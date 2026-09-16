@@ -10,6 +10,18 @@ import DoodleField from '../ui/DoodleField'
 import FlipSpot from '../mascot/FlipSpot'
 
 const INK = '#0D2818'
+
+/** Blend `hex` toward `toward` by t (0 = unchanged, 1 = fully the target). */
+function mixHex(hex, toward, t) {
+  const parse = (h) => {
+    const v = parseInt(h.replace('#', ''), 16)
+    return [(v >> 16) & 255, (v >> 8) & 255, v & 255]
+  }
+  const [r1, g1, b1] = parse(hex)
+  const [r2, g2, b2] = parse(toward)
+  const c = (a, b) => Math.round(a + (b - a) * t)
+  return `rgb(${c(r1, r2)}, ${c(g1, g2)}, ${c(b1, b2)})`
+}
 // The hero now holds one fixed brand colour rather than repainting itself per
 // flavour like the scroll stage does -- flavour identity lives in the pack,
 // the doodle tint, the heat-rail pips and Flip's own colours instead.
@@ -40,9 +52,9 @@ const HERO_EMOTES = {
  * anchored.
  */
 const PACK_SLOTS = [
-  { left: '12%', top: '20%', width: '70%', rotate: -6, zIndex: 30, opacity: 1 },
-  { left: '56%', top: '0%', width: '38%', rotate: 14, zIndex: 20, opacity: 0.6 },
-  { left: '0%', top: '4%', width: '36%', rotate: -18, zIndex: 10, opacity: 0.55 },
+  { left: '12%', top: '20%', width: '78%', rotate: -6, zIndex: 30, fade: 0 },
+  { left: '56%', top: '0%', width: '38%', rotate: 14, zIndex: 20, fade: 0.4 },
+  { left: '0%', top: '4%', width: '36%', rotate: -18, zIndex: 10, fade: 0.45 },
 ]
 
 /** Hand-drawn arrow aiming the eye at the hero CTA, the way the brand's own
@@ -86,11 +98,24 @@ const HERO_BURST = [
  * hand-drawn keyline traced around the exact same outline and a drop-shadow
  * that hugs it -- the organic alternative to the rounded-rect-with-border
  * card used on the PDP gallery, bundle cards and the flavour stage below. */
-function BlobPack({ blobName, lineColor, children }) {
+function BlobPack({ blobName, lineColor, fade = 0, children }) {
+  // A receded pack used to be dimmed with element opacity, which made the pack
+  // itself translucent and let the doodle field show straight through the art.
+  // Instead the pack stays fully opaque and is washed toward the ground colour
+  // by a veil inside the clip -- with the keyline and its hard shadow mixed the
+  // same distance, so the whole pack recedes as one piece.
+  const line = fade > 0 ? mixHex(lineColor, HERO_GROUND, fade) : lineColor
   return (
-    <div className="relative h-full w-full" style={{ filter: `drop-shadow(5px 6px 0 ${lineColor})` }}>
-      <div className="h-full w-full" style={blobClip(blobName)}>
+    <div className="relative h-full w-full" style={{ filter: `drop-shadow(5px 6px 0 ${line})` }}>
+      <div className="relative h-full w-full" style={blobClip(blobName)}>
         {children}
+        {fade > 0 && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0"
+            style={{ backgroundColor: HERO_GROUND, opacity: fade }}
+          />
+        )}
       </div>
       <svg
         className="pointer-events-none absolute inset-0 h-full w-full"
@@ -98,7 +123,7 @@ function BlobPack({ blobName, lineColor, children }) {
         preserveAspectRatio="none"
         aria-hidden="true"
       >
-        <path d={BLOB_PATHS[blobName]} fill="none" stroke={lineColor} strokeWidth="0.024" />
+        <path d={BLOB_PATHS[blobName]} fill="none" stroke={line} strokeWidth="0.024" />
       </svg>
     </div>
   )
@@ -394,7 +419,7 @@ export default function HeroCarousel() {
           </Link>
         </div>
 
-        <div className="relative z-10 hidden md:absolute md:right-[6vw] md:top-[4%] md:block md:h-[38vw] md:max-h-[27rem] md:w-[38vw] md:max-w-[27rem]">
+        <div className="relative z-10 hidden md:absolute md:right-[6vw] md:top-[4%] md:block md:h-[44vw] md:max-h-[32rem] md:w-[44vw] md:max-w-[32rem]">
           {heroSlides.map((s, i) => {
             const offset = (i - index + heroSlides.length) % heroSlides.length
             const slot = PACK_SLOTS[offset]
@@ -424,7 +449,7 @@ export default function HeroCarousel() {
                   transition: 'left 0.55s ease, top 0.55s ease, width 0.55s ease',
                 }}
                 initial={firstLoad.current ? { opacity: 0, scale: 0.7, y: -40 } : false}
-                animate={{ opacity: slot.opacity, scale: 1, rotate: slot.rotate, y: 0 }}
+                animate={{ opacity: 1, scale: 1, rotate: slot.rotate, y: 0 }}
                 transition={
                   firstLoad.current
                     ? { type: 'spring', stiffness: 220, damping: 18, delay: 0.35 + offset * 0.08 }
@@ -449,7 +474,7 @@ export default function HeroCarousel() {
                     aria-label={`Show ${s.kicker}`}
                     className="block transition hover:opacity-90"
                   >
-                    <BlobPack blobName={blobName} lineColor={pal.line}>
+                    <BlobPack blobName={blobName} lineColor={pal.line} fade={slot.fade}>
                       {image}
                     </BlobPack>
                   </button>

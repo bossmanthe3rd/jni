@@ -4,9 +4,16 @@ import { motion } from 'framer-motion'
 import { Minus, Plus } from 'lucide-react'
 import { useCart } from '../../store/cartStore'
 import { savingsPercent, toCartProduct } from '../../data/products'
+import { packPalettes } from '../icons/PackDoodles'
 import { SmartImage } from '../ui/Primitives'
+import HeatMeter from './HeatMeter'
 
-/** Single-flavour card used in the homepage "Our flavours" grid. */
+/** Single-flavour card used in the homepage "Our flavours" grid.
+ *
+ * The three cards used to be identical but for the photo -- same ink border,
+ * same black price, nothing said which one was the hot one. Each now carries
+ * its own pack palette: a flavour badge over the image, the card's own ink
+ * border colour, and the price in the pack's own dark ink. */
 export function ProductCard({ product, index = 0 }) {
   const { addItem, openCart } = useCart()
   const [qty, setQty] = useState(1)
@@ -15,6 +22,7 @@ export function ProductCard({ product, index = 0 }) {
   const soldOut = product.stockQuantity === 0
   const image = product.images?.plp || product.imageUrl
   const to = product.isBundle ? `/combos/${product.slug}` : `/flavours/${product.slug}`
+  const palette = packPalettes[product.slug]
 
   const handleAdd = () => {
     if (soldOut) return
@@ -31,7 +39,8 @@ export function ProductCard({ product, index = 0 }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.18 }}
       transition={{ duration: 0.35, delay: index * 0.05 }}
-      className="flex h-full flex-col overflow-hidden rounded-2xl border-[3px] border-ink bg-cream sm:rounded-[22px]"
+      className="flex h-full flex-col overflow-hidden rounded-2xl border-[3px] bg-cream sm:rounded-[22px]"
+      style={{ borderColor: palette?.line || 'var(--color-border)' }}
     >
       <Link
         to={to}
@@ -47,6 +56,14 @@ export function ProductCard({ product, index = 0 }) {
           height="1200"
           className="h-full w-full object-contain p-1.5 sm:p-3"
         />
+        {palette && product.flavor && (
+          <span
+            className="absolute left-2 top-2 rounded-pill border-[2px] px-2 py-1 text-[9px] font-black uppercase text-ink sm:left-3 sm:top-3 sm:border-[3px] sm:px-3 sm:py-1.5 sm:text-[10px]"
+            style={{ backgroundColor: palette.fill, borderColor: palette.line }}
+          >
+            {product.flavor}
+          </span>
+        )}
       </Link>
 
       <div className="flex flex-1 flex-col px-2 pb-2.5 pt-2 text-ink sm:px-6 sm:pb-6 sm:pt-4">
@@ -58,10 +75,23 @@ export function ProductCard({ product, index = 0 }) {
             {product.tagline || product.subtitle}
           </p>
         )}
+        {palette && (
+          <HeatMeter
+            product={product}
+            flavour={product.slug}
+            labelClassName="text-ink/60"
+            className="mt-1.5 sm:mt-2"
+          />
+        )}
 
         <div className="mt-auto flex flex-col gap-2 pt-3 sm:flex-row sm:items-end sm:justify-between sm:gap-3 sm:pt-4">
           <div className="flex items-baseline gap-1.5 sm:gap-2">
-            <span className="text-lg font-black sm:text-2xl">₹{price}</span>
+            <span
+              className="text-lg font-black sm:text-2xl"
+              style={{ color: palette?.stem || 'var(--color-text-dark)' }}
+            >
+              ₹{price}
+            </span>
             {original > price && (
               <span className="text-[11px] font-semibold text-ink/40 line-through sm:text-sm">
                 ₹{original}

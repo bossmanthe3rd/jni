@@ -28,7 +28,7 @@ export function heatLevel(product) {
  * panel (peri #c8102e on #7a1028 is 1.85:1), so on those pages the lit chillies
  * dissolved into the background and the scale showed nothing.
  */
-export default function HeatMeter({ product, flavour, className = '', litFill }) {
+export default function HeatMeter({ product, flavour, className = '', litFill, labelClassName = 'text-foam/70' }) {
   const level = heatLevel(product)
   if (!level) return null
 
@@ -66,7 +66,7 @@ export default function HeatMeter({ product, flavour, className = '', litFill })
           </span>
         ))}
       </div>
-      <span className="text-[11px] font-black uppercase tracking-[0.14em] text-foam/70 sm:text-xs">
+      <span className={`text-[11px] font-black uppercase tracking-[0.14em] ${labelClassName} sm:text-xs`}>
         {label}
       </span>
     </div>
