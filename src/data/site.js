@@ -52,13 +52,37 @@ export const heroSlides = [
   },
 ]
 
-export const HERO_INTERVAL = 5600
+export const HERO_INTERVAL = 4200
 
 export const whyFeatures = [
-  { id: 'flavour', lines: ['Bold', 'Flavour'], loopClass: 'why-icon-flame', overlay: null },
-  { id: 'desk', lines: ['Desk', 'Crunch'], loopClass: 'why-icon-keys', overlay: 'keys' },
-  { id: 'creative', lines: ['Creative', 'Sidekick'], loopClass: 'why-icon-pencils', overlay: null },
-  { id: 'brain', lines: ['Brain', 'Break'], loopClass: 'why-icon-burst', overlay: 'burst' },
+  {
+    id: 'flavour',
+    lines: ['Bold', 'Flavour'],
+    blurb: 'Real heat, baked right in. No shy flavours here.',
+    loopClass: 'why-icon-flame',
+    overlay: null,
+  },
+  {
+    id: 'desk',
+    lines: ['Desk', 'Crunch'],
+    blurb: 'Clean fingers. Nothing greasy near the keyboard.',
+    loopClass: 'why-icon-keys',
+    overlay: 'keys',
+  },
+  {
+    id: 'creative',
+    lines: ['Creative', 'Sidekick'],
+    blurb: 'Snack now, big idea later. Usually.',
+    loopClass: 'why-icon-pencils',
+    overlay: null,
+  },
+  {
+    id: 'brain',
+    lines: ['Brain', 'Break'],
+    blurb: 'The ninety-second reset your afternoon needs.',
+    loopClass: 'why-icon-burst',
+    overlay: 'burst',
+  },
 ]
 
 export const testimonials = [

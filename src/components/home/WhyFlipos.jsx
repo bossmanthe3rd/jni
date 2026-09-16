@@ -42,7 +42,7 @@ function FeatureTile({ feature, index }) {
           ref={ref}
           className={`why-icon relative ${feature.loopClass} ${seen ? 'why-loop' : ''}`}
         >
-          <Icon className="h-14 w-14 sm:h-24 sm:w-24 lg:h-28 lg:w-28" />
+          <Icon className="h-20 w-20 sm:h-24 sm:w-24 lg:h-28 lg:w-28" />
 
           {feature.overlay === 'keys' && (
             <span className="why-keys text-[#071A16]">
@@ -61,11 +61,17 @@ function FeatureTile({ feature, index }) {
         </div>
       </motion.div>
 
-      <h3 className="mt-3 font-display text-[0.8rem] leading-[1.1] text-white sm:mt-5 sm:text-lg lg:text-xl">
+      <h3 className="mt-3 font-display text-base leading-[1.1] text-white sm:mt-5 sm:text-lg lg:text-xl">
         {feature.lines[0]}
         <br />
         {feature.lines[1]}
       </h3>
+
+      {/* The claim under the label. Without this the section is four glyphs
+          and eight words -- decorative rather than persuasive. */}
+      <p className="mt-2 max-w-[24ch] text-[0.8rem] font-bold leading-snug text-white/70 sm:mt-3 sm:text-sm">
+        {feature.blurb}
+      </p>
     </article>
   )
 }
@@ -74,13 +80,14 @@ export default function WhyFlipos() {
   return (
     <section
       id="why-flipos"
-      className="on-dark relative isolate overflow-hidden bg-[#071A16] pb-20 pt-8 sm:pb-32 sm:pt-12"
+      className="relative isolate overflow-hidden bg-[#fbf6d0] pb-20 pt-8 sm:pb-32 sm:pt-12"
     >
-      {/* The pack never leaves a ground flat. Tinted to near-ink so it is
-          texture behind the type, not competition for it. */}
+      {/* The pack never leaves a ground flat. DoodleField mixes each ink
+          toward the ground it is given, so handing it cream is what keeps the
+          doodles texture behind the type rather than competition for it. */}
       <DoodleField
         flavour="jalapeno-kick"
-        ground="#071A16"
+        ground="#fbf6d0"
         intensity="medium"
         count={22}
         seed={7}
@@ -115,7 +122,7 @@ export default function WhyFlipos() {
           pad="lg"
           className="mx-auto mt-10 max-w-5xl sm:mt-16"
         >
-          <div className="grid grid-cols-4 gap-2 sm:gap-10">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-9 sm:grid-cols-4 sm:gap-10">
             {whyFeatures.map((feature, i) => (
               <FeatureTile key={feature.id} feature={feature} index={i} />
             ))}

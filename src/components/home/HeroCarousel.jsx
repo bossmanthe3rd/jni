@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { AnimatePresence, motion, useMotionValue, useSpring } from 'framer-motion'
 import { HERO_INTERVAL, heroSlides, flavourStages } from '../../data/site'
 import { doodleComponents, packPalettes } from '../icons/PackDoodles'
-import { BrandHeading, Sparkle, Blob, useMediaQuery } from '../ui/Primitives'
+import { BrandHeading, Sparkle, Blob, Stars, useMediaQuery } from '../ui/Primitives'
 import { BLOB_PATHS, blobShape, blobClip } from '../ui/BlobShapes'
 import { TriangleCluster } from './FlavourGrid'
 import DoodleField from '../ui/DoodleField'
@@ -344,6 +344,28 @@ export default function HeroCarousel() {
                   style={{ color: palette.fill }}
                 >
                   {slide.product.weight}
+                </span>
+              </p>
+
+              {/* The one piece of credibility that belongs only in a hero.
+                  It rides in this same flex row rather than in a strip of
+                  its own: the bottom band is spoken for by the heat rail,
+                  and on mobile the pack sits in normal flow, so an extra
+                  row would push both down. Swaps per slide like the rest
+                  of the copy -- it is inside the crossfade block. */}
+              <p className="flex items-center gap-2 text-sm font-black" style={{ color: FOAM }}>
+                <Stars value={slide.product.rating.value} color={palette.fill} size={13} />
+                <span className="sr-only">
+                  Rated {slide.product.rating.value} out of 5 from {slide.product.rating.count} reviews
+                </span>
+                <span aria-hidden="true">
+                  {slide.product.rating.value}
+                  <span
+                    className="ml-1.5 text-[11px] font-bold uppercase tracking-[0.14em]"
+                    style={{ color: palette.fill }}
+                  >
+                    ({slide.product.rating.count})
+                  </span>
                 </span>
               </p>
             </div>
