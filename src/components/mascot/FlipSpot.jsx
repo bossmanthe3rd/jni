@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import FlipArt, { FLIP_BODY_PCT, FLIP_VIEW_W, poseFlip } from './FlipArt'
+import FlipArt, { FLIP_BODY_PCT, FLIP_FOOT_PCT, FLIP_VIEW_W, poseFlip } from './FlipArt'
 import { CHIP, FLAVOUR_CHIPS, R as BODY_R } from './flipGeometry'
 
 /*
@@ -91,23 +91,36 @@ const ANCHOR = {
   wave: ((185 + 157 + 15 - 6) / 400) * 100,
   float: FLIP_BODY_PCT,
   peek: ((185 + 45) / 400) * 100,
+  // Grounded like `wave`, but he isn't walking a path here -- he just stands
+  // his ground beside the hero pack.
+  hero: FLIP_FOOT_PCT,
 }
 
 /**
  * One placement.
  *
- *   mode      'wave' | 'float' | 'peek'
+ *   mode      'wave' | 'float' | 'peek' | 'hero'
  *   width     CSS width for the art (its body is ~0.4 of this)
  *   tint      flavour slug to season to, or null for the plain chip
+ *   emote     'hero' mode only -- 'delighted' | 'cheeky' | 'shocked', one per
+ *             flavour; unset falls back to the plain wave-and-bounce greeting
  *   progress  optional () => 0..1 for modes that ride a parent's own scroll
  *   style     ordinary CSS placing the spot inside its section
  */
-export default function FlipSpot({ mode = 'peek', width, tint = null, progress, style, className = '' }) {
+export default function FlipSpot({
+  mode = 'peek',
+  width,
+  tint = null,
+  emote = null,
+  progress,
+  style,
+  className = '',
+}) {
   const host = useRef(null)
   const hook = useRef(null)
   const parts = useRef({})
-  const live = useRef({ tint, progress })
-  live.current = { tint, progress }
+  const live = useRef({ tint, progress, emote })
+  live.current = { tint, progress, emote }
 
   useEffect(() => {
     const node = host.current
@@ -245,6 +258,24 @@ export default function FlipSpot({ mode = 'peek', width, tint = null, progress, 
         walk += (0 - walk) * approach(dt, 6)
         rush += (0 - rush) * approach(dt, 6)
         rot += (Math.sin(p * Math.PI * 4) * 13 - 3 - rot) * approach(dt, 3.5)
+      } else if (mode === 'hero') {
+        // Stands his ground beside the hero pack -- he never walks anywhere
+        // here, so `walk` stays off. Each flavour gets its own reaction:
+        // 'shocked' pulses rush to borrow the rig's own open-mouth/speed-dart
+        // threshold, the rest just vary the tilt.
+        walk += (0 - walk) * approach(dt, 6)
+        const heroEmote = live.current.emote
+        if (heroEmote === 'shocked') {
+          const targetRush = 0.25 + 0.55 * Math.max(0, Math.sin(clock * 1.8))
+          rush += (targetRush - rush) * approach(dt, 5)
+          rot += (Math.sin(clock * 2.4) * 5 - 5 - rot) * approach(dt, 4)
+        } else if (heroEmote === 'cheeky') {
+          rush += (0 - rush) * approach(dt, 6)
+          rot += (Math.sin(clock * 1.7) * 9 - 3 - rot) * approach(dt, 3)
+        } else {
+          rush += (0 - rush) * approach(dt, 6)
+          rot += (Math.sin(clock * 1.15) * 6 - 3 - rot) * approach(dt, 3)
+        }
       } else {
         walk += (0 - walk) * approach(dt, 6)
         rush += (0 - rush) * approach(dt, 6)
@@ -276,6 +307,33 @@ export default function FlipSpot({ mode = 'peek', width, tint = null, progress, 
 
       season(dt)
 
+      // Each hero emote borrows a different lever of the same rig instead of
+      // needing its own drawing: 'cheeky' leans on the wave arm (which is
+      // also what flips the mouth to a grin), 'shocked' leans on rush (which
+      // is also what flips the mouth open and lights the speed darts), and
+      // 'delighted' adds a solo wink via blinkR. Anything else -- the plain
+      // hero cameo -- keeps the original steady wave-and-bounce.
+      let heroWave = 0
+      let heroSquash = 0
+      let blinkR = blink
+      if (mode === 'hero') {
+        const heroEmote = live.current.emote
+        if (heroEmote === 'cheeky') {
+          heroWave = 0.85 + 0.15 * Math.sin(clock * 2)
+          heroSquash = 0.07 * Math.sin(clock * 2.2)
+        } else if (heroEmote === 'shocked') {
+          heroSquash = -0.09 * Math.max(0, Math.sin(clock * 1.8))
+        } else if (heroEmote === 'delighted') {
+          heroSquash = 0.045 * Math.sin(clock * 1.2)
+          const winkPhase = clock % 3.4
+          const winkAmt = winkPhase < 0.22 ? Math.sin((winkPhase / 0.22) * Math.PI) : 0
+          blinkR = Math.max(0.08, blink - winkAmt * 0.9)
+        } else {
+          heroWave = 0.55 + 0.45 * Math.sin(clock * 1.4)
+          heroSquash = 0.045 * Math.sin(clock * 1.2)
+        }
+      }
+
       poseFlip(art, {
         phase,
         time: clock,
@@ -285,10 +343,11 @@ export default function FlipSpot({ mode = 'peek', width, tint = null, progress, 
         walk,
         roll: 0,
         darts: 0,
-        wave: 0,
+        wave: heroWave,
         chomp: 0,
-        squash: 0,
+        squash: heroSquash,
         blink,
+        blinkR,
         look,
         peek: mode === 'peek' ? 1 : 0,
       })
@@ -301,9 +360,12 @@ export default function FlipSpot({ mode = 'peek', width, tint = null, progress, 
         peg.style.left = `${((at.x / WAVE_W) * box.w).toFixed(1)}px`
         peg.style.top = `${((at.y / WAVE_H) * box.h).toFixed(1)}px`
       }
+      const staticEmote = mode === 'hero' ? live.current.emote : null
+      const staticWave = staticEmote === 'cheeky' ? 0.9 : staticEmote == null && mode === 'hero' ? 0.4 : 0
+      const staticRush = staticEmote === 'shocked' ? 0.6 : 0
       poseFlip(art, {
-        phase: 0, time: 0, facing: 1, rot: -3, rush: 0, walk: 0, roll: 0,
-        darts: 0, wave: 0, chomp: 0, squash: 0, blink: 1, look: [3, 2],
+        phase: 0, time: 0, facing: 1, rot: -3, rush: staticRush, walk: 0, roll: 0,
+        darts: 0, wave: staticWave, chomp: 0, squash: 0, blink: 1, look: [3, 2],
         peek: mode === 'peek' ? 1 : 0,
       })
       season(1)

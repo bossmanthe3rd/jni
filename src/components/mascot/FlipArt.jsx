@@ -148,6 +148,8 @@ const setXY = (el, x, y) => {
  *   chomp    0..1, a bite in progress
  *   squash   extra vertical squash; negative is flatter
  *   blink    1 open, 0 shut
+ *   blinkL   optional per-eye override (a wink); falls back to `blink`
+ *   blinkR   optional per-eye override (a wink); falls back to `blink`
  *   look     [x, y] pupil offset, body units
  *   darts    0..1 ceiling on the speed marks; 0 keeps them off entirely
  *   peek     0..1, both hands up onto a ledge -- the sheet's Peek pose, used
@@ -219,9 +221,10 @@ export function poseFlip(p, pose) {
   const pupil = `translate(${lx.toFixed(1)},${ly.toFixed(1)})`
   p.pupilL.setAttribute('transform', pupil)
   p.pupilR.setAttribute('transform', pupil)
-  const shut = Math.max(0.06, blink).toFixed(3)
-  p.eyeL.setAttribute('transform', `translate(${EYE_L[0]},${EYE_L[1]}) scale(1,${shut}) translate(${-EYE_L[0]},${-EYE_L[1]})`)
-  p.eyeR.setAttribute('transform', `translate(${EYE_R[0]},${EYE_R[1]}) scale(1,${shut}) translate(${-EYE_R[0]},${-EYE_R[1]})`)
+  const shutL = Math.max(0.06, pose.blinkL ?? blink).toFixed(3)
+  const shutR = Math.max(0.06, pose.blinkR ?? blink).toFixed(3)
+  p.eyeL.setAttribute('transform', `translate(${EYE_L[0]},${EYE_L[1]}) scale(1,${shutL}) translate(${-EYE_L[0]},${-EYE_L[1]})`)
+  p.eyeR.setAttribute('transform', `translate(${EYE_R[0]},${EYE_R[1]}) scale(1,${shutR}) translate(${-EYE_R[0]},${-EYE_R[1]})`)
 
   const shape =
     chomp > 0.5 ? 'chomp' : roll > 0.4 || rush > 0.5 ? 'open' : wave > 0.4 ? 'grin' : 'smile'

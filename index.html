@@ -8,11 +8,12 @@
     <meta name="theme-color" content="#0D2818" />
     <title>Just Nibble It - Bold Baked Snacks</title>
 
-    <!-- LCP is the first hero slide, which is the SWEET CHILLI background.
-         This used to preload hero-bg-peri.jpg -- slide two, which is not on
-         screen at first paint -- so the real LCP image was discovered late and
-         a second, unused image competed with it for bandwidth. -->
-    <link rel="preload" as="image" href="/assets/hero/hero-bg-sweet.jpg" fetchpriority="high" />
+    <!-- LCP is the first hero slide's pack shot (Sweet Chilli Rush). The hero
+         used to be a full-bleed background photo with the headline baked in;
+         it is now the same propped pack image the scroll stage below uses, so
+         this preload was repointed from the old hero-bg-sweet.jpg to that
+         smaller, shared asset. -->
+    <link rel="preload" as="image" href="/assets/products/sweet-chilli-rush-pack.webp" fetchpriority="high" />
 
     <!-- Both brand faces are self-hosted (see @font-face in src/index.css), so
          the render-blocking Google Fonts stylesheet is gone: it was fetching
