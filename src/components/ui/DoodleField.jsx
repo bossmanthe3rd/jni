@@ -95,6 +95,7 @@ export default function DoodleField({
   count = 14,
   seed = 1,
   drift = true,
+  fadeEdges = false,
   className = '',
 }) {
   const ref = useRef(null)
@@ -157,11 +158,28 @@ export default function DoodleField({
 
   const moving = drift && !reduced
 
+  // A field is clipped by its section's own `overflow-hidden`, so any doodle
+  // straddling a section boundary gets sliced in half and the cut reads as a
+  // hard line -- most visibly where two cream sections meet and the only thing
+  // marking the seam is a row of half-doodles. Fading the field out before it
+  // reaches the edge means there is nothing left to cut. Opt-in, so the eight
+  // fields that sit well inside their own section are unaffected.
+  //
+  // `true` fades both edges; { top, bottom } sets each independently, in % of
+  // the field's height.
+  const fade = fadeEdges === true ? { top: 10, bottom: 10 } : fadeEdges || null
+  const mask = fade
+    ? `linear-gradient(to bottom, transparent 0%, #000 ${fade.top ?? 0}%, #000 ${
+        100 - (fade.bottom ?? 0)
+      }%, transparent 100%)`
+    : undefined
+
   return (
     <div
       ref={ref}
       aria-hidden="true"
       className={`pointer-events-none absolute inset-0 -z-10 overflow-hidden ${className}`}
+      style={mask ? { maskImage: mask, WebkitMaskImage: mask } : undefined}
     >
       {LAYERS.map((layer, li) => (
         <Layer

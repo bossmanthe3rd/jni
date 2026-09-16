@@ -182,13 +182,25 @@ export default function FlavourGrid() {
             style={{ top: 0 }}
           />
 
-          <div className="relative overflow-hidden rounded-[28px] border-[4px] border-ink bg-teal p-2.5 shadow-doodle-lg sm:rounded-[36px] sm:p-6 lg:p-8">
-            <div className="grid grid-cols-3 gap-2 sm:gap-5">
+          <div className="relative isolate overflow-hidden rounded-[28px] border-[4px] border-ink bg-teal p-2.5 shadow-doodle-lg sm:rounded-[36px] sm:p-6 lg:p-8">
+            {/* The panel's own doodle ground: the outer field behind the whole
+                section stops at the panel's opaque edge, so everything inside
+                it -- the gutters between cards, the space above the bottom
+                strip -- was bare teal. Jalapeño here for variety against the
+                outer field's peri-peri. */}
+            <DoodleField
+              flavour="jalapeno-kick"
+              ground="#4DB8AE"
+              intensity="subtle"
+              count={16}
+              seed={55}
+            />
+            <div className="relative grid grid-cols-3 gap-2 sm:gap-5">
               {ordered.map((product, i) => (
                 <ProductCard key={product.slug} product={product} index={i} />
               ))}
             </div>
-            <div className="mt-2.5 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-5">
+            <div className="relative mt-2.5 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-5">
               {bundles.map((bundle, i) => (
                 <BundleCard key={bundle.slug} bundle={bundle} index={i + 3} />
               ))}

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { whyFeatures } from '../../data/site'
 import { BrandHeading, Sparkle, WaveDivider } from '../ui/Primitives'
-import FlipSpot from '../mascot/FlipSpot'
 import DoodleField from '../ui/DoodleField'
 import BlobPanel from '../ui/BlobPanel'
 
@@ -102,6 +101,7 @@ export default function WhyFlipos() {
         intensity="medium"
         count={22}
         seed={7}
+        fadeEdges={{ top: 16, bottom: 10 }}
       />
 
       <div className="relative z-10 px-3 text-center sm:px-8 lg:px-12">
@@ -141,17 +141,8 @@ export default function WhyFlipos() {
         </BlobPanel>
       </div>
 
-      {/* The section closes on a drawn wave, so it gets a walker. FlipSpot
-          shares WaveDivider's curve, which is what lets him stand on the
-          crests and lean with the slope instead of hovering near them. */}
       <div className="absolute inset-x-0 -bottom-px z-20 h-12 w-full sm:h-16">
         <WaveDivider fill="#7d1206" className="absolute inset-0 h-full w-full" />
-        <FlipSpot
-          mode="wave"
-          width="clamp(96px, 11.5vw, 168px)"
-          className="inset-0"
-          style={{ inset: 0, zIndex: 1 }}
-        />
       </div>
     </section>
   )

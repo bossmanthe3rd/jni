@@ -280,6 +280,7 @@ export default function HeroCarousel() {
           intensity="medium"
           count={20}
           seed={101}
+          fadeEdges={{ bottom: 14 }}
         />
 
         {/* A bolder, second doodle layer confined to the pack side of the
@@ -295,6 +296,7 @@ export default function HeroCarousel() {
             intensity="bold"
             count={16}
             seed={202}
+            fadeEdges={{ bottom: 32 }}
           />
         </div>
 
