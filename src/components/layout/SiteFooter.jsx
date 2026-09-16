@@ -1,17 +1,21 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowRight, ChevronDown, Facebook, Instagram } from 'lucide-react'
+import { ArrowRight, ChevronDown, Facebook, Instagram, Mail, MapPin, Phone } from 'lucide-react'
 import {
   FOOTER_IMAGE_INTERVAL,
   footerColumns,
   footerRotatingImages,
   footerStaticImage,
+  legalBusinessDetails,
 } from '../../data/site'
 import { bundles } from '../../data/products'
 import { Blob, BrandHeading, Sparkle } from '../ui/Primitives'
+import DoodleField from '../ui/DoodleField'
 
 const socialIcons = { Instagram, Facebook }
+const SOCIAL_BG = { Instagram: 'bg-[#E1306C]', Facebook: 'bg-[#1877F2]' }
+const SOCIAL_FG = { Instagram: 'text-[#E1306C]', Facebook: 'text-[#1877F2]' }
 
 /** Wobbly starburst badge on the launch-drop card. */
 function BurstBadge({ className = '', children }) {
@@ -25,7 +29,11 @@ function BurstBadge({ className = '', children }) {
           d="M80 8c8 0 12 8 20 8s12-8 20 0 0 12 8 20 8 12 0 20 8 12 0 20-8 12-8 20-12 8-20 8-12 8-20 0-12-8-20-8-12 8-20 0-8-12-8-20-8-12 0-20-8-12 0-20 8-12 8-20 12-8 20-8 12-8 20 0Z"
         />
       </svg>
-      <div className="absolute inset-0 grid place-items-center px-4 text-center font-black uppercase leading-none text-[#05222a]">
+      {/* The label sits in the blob's inner area, not its bounding box. As a
+          two-row grid over inset-0 the number was pushed past the lower lobe and
+          landed on the dark card behind -- near-black on near-black, so the "3"
+          in "Bundle of 3" was effectively invisible. */}
+      <div className="absolute inset-[20%] flex flex-col items-center justify-center gap-0.5 text-center font-black uppercase leading-none text-[#05222a]">
         {children}
       </div>
     </div>
@@ -123,7 +131,7 @@ function FooterCta() {
               <br />
               of
             </span>
-            <span className="text-3xl leading-none">{trio.packetCount}</span>
+            <span className="text-2xl leading-none">{trio.packetCount}</span>
           </BurstBadge>
           <p className="text-xs font-black uppercase tracking-[0.15em] text-teal">Launch drop</p>
           <p className="mt-2 max-w-[16ch] font-display text-2xl text-sunshine sm:text-3xl">
@@ -135,7 +143,7 @@ function FooterCta() {
               ₹{trio.originalPrice}
             </span>
           </div>
-          <Link to="/combos" className="jni-btn mt-6 w-full">
+          <Link to="/combos" className="jni-btn mt-6 w-fit px-8">
             Shop the bundles <ArrowRight size={16} />
           </Link>
         </div>
@@ -201,7 +209,10 @@ function FooterGallery() {
 function ColumnBody({ column }) {
   if (column.socials) {
     return (
-      <div className="flex items-center gap-3">
+      /* Labelled pills in each network's own colour, the way the live footer
+         has them. Two bare teal circles read as generic UI chrome next to five
+         columns of text, and gave no clue which was which until hover. */
+      <div className="flex flex-col items-start gap-3">
         {column.socials.map(({ label, href }) => {
           const Icon = socialIcons[label]
           return (
@@ -210,10 +221,12 @@ function ColumnBody({ column }) {
               href={href}
               target="_blank"
               rel="noreferrer"
-              aria-label={label}
-              className="grid h-11 w-11 place-items-center rounded-full border-[3px] border-teal text-teal transition hover:-translate-y-0.5 hover:bg-teal hover:text-[#050D0B]"
+              className={`inline-flex items-center gap-2.5 rounded-pill border-[3px] border-ink px-3.5 py-2 font-brand text-sm text-white shadow-doodle transition hover:-translate-y-0.5 ${SOCIAL_BG[label] ?? 'bg-teal'}`}
             >
-              <Icon size={18} />
+              <span className="grid h-6 w-6 place-items-center rounded-full bg-white/95">
+                <Icon size={14} className={SOCIAL_FG[label] ?? 'text-ink'} />
+              </span>
+              {label}
             </a>
           )
         })}
@@ -221,12 +234,12 @@ function ColumnBody({ column }) {
     )
   }
   return (
-    <ul className="space-y-2.5">
+    <ul className="space-y-3">
       {column.links.map((link) => (
         <li key={link.label}>
           <Link
             to={link.to}
-            className="inline-block text-sm font-bold text-white/85 transition hover:translate-x-1 hover:text-sunshine"
+            className="inline-block text-base font-bold text-white/85 transition hover:translate-x-1 hover:text-sunshine"
           >
             {link.label}
           </Link>
@@ -236,15 +249,106 @@ function ColumnBody({ column }) {
   )
 }
 
+/** The zigzag a pouch gets where it is heat-sealed. Stretches to any width. */
+function CrimpEdge({ className = '', fill = '#F3C63B' }) {
+  const teeth = 24
+  const step = 120 / teeth
+  const d =
+    'M0,10' +
+    Array.from({ length: teeth }, (_, i) => ` L${(i * step + step / 2).toFixed(2)},0 L${((i + 1) * step).toFixed(2)},10`).join('') +
+    ' Z'
+  return (
+    <svg
+      viewBox="0 0 120 10"
+      preserveAspectRatio="none"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d={d} fill={fill} />
+    </svg>
+  )
+}
+
+/**
+ * Who you are actually buying from.
+ *
+ * The registered entity, address, phone and support mailbox were already in
+ * `legalBusinessDetails` but appeared nowhere a visitor would look -- the
+ * footer offered five columns of links and no way to reach a human. For a
+ * packaged-foods brand this is also the detail a retailer or distributor scans
+ * for first, so it sits with the columns rather than buried on /contact.
+ */
+function FooterContact() {
+  const { entity, address, email, supportEmail, phone } = legalBusinessDetails
+  const rows = [
+    {
+      Icon: Mail,
+      label: 'Write to us',
+      items: [
+        { text: email, href: `mailto:${email}` },
+        { text: supportEmail, href: `mailto:${supportEmail}` },
+      ],
+    },
+    {
+      Icon: Phone,
+      label: 'Call us',
+      items: [{ text: phone, href: `tel:${phone.replace(/\s+/g, '')}` }],
+    },
+    { Icon: MapPin, label: 'Find us', items: [{ text: address }] },
+  ]
+
+  return (
+    <div className="mt-8 border-t border-white/10 pt-8 lg:mt-12">
+      <div className="grid gap-6 sm:grid-cols-3">
+        {rows.map(({ Icon, label, items }) => (
+          <div key={label} className="flex gap-3">
+            <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full border-2 border-teal/50 text-teal">
+              <Icon size={15} />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[11px] font-black uppercase tracking-[0.14em] text-teal">
+                {label}
+              </p>
+              {items.map((item) => (
+                <p key={item.text} className="mt-1 text-sm font-bold leading-6 text-white/75">
+                  {item.href ? (
+                    <a href={item.href} className="transition hover:text-sunshine">
+                      {item.text}
+                    </a>
+                  ) : (
+                    item.text
+                  )}
+                </p>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-6 text-xs font-bold text-white/40">
+        {entity} &middot; FSSAI-compliant packaged foods
+      </p>
+    </div>
+  )
+}
+
 export default function SiteFooter() {
   const [openColumn, setOpenColumn] = useState(null)
 
   return (
-    <footer className="bg-[#050D0B] text-white">
+    <footer className="on-dark bg-[#050D0B] text-white">
       <FooterCta />
       <FooterGallery />
 
-      <div className="border-t border-white/10">
+      <div className="relative isolate border-t border-white/10">
+        {/* The flattest surface on the site: six columns of links on near-black.
+            Subtle, because everything on top of it is something to read. */}
+        <DoodleField
+          flavour="jalapeno-kick"
+          ground="#050D0B"
+          intensity="subtle"
+          count={20}
+          seed={41}
+        />
         <div className="mx-auto max-w-6xl px-5 py-6 sm:px-8 lg:px-12 lg:py-12">
           {/* Mobile / tablet: accordion */}
           <div className="lg:hidden">
@@ -276,18 +380,26 @@ export default function SiteFooter() {
           <div className="hidden gap-8 lg:grid lg:grid-cols-6">
             {footerColumns.map((column) => (
               <div key={column.title}>
-                <h4 className="mb-4 text-xs font-black uppercase tracking-[0.14em] text-teal">
+                <h4 className="mb-5 text-sm font-black uppercase leading-none tracking-[0.12em] text-teal">
                   {column.title}
                 </h4>
                 <ColumnBody column={column} />
               </div>
             ))}
           </div>
+
+          <FooterContact />
         </div>
       </div>
 
-      <div className="bg-sunshine px-5 py-3 text-center text-xs font-black text-ink">
-        © 2026 Just Nibble It. All Rights Reserved.
+      {/* Every pouch is closed with a zigzag heat-seal crimp. The site ends on
+          the same edge, so the last thing you see is a sealed packet. */}
+      <div className="relative">
+        <CrimpEdge className="absolute inset-x-0 -top-[11px] h-3 w-full" />
+        <div className="bg-sunshine px-5 py-3 text-center text-xs font-black text-ink">
+          {/* Hardcoding the year guarantees a stale footer on 1 January. */}
+          © {new Date().getFullYear()} Just Nibble It. All Rights Reserved.
+        </div>
       </div>
     </footer>
   )

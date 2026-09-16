@@ -24,7 +24,7 @@ export default function CheckoutPage() {
   if (items.length === 0) {
     return (
       <div className="min-w-0 flex-grow">
-        <main className="box-border grid min-h-[100dvh] w-full place-items-center bg-cream px-4 pb-10 pt-[calc(var(--site-header-offset)+1rem)]">
+        <div className="box-border grid min-h-[100dvh] w-full place-items-center bg-cream px-4 pb-10 pt-[calc(var(--site-header-offset)+1rem)]">
           <div className="w-full max-w-md text-center">
             <h1 className="font-display text-3xl text-ink md:text-4xl">Your crate is empty.</h1>
             <p className="mt-3 text-sm leading-6 text-ink/50">
@@ -34,14 +34,14 @@ export default function CheckoutPage() {
               <ShoppingBag size={16} /> Shop flavours
             </Link>
           </div>
-        </main>
+        </div>
       </div>
     )
   }
 
   return (
     <div className="min-w-0 flex-grow">
-      <main className="bg-cream px-5 pb-16 pt-[calc(var(--site-header-offset)+1.5rem)] sm:px-8 lg:px-12">
+      <div className="bg-cream px-5 pb-16 pt-[calc(var(--site-header-offset)+1.5rem)] sm:px-8 lg:px-12">
         <div className="mx-auto max-w-2xl">
           <h1 className="font-display text-3xl text-ink md:text-4xl">Checkout</h1>
 
@@ -91,7 +91,7 @@ export default function CheckoutPage() {
             clone stops at the summary. See <code>reference/CLONE-NOTES.md</code>.
           </p>
         </div>
-      </main>
+      </div>
     </div>
   )
 }

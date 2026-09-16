@@ -5,6 +5,7 @@ import { bundles, perPacketPrice, savingsPercent } from '../data/products'
 import { useCart } from '../store/cartStore'
 import { SmartImage, Sparkle, Blob } from '../components/ui/Primitives'
 import { StarDoodle } from '../components/icons/WhyIcons'
+import DoodleField from '../components/ui/DoodleField'
 
 function ComboCard({ bundle, index }) {
   const { addItem, openCart } = useCart()
@@ -22,56 +23,58 @@ function ComboCard({ bundle, index }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.15 }}
       transition={{ duration: 0.4, delay: index * 0.08 }}
-      className="group relative flex h-full flex-col overflow-hidden text-foam"
+      className="group relative flex h-full flex-col overflow-hidden rounded-[28px] border-[4px] border-ink bg-cream p-5 text-ink shadow-doodle-lg sm:rounded-[36px] sm:p-7"
     >
-      <div className="relative aspect-[16/10] overflow-hidden rounded-card">
-        <SmartImage
-          src={bundle.imageUrl}
-          alt={`${bundle.name} party snack combo`}
-          width="1920"
-          height="800"
-          className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
-        />
+      <div className="relative">
+        <div className="overflow-hidden rounded-card">
+          <SmartImage
+            src={bundle.imageUrl}
+            alt={`${bundle.name} party snack combo`}
+            width="1920"
+            height="800"
+            className="aspect-[16/10] h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+          />
+        </div>
         <span className="absolute left-3 top-3 z-[2] rounded-full border-[3px] border-outline bg-sunshine px-2.5 py-1 text-[10px] font-black uppercase text-ink">
           {bundle.badge}
         </span>
       </div>
 
-      <div className="flex flex-1 flex-col pt-5">
+      <div className="flex flex-1 flex-col pt-5 text-ink">
         <div className="mb-3 w-fit rounded-full border-[3px] border-outline bg-teal px-2 py-1 text-[10px] font-black uppercase text-ink">
           Save {save}%
         </div>
-        <h3 className="font-display text-2xl leading-tight text-sunshine sm:text-3xl">
+        <h3 className="font-display text-2xl leading-tight text-forest sm:text-3xl">
           {bundle.name}
         </h3>
-        <p className="mt-2 text-sm leading-5 text-foam/70">{bundle.description}</p>
+        <p className="mt-2 text-sm leading-5 text-ink/70">{bundle.description}</p>
 
         <div className="mt-4 space-y-1.5">
           {bundle.includes.map((line) => (
             <p key={line} className="flex items-center gap-2 text-xs font-bold">
-              <Check size={14} className="shrink-0 text-jalapeno" /> {line}
+              <Check size={14} className="shrink-0 text-forest" /> {line}
             </p>
           ))}
         </div>
 
-        <div className="mt-auto pt-5">
-          <div className="mb-3 flex flex-wrap items-center gap-2">
-            <p className="font-display text-3xl text-sunshine">₹{bundle.price}</p>
-            <span className="text-sm font-bold text-foam/45 line-through">
+        <div className="mt-auto flex flex-col items-center pt-5">
+          <div className="mb-3 flex w-full flex-wrap items-center gap-2">
+            <p className="font-display text-3xl text-forest">₹{bundle.price}</p>
+            <span className="text-sm font-bold text-ink/45 line-through">
               ₹{bundle.originalPrice}
             </span>
             <span className="rounded-full border-[3px] border-outline bg-jalapeno px-2.5 py-1 text-[11px] font-black uppercase text-ink">
               Just ₹{perPacket} / packet
             </span>
           </div>
-          <p className="mb-3 text-xs font-bold text-foam/55">
+          <p className="mb-4 w-full text-xs font-bold text-ink/55">
             ₹{bundle.price} ({bundle.packetCount} packs · ₹{perPacket}/packet)
           </p>
           <button
             type="button"
             onClick={handleAdd}
             aria-label={`Add ${bundle.name}`}
-            className="jni-btn w-full"
+            className="jni-btn px-12 py-3 text-base"
           >
             <ShoppingBag size={16} />
             Add the bundle
@@ -89,9 +92,11 @@ export default function CombosPage() {
 
   return (
     <div className="min-w-0 flex-grow">
-      <main className="bg-forest pt-[var(--site-header-offset)]">
+      <div className="bg-forest pt-[var(--site-header-offset)]">
         {/* Hero banner */}
-        <section className="relative aspect-[4/5] min-h-[430px] overflow-hidden md:aspect-[2.4/1] md:min-h-[340px]">
+        <section
+          className="relative aspect-[4/5] min-h-[430px] overflow-hidden md:aspect-[2.4/1] md:min-h-[340px]"
+        >
           <img
             src="/assets/products/flipos-promo.webp"
             alt="FLIPO's party snack combo banner"
@@ -101,11 +106,16 @@ export default function CombosPage() {
             decoding="async"
             className="h-full w-full object-cover"
           />
-          <div className="absolute inset-0 bg-forest/45 md:bg-forest/25" />
-          <div className="absolute inset-y-0 left-0 hidden w-[58%] bg-forest/80 md:block" />
-          <div className="absolute inset-x-0 bottom-0 h-[72%] bg-forest/80 md:hidden" />
+          {/* The banner art is a three-panel composite, so a scrim with a hard
+              edge lands as a fourth vertical seam across it -- and the seam fell
+              right where the jalapeno panel begins. Both scrims are gradients
+              now: they hold full strength under the headline and fade out over
+              the photography instead of cutting it. */}
+          <div className="absolute inset-0 bg-forest/45 md:bg-forest/20" />
+          <div className="absolute inset-y-0 left-0 hidden w-[72%] bg-gradient-to-r from-forest via-forest/85 to-transparent md:block" />
+          <div className="absolute inset-x-0 bottom-0 h-[78%] bg-gradient-to-t from-forest via-forest/90 to-transparent md:hidden" />
           <div className="absolute inset-0 flex max-w-3xl flex-col justify-end px-5 pb-7 text-foam sm:px-8 md:justify-center md:px-[6vw] md:pb-0">
-            <p className="text-xs font-black uppercase text-sunshine">More packs. Better maths.</p>
+            <p className="text-xs font-black uppercase text-sunshine">Three flavours, one box</p>
             <h1 className="mt-2 font-display text-4xl leading-[0.98] text-teal sm:text-5xl lg:text-6xl">
               Build the loudest
               <br />
@@ -120,8 +130,17 @@ export default function CombosPage() {
         {/* Bundles */}
         <section
           id="bundles"
-          className="jni-section-dark relative overflow-x-hidden py-12 sm:py-14 lg:py-16"
+          className="jni-section-dark relative isolate overflow-hidden py-12 sm:py-14 lg:py-16"
         >
+          {/* All three flavours share this band, so it takes the house green
+              rather than picking a side. */}
+          <DoodleField
+            flavour="jalapeno-kick"
+            ground="#071A16"
+            intensity="medium"
+            count={24}
+            seed={19}
+          />
           <Blob className="absolute left-[3%] top-16 h-6 w-6 opacity-70" />
           <StarDoodle className="absolute right-[8%] top-24 h-6 w-6 opacity-60" />
           <Sparkle className="absolute left-[28%] bottom-24 h-6 w-6 opacity-50" />
@@ -148,7 +167,7 @@ export default function CombosPage() {
             </div>
           </div>
         </section>
-      </main>
+      </div>
     </div>
   )
 }

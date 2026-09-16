@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { HERO_INTERVAL, heroSlides } from '../../data/site'
+import { useMediaQuery } from '../ui/Primitives'
 
 /**
  * The homepage hero. Note: the headline artwork is baked into each background
@@ -11,20 +12,32 @@ export default function HeroCarousel() {
   const [index, setIndex] = useState(0)
   const [paused, setPaused] = useState(false)
   const [touchStart, setTouchStart] = useState(null)
+  const resumeRef = useRef(0)
+  // An auto-advancing carousel is the one piece of motion on this page a reader
+  // cannot escape by not scrolling, so it holds still when the OS asks it to.
+  const reduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
   const slide = heroSlides[index]
 
   useEffect(() => {
-    if (paused) return
+    if (paused || reduceMotion) return
     const id = window.setInterval(
       () => setIndex((i) => (i + 1) % heroSlides.length),
       HERO_INTERVAL
     )
     return () => window.clearInterval(id)
-  }, [paused])
+  }, [paused, reduceMotion])
 
+  useEffect(() => () => window.clearTimeout(resumeRef.current), [])
+
+  // Jumping to a slide pauses the rotation so the chosen slide is actually
+  // readable -- but on touch there is no mouseleave to un-pause it, so the
+  // carousel used to stop for good after the first tap. It now resumes once the
+  // reader has had the slide to themselves for a full interval.
   const goTo = (next) => {
     setPaused(true)
     setIndex((next + heroSlides.length) % heroSlides.length)
+    window.clearTimeout(resumeRef.current)
+    resumeRef.current = window.setTimeout(() => setPaused(false), HERO_INTERVAL)
   }
 
   return (
@@ -57,12 +70,18 @@ export default function HeroCarousel() {
               aria-label={`Shop ${slide.product.name}`}
               className="block h-full w-full"
             >
+              {/* The first slide is the LCP element and is preloaded in
+                  index.html, so it must not be lazy or low priority. The other
+                  two are off-screen until the carousel advances. */}
               <img
                 src={slide.bg}
                 alt={`${slide.headline} — shop ${slide.product.name}`}
                 className="block h-full w-full object-cover object-center sm:object-contain"
                 width="1426"
                 height="800"
+                loading={index === 0 ? 'eager' : 'lazy'}
+                fetchpriority={index === 0 ? 'high' : 'auto'}
+                decoding="async"
               />
             </Link>
           </motion.div>
@@ -77,6 +96,7 @@ export default function HeroCarousel() {
             key={s.kicker}
             type="button"
             aria-label={`Show ${s.kicker}`}
+            aria-current={i === index ? 'true' : undefined}
             onClick={() => goTo(i)}
             className={`h-2.5 rounded-full border-2 border-ink transition-all ${
               i === index ? 'w-8 bg-ink' : 'w-2.5 bg-white/70'

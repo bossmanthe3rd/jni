@@ -12,7 +12,7 @@ export default function LegalLayout({ title, lastUpdated, children }) {
 
   return (
     <div className="min-w-0 flex-grow">
-      <main className="relative overflow-hidden bg-cream pt-[var(--site-header-offset)] text-ink">
+      <div className="relative overflow-hidden bg-cream pt-[var(--site-header-offset)] text-ink">
         <Blob className="absolute -left-4 top-40 h-16 w-16 opacity-20" />
         <Sparkle className="absolute right-6 top-64 h-10 w-10 opacity-25" />
 
@@ -56,7 +56,7 @@ export default function LegalLayout({ title, lastUpdated, children }) {
             <p>Phone: {legalBusinessDetails.phone}</p>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   )
 }

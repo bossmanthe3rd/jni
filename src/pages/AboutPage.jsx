@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { BrandHeading, Blob, Sparkle } from '../components/ui/Primitives'
 import { KeyboardIcon, StarDoodle } from '../components/icons/WhyIcons'
+import DoodleField from '../components/ui/DoodleField'
+import BlobPanel from '../components/ui/BlobPanel'
 
 export default function AboutPage() {
   useEffect(() => {
@@ -11,9 +13,11 @@ export default function AboutPage() {
 
   return (
     <div className="min-w-0 flex-grow">
-      <main className="bg-cream pt-[var(--site-header-offset)] text-ink">
+      <div className="bg-cream pt-[var(--site-header-offset)] text-ink">
         {/* Intro */}
-        <section className="relative overflow-hidden px-5 pb-14 pt-10 text-center sm:px-8 lg:px-12">
+        <section
+          className="relative overflow-hidden px-5 pb-14 pt-10 text-center sm:px-8 lg:px-12"
+        >
           <div className="relative mx-auto mb-7 inline-block">
             <Sparkle className="absolute -left-10 -top-2 h-7 w-7" />
             <BrandHeading as="h1" fill="#F3C63B" className="text-5xl sm:text-6xl lg:text-7xl">
@@ -30,8 +34,11 @@ export default function AboutPage() {
             Your snack break should never be boring!
           </BrandHeading>
 
-          <div className="mx-auto mt-8 max-w-3xl space-y-4 text-sm font-bold leading-7 sm:text-base">
-            <p className="text-base font-black uppercase tracking-wide sm:text-lg">
+          {/* Centred, like the live page. A left-aligned column inside a
+              centred section put the ragged edge under the middle of the
+              heading, so the whole block looked nudged to the right. */}
+          <div className="mx-auto mt-8 max-w-3xl space-y-5 text-center text-base font-bold leading-8 sm:text-lg">
+            <p className="text-lg font-black uppercase tracking-wide sm:text-xl">
               You spend long hours at your desk staring at that boring spreadsheet!
             </p>
             <p>
@@ -45,9 +52,9 @@ export default function AboutPage() {
             </p>
           </div>
 
-          <div className="mx-auto mt-9 max-w-2xl">
-            <p className="font-display text-2xl sm:text-3xl">Taste first. Flavour always.</p>
-            <p className="mt-3 text-sm font-bold leading-7 sm:text-base">
+          <div className="mx-auto mt-10 max-w-3xl">
+            <p className="font-display text-3xl sm:text-4xl">Taste first. Flavour always.</p>
+            <p className="mt-4 text-base font-bold leading-8 sm:text-lg">
               No unnecessary rules. No loud claims.
               <br />
               Just damn good snacks made for your everyday mundane moments.
@@ -68,7 +75,18 @@ export default function AboutPage() {
         </section>
 
         {/* Why we created it */}
-        <section className="relative overflow-hidden bg-[#071A16] px-5 py-14 text-center text-white sm:px-8 sm:py-16 lg:px-12">
+        <section
+          className="relative isolate overflow-hidden bg-[#071A16] px-5 py-14 text-center text-white sm:px-8 sm:py-16 lg:px-12"
+        >
+          {/* This section is almost entirely body copy, so the field drops to
+              subtle -- medium competes with small text on a dark ground. */}
+          <DoodleField
+            flavour="peri-peri-punch"
+            ground="#071A16"
+            intensity="subtle"
+            count={22}
+            seed={31}
+          />
           <KeyboardIcon className="absolute left-[3%] top-[38%] h-8 w-14 opacity-30" />
           <KeyboardIcon className="absolute right-[3%] top-[35%] h-8 w-14 opacity-30" />
 
@@ -80,7 +98,7 @@ export default function AboutPage() {
             Why we created Just Nibble It
           </BrandHeading>
 
-          <div className="mx-auto mt-8 max-w-3xl space-y-4 text-sm font-bold leading-7 text-white/85 sm:text-base">
+          <div className="mx-auto mt-8 max-w-2xl space-y-4 text-left text-sm font-bold leading-7 text-white/85 sm:text-base">
             <p>
               Our story began when we realised we had stopped enjoying snacks and started
               overthinking them.
@@ -98,7 +116,7 @@ export default function AboutPage() {
             </p>
           </div>
 
-          <div className="mx-auto mt-9 max-w-3xl space-y-4 text-sm font-bold leading-7 text-white/85 sm:text-base">
+          <div className="mx-auto mt-9 max-w-2xl space-y-4 text-left text-sm font-bold leading-7 text-white/85 sm:text-base">
             <p>That question became our starting point.</p>
             <p>
               Nibble was born to debunk the rulebook, to make desk snacking easy again. Snacks that
@@ -125,7 +143,9 @@ export default function AboutPage() {
         </section>
 
         {/* In-between moments */}
-        <section className="relative overflow-hidden bg-cream px-5 pb-14 pt-16 text-center sm:px-8 sm:pt-20 lg:px-12">
+        <section
+          className="relative overflow-hidden bg-cream px-5 pb-14 pt-16 text-center sm:px-8 sm:pt-20 lg:px-12"
+        >
           <span
             className="absolute left-6 top-[38%] block h-6 w-6 rounded-full bg-teal/70"
             aria-hidden="true"
@@ -144,7 +164,7 @@ export default function AboutPage() {
             Just Nibble It are snacks made for the in-between moments during your day!
           </BrandHeading>
 
-          <div className="mx-auto mt-8 max-w-3xl space-y-3 text-sm font-bold leading-7 sm:text-base">
+          <div className="mx-auto mt-8 max-w-2xl space-y-3 text-left text-sm font-bold leading-7 sm:text-base">
             <p>Because your desk isn&apos;t just a desk.</p>
             <p>
               It&apos;s where you work, study, create, game, scroll, hustle and take those much
@@ -200,7 +220,7 @@ export default function AboutPage() {
             Nibble All Now <ArrowRight size={16} />
           </Link>
         </section>
-      </main>
+      </div>
     </div>
   )
 }

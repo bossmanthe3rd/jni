@@ -83,7 +83,7 @@ export default function ContentPage() {
   }, [content])
 
   return (
-    <main className="relative overflow-hidden bg-cream pb-12 pt-[var(--site-header-offset)] text-ink">
+    <div className="relative overflow-hidden bg-cream pb-12 pt-[var(--site-header-offset)] text-ink">
       <Blob className="pointer-events-none absolute left-[3%] top-[22%] hidden h-16 w-16 opacity-50 lg:block" />
       <Blob className="pointer-events-none absolute right-[5%] top-[38%] hidden h-24 w-24 opacity-40 lg:block" />
 
@@ -139,6 +139,6 @@ export default function ContentPage() {
           Back to the snacks <ArrowRight size={16} />
         </Link>
       </section>
-    </main>
+    </div>
   )
 }

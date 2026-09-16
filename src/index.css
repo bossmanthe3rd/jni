@@ -3,6 +3,33 @@
 @tailwind utilities;
 
 /* ---------------------------------------------------------------------------
+   Brand faces, self-hosted from the live site.
+
+   CLONE-NOTES.md recorded that justnibbleit.in "never ships a @font-face for
+   Milkyway, so it always falls back to Lilita One". That was wrong: the live
+   CSS declares both faces and serves both files. The clone shipped neither, so
+   every heading rendered in Lilita One and every paragraph in Inter -- the two
+   most visible things on the page, both incorrect.
+
+   Stacks below are copied verbatim from the live :root.
+   --------------------------------------------------------------------------- */
+@font-face {
+  font-family: 'Milkyway';
+  src: url('/assets/fonts/milkyway.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'ComicSansMS3';
+  src: url('/assets/fonts/comic-sans-ms3.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---------------------------------------------------------------------------
    Design tokens - copied verbatim from the live site's :root block
    --------------------------------------------------------------------------- */
 :root {
@@ -24,15 +51,46 @@
   --color-cta-yellow-hover: #fcd34d;
   --border-width-cta: 2.5px;
   --radius-organic: 2rem 1.6rem 2.2rem 1.8rem / 1.7rem 2.1rem 1.7rem 2.1rem;
-  --font-brand: 'Milkyway', 'Lilita One', Fredoka, Nunito, system-ui, sans-serif;
+  /* Both stacks verbatim from the live site's :root. */
+  --font-body: 'ComicSansMS3', 'Comic Sans MS', Nunito, system-ui, sans-serif;
+  --font-brand: 'Milkyway', 'ComicSansMS3', 'Comic Sans MS', 'Lilita One', Fredoka,
+    system-ui, sans-serif;
 }
 
 @layer base {
   body {
     @apply bg-cream font-sans text-ink antialiased;
+    /* Decorative marks -- triangle clusters, sparkles, the mascot, the falling
+       doodles -- are positioned off the edges of their sections on purpose. On
+       a 390px phone several of them landed past the right edge and widened the
+       document, so every centred element on the page was pushed sideways by the
+       difference and the section headings sat cropped against the right edge.
+       `clip` rather than `hidden`: `overflow-x: hidden` would force overflow-y
+       to `auto` and make this a scroll container, which silently kills the
+       `position: sticky` the flavour stage is built on. */
+    overflow-x: clip;
   }
   html {
     scroll-behavior: smooth;
+  }
+
+  /* One focus ring for the whole site.
+
+     Every interactive element here is a hand-drawn shape -- pills, blobs,
+     organic-radius buttons -- and none of them carried a focus style, so
+     tabbing through the page moved an invisible cursor. `:focus-visible` means
+     pointer users never see it; only keyboard and assistive-tech users do.
+     The offset keeps it clear of the 3px ink borders the cards already have. */
+  :where(a, button, [role='button'], input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 3px solid var(--color-accent-teal);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  /* On the near-black grounds (header, footer, Why Flipo's) teal-on-ink is the
+     low-contrast pairing; sunshine is the one that reads. */
+  .on-dark :where(a, button, [role='button']):focus-visible {
+    outline-color: var(--color-accent-yellow);
   }
 }
 
@@ -95,15 +153,21 @@
     color: var(--color-text-light);
   }
 
-  /* Outlined "bubble" display heading used for every section title */
+  /* Outlined "bubble" display heading used for every section title.
+
+     Stroke and shadow are in `em`, not pixels. They used to be a flat 4px and
+     3px/4px, which is only correct at one size: the same rule was crushing the
+     3xl sub-headings into near-solid ink while leaving the 7xl section titles
+     looking hairline next to the live site's. In em they hold the same weight
+     ratio the brand art does at every step of the scale. */
   .bubble-title {
-    font-family: 'Lilita One', Fredoka, system-ui, sans-serif;
+    font-family: var(--font-brand);
     font-weight: 400;
     line-height: 0.92;
     letter-spacing: 0.01em;
-    -webkit-text-stroke: 4px var(--bubble-stroke, #071a16);
+    -webkit-text-stroke: 0.075em var(--bubble-stroke, #071a16);
     paint-order: stroke fill;
-    text-shadow: 3px 4px 0 var(--bubble-stroke, #071a16);
+    text-shadow: 0.055em 0.07em 0 var(--bubble-stroke, #071a16);
   }
 
   .img-skeleton {
@@ -381,15 +445,44 @@
   }
 }
 
+/* Reduced motion.
+
+   This block used to name four selectors, which left the looping key-press and
+   brain-burst icon animations, the card wiggle, the ticker and every hover
+   animation still running for someone who had asked the OS for less movement.
+   Blanket-stopping the decorative animations is both simpler and complete;
+   `scroll-behavior: auto` stops the smooth-scroll jump on #hash navigation,
+   which is the single largest motion on the page for that user. */
 @media (prefers-reduced-motion: reduce) {
-  .quick-view-sheet {
+  html {
+    scroll-behavior: auto;
+  }
+  .quick-view-sheet,
+  .falling-ingredient,
+  .falling-ingredient-inner,
+  .why-icon,
+  .why-icon-flame,
+  .why-icon-keys,
+  .why-icon-pencils,
+  .why-icon-burst,
+  .why-keys i,
+  .why-burst i,
+  .img-skeleton {
     animation: none !important;
     transition: none !important;
   }
-  .falling-ingredient,
-  .falling-ingredient-inner,
-  .why-icon-flame,
-  .why-icon-pencils {
+  .why-icon-flame:hover,
+  .why-icon-pencils:hover,
+  .why-icon-keys:hover .why-keys i,
+  .why-icon-burst:hover .why-burst i {
     animation: none !important;
   }
+}
+
+/* Doodle art inside a DoodleField: the generated pack doodles carry a viewBox
+   but no intrinsic size, so they need to fill their positioned wrapper. */
+.jni-doodle-art {
+  display: block;
+  width: 100%;
+  height: auto;
 }

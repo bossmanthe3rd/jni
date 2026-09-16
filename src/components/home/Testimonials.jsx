@@ -9,6 +9,8 @@ import {
 import { BrandHeading, useMediaQuery } from '../ui/Primitives'
 import { StarDoodle } from '../icons/WhyIcons'
 import { TriangleCluster } from './FlavourGrid'
+import FlipSpot from '../mascot/FlipSpot'
+import DoodleField from '../ui/DoodleField'
 
 function ReviewCard({ review }) {
   return (
@@ -51,84 +53,111 @@ export default function Testimonials() {
   const visible = testimonials.slice(page * perPage, page * perPage + perPage)
 
   return (
-    <section id="reviews" className="bg-cream px-5 py-12 sm:px-8 sm:py-16 lg:px-12">
+    <section
+      id="reviews"
+      className="bg-cream px-5 py-12 sm:px-8 sm:py-16 lg:px-12"
+    >
       <div className="relative mb-8 flex items-center justify-center">
-        <TriangleCluster className="absolute left-1/2 top-1 -translate-x-[12rem] sm:-translate-x-[16rem]" />
-        <StarDoodle className="absolute left-1/2 top-2 h-8 w-8 -translate-x-[9rem] sm:-translate-x-[12rem]" />
+        {/* Hidden on the narrowest screens: at 390px the outer pair reached
+            past both edges of the viewport, and a confetti triangle is not
+            worth a page that scrolls sideways. */}
+        <TriangleCluster className="absolute left-1/2 top-1 hidden -translate-x-[12rem] xs:block sm:-translate-x-[16rem]" />
+        <StarDoodle className="absolute left-1/2 top-2 hidden h-8 w-8 -translate-x-[9rem] xs:block sm:-translate-x-[12rem]" />
 
         <BrandHeading as="h2" fill="#F3C63B" className="text-5xl sm:text-6xl">
           Testimonials
         </BrandHeading>
 
-        <StarDoodle className="absolute left-1/2 top-2 h-8 w-8 translate-x-[8.5rem] sm:translate-x-[11.5rem]" />
-        <TriangleCluster className="absolute left-1/2 top-1 translate-x-[10rem] scale-x-[-1] sm:translate-x-[14rem]" />
+        <StarDoodle className="absolute left-1/2 top-2 hidden h-8 w-8 translate-x-[8.5rem] xs:block sm:translate-x-[11.5rem]" />
+        <TriangleCluster className="absolute left-1/2 top-1 hidden translate-x-[10rem] scale-x-[-1] xs:block sm:translate-x-[14rem]" />
       </div>
 
-      <div
-        className="relative mx-auto max-w-6xl overflow-hidden rounded-t-[48px] border-[4px] border-b-0 border-ink bg-sunshine px-5 pb-20 pt-9 sm:px-10 sm:pt-10"
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-      >
-        <div className="relative min-h-[210px] sm:min-h-[200px]">
-          <motion.div
-            key={page}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3"
-          >
-            {visible.map((review) => (
-              <ReviewCard key={review.name} review={review} />
-            ))}
-          </motion.div>
-        </div>
+      <div className="relative mx-auto max-w-6xl">
+        {/* Hands on the rim, the rest of him behind the panel. Tucked deeper
+            under 640px, where the heading sits close above the panel and a head
+            poking up into it is exactly the thing to avoid. */}
+        <FlipSpot
+          mode="peek"
+          width="clamp(102px, 15vw, 218px)"
+          className="translate-y-[13px] sm:translate-y-0"
+          style={{ left: '21%', top: 0 }}
+        />
 
-        <div className="mt-7 flex items-center justify-center gap-4">
-          <button
-            type="button"
-            aria-label="Previous reviews"
-            onClick={() => go(page - 1)}
-            className="grid h-10 w-10 place-items-center rounded-full border-[3px] border-ink bg-cream text-ink transition hover:-translate-y-0.5 hover:shadow-doodle"
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <div className="flex items-center gap-2">
-            {Array.from({ length: pages }, (_, i) => (
-              <button
-                key={i}
-                type="button"
-                aria-label={`Go to review page ${i + 1}`}
-                onClick={() => go(i)}
-                className={`h-2.5 rounded-full border-2 border-ink transition-all ${
-                  i === page ? 'w-8 bg-ink' : 'w-2.5 bg-cream'
-                }`}
-              />
-            ))}
-          </div>
-          <button
-            type="button"
-            aria-label="Next reviews"
-            onClick={() => go(page + 1)}
-            className="grid h-10 w-10 place-items-center rounded-full border-[3px] border-ink bg-cream text-ink transition hover:-translate-y-0.5 hover:shadow-doodle"
-          >
-            <ChevronRight size={18} />
-          </button>
-        </div>
-
-        {/* Wavy cream lip along the bottom of the yellow panel */}
-        <svg
-          className="absolute inset-x-0 -bottom-px h-14 w-full"
-          viewBox="0 0 1440 80"
-          preserveAspectRatio="none"
-          aria-hidden="true"
+        <div
+          className="relative isolate overflow-hidden rounded-t-[48px] border-[4px] border-b-0 border-ink bg-sunshine px-5 pb-20 pt-9 sm:px-10 sm:pt-10"
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
         >
-          <path
-            fill="#FBF6D0"
-            stroke="#071A16"
-            strokeWidth="6"
-            d="M0 24 C 180 72 360 4 540 36 C 720 68 900 8 1080 40 C 1260 72 1380 20 1440 36 L1440 80 L0 80 Z"
+          {/* Sunshine is a light ground, so the doodles tint toward it and stay
+              subtle -- the review cards are the content here. */}
+          <DoodleField
+            flavour="sweet-chilli-rush"
+            ground="#F3C63B"
+            intensity="subtle"
+            count={18}
+            seed={23}
           />
-        </svg>
+          <div className="relative min-h-[210px] sm:min-h-[200px]">
+            <motion.div
+              key={page}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3"
+            >
+              {visible.map((review) => (
+                <ReviewCard key={review.name} review={review} />
+              ))}
+            </motion.div>
+          </div>
+
+          <div className="mt-7 flex items-center justify-center gap-4">
+            <button
+              type="button"
+              aria-label="Previous reviews"
+              onClick={() => go(page - 1)}
+              className="grid h-10 w-10 place-items-center rounded-full border-[3px] border-ink bg-cream text-ink transition hover:-translate-y-0.5 hover:shadow-doodle"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <div className="flex items-center gap-2">
+              {Array.from({ length: pages }, (_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  aria-label={`Go to review page ${i + 1}`}
+                  onClick={() => go(i)}
+                  className={`h-2.5 rounded-full border-2 border-ink transition-all ${
+                    i === page ? 'w-8 bg-ink' : 'w-2.5 bg-cream'
+                  }`}
+                />
+              ))}
+            </div>
+            <button
+              type="button"
+              aria-label="Next reviews"
+              onClick={() => go(page + 1)}
+              className="grid h-10 w-10 place-items-center rounded-full border-[3px] border-ink bg-cream text-ink transition hover:-translate-y-0.5 hover:shadow-doodle"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+
+          {/* Wavy cream lip along the bottom of the yellow panel */}
+          <svg
+            className="absolute inset-x-0 -bottom-px h-14 w-full"
+            viewBox="0 0 1440 80"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <path
+              fill="#FBF6D0"
+              stroke="#071A16"
+              strokeWidth="6"
+              d="M0 24 C 180 72 360 4 540 36 C 720 68 900 8 1080 40 C 1260 72 1380 20 1440 36 L1440 80 L0 80 Z"
+            />
+          </svg>
+        </div>
       </div>
     </section>
   )

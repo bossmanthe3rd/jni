@@ -7,20 +7,31 @@ export default function ProductAccordion({ items, accent = '#F3C63B' }) {
   const [open, setOpen] = useState(0)
 
   return (
-    <div className="overflow-hidden rounded-[22px] border-[3px] border-ink bg-[#0C1B17] shadow-doodle">
+    /* Separate stickers rather than one box of hairline rows. Six identical
+       thin dividers read as a spec sheet; giving each panel its own keyline and
+       air makes them things you press, and matches the sticker treatment the
+       testimonial and combo cards use. */
+    <div className="space-y-2.5">
       {items.map((item, i) => {
         const isOpen = i === open
         return (
-          <div key={item.title} className="border-b border-white/10 last:border-b-0">
+          <div
+            key={item.title}
+            className="overflow-hidden rounded-[18px] border-[3px] transition-colors sm:rounded-[22px]"
+            style={{
+              borderColor: isOpen ? accent : 'rgba(255,255,255,0.16)',
+              backgroundColor: isOpen ? '#11251E' : '#0C1B17',
+            }}
+          >
             <button
               type="button"
               onClick={() => setOpen(isOpen ? -1 : i)}
               aria-expanded={isOpen}
-              className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-white/5 sm:px-7"
+              className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-white/5 sm:px-7 sm:py-5"
             >
               <span
-                className="font-display text-sm tracking-wide transition-colors sm:text-base"
-                style={{ color: isOpen ? accent : 'rgba(255,255,255,0.88)' }}
+                className="font-brand text-base leading-none tracking-wide transition-colors sm:text-lg"
+                style={{ color: isOpen ? accent : 'rgba(255,255,255,0.9)' }}
               >
                 {item.title}
               </span>

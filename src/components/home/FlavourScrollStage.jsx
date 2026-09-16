@@ -12,6 +12,7 @@ import { flavourStages } from '../../data/site'
 import { getProductBySlug } from '../../data/products'
 import { ASPECT, doodleComponents, packPalettes } from '../icons/PackDoodles'
 import { BrandHeading, WaveDivider, useMediaQuery } from '../ui/Primitives'
+import FlipSpot from '../mascot/FlipSpot'
 
 /*
  * The flavour stage: a pinned, scroll-driven introduction to the three FLIPO's
@@ -408,6 +409,17 @@ export default function FlavourScrollStage() {
         >
           <WaveDivider fill={CREAM} className="h-full w-full" />
         </motion.div>
+
+        {/* A loose chip in the pouch, between the copy and the pack shot. He
+            re-seasons as the stage does, so he reads the heat with you. */}
+        <FlipSpot
+          mode="float"
+          tint={stage.slug}
+          progress={() => scrollYProgress.get()}
+          width="clamp(100px, 12vw, 172px)"
+          className="z-20"
+          style={{ left: '61%', top: '64%', display: isDesktop ? 'block' : 'none' }}
+        />
 
         {/* The crimped pouch seal, re-crimped in the live flavour's colours. */}
         <div className="pointer-events-none absolute inset-0 z-40" aria-hidden="true">

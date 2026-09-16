@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ShoppingCart, User, X } from 'lucide-react'
 import { useCart } from '../../store/cartStore'
@@ -26,6 +26,7 @@ function WavyMenuIcon({ className = '' }) {
 export default function SiteHeader() {
   const [navOpen, setNavOpen] = useState(false)
   const navigate = useNavigate()
+  const { pathname, hash } = useLocation()
   const { toggleCart, getTotalQty } = useCart()
   const qty = getTotalQty()
 
@@ -48,8 +49,23 @@ export default function SiteHeader() {
     }
   }, [navOpen])
 
+  // Escape closes the drawer. Without it the only way out was the same button
+  // that opened it, which a keyboard reader has to tab all the way back to.
+  useEffect(() => {
+    if (!navOpen) return
+    const onKey = (e) => {
+      if (e.key === 'Escape') setNavOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [navOpen])
+
+  // Navigating within the drawer already closes it, but a browser Back or a
+  // link elsewhere on the page left it hanging open over the new route.
+  useEffect(() => setNavOpen(false), [pathname, hash])
+
   return (
-    <header data-site-header="true" className="fixed inset-x-0 top-0 z-50">
+    <header data-site-header="true" className="on-dark fixed inset-x-0 top-0 z-50">
       {ticker.active !== false && (
         <Link
           to={ticker.link || '/combos'}
@@ -69,9 +85,10 @@ export default function SiteHeader() {
           <button
             type="button"
             onClick={() => setNavOpen((v) => !v)}
-            className="grid h-11 w-11 place-items-center"
+            className="grid h-11 w-11 place-items-center rounded-full"
             aria-label="Toggle navigation"
             aria-expanded={navOpen}
+            aria-controls="site-nav-drawer"
           >
             {navOpen ? <X size={22} className="text-teal" /> : <WavyMenuIcon className="h-6 w-8" />}
           </button>
@@ -119,6 +136,8 @@ export default function SiteHeader() {
       <AnimatePresence>
         {navOpen && (
           <motion.nav
+            id="site-nav-drawer"
+            aria-label="Main"
             initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}

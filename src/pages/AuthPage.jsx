@@ -24,7 +24,7 @@ export default function AuthPage() {
 
   return (
     <div className="min-w-0 flex-grow">
-      <main className="bg-cream pt-24">
+      <div className="bg-cream pt-24">
         <div className="mx-auto grid min-h-[calc(100dvh-6rem)] max-w-7xl place-items-center px-4 py-10 sm:px-6 lg:px-8">
           <div className="jni-card w-full max-w-md p-5 shadow-doodle md:p-6">
             <p className="mb-2 text-xs font-extrabold uppercase tracking-[0.16em] text-teal">
@@ -81,7 +81,7 @@ export default function AuthPage() {
             </p>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   )
 }

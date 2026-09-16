@@ -17,10 +17,18 @@ export const ticker = {
   active: true,
 }
 
-/** Drawer nav opened by the wavy hamburger. */
+/**
+ * Drawer nav opened by the wavy hamburger.
+ *
+ * Combos and Contact are reachable from the footer but were missing here, so
+ * the only way to the bundles -- the highest-value thing on the site, and what
+ * the ticker points at -- was to scroll the whole homepage or find the footer.
+ */
 export const navLinks = [
   { label: 'Shop flavours', to: '/', hash: 'products' },
+  { label: 'Combos', to: '/combos' },
   { label: 'About us', to: '/about' },
+  { label: 'Contact us', to: '/contact' },
 ]
 
 export const heroSlides = [
@@ -133,19 +141,19 @@ export const FOOTER_IMAGE_INTERVAL = 3600
 
 export const footerColumns = [
   {
+    title: 'About Us',
+    links: [
+      { label: 'Our Story', to: '/about' },
+      { label: 'The Brand', to: '/story' },
+    ],
+  },
+  {
     title: 'Customer Care',
     links: [
       { label: 'Contact Us', to: '/contact' },
       { label: 'Shipping & Delivery', to: '/shipping' },
       { label: 'Cancellation & Refunds', to: '/refunds' },
       { label: 'Returns & Replacements', to: '/returns' },
-    ],
-  },
-  {
-    title: 'About Us',
-    links: [
-      { label: 'Our Story', to: '/about' },
-      { label: 'The Brand', to: '/story' },
     ],
   },
   {

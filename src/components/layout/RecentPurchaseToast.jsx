@@ -43,7 +43,11 @@ export default function RecentPurchaseToast() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 24 }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
-          className="fixed bottom-4 left-4 z-40 flex max-w-[15rem] items-start gap-2 rounded-2xl border-[2px] border-teal bg-cream px-3 py-2.5 shadow-lg"
+          /* Lifted clear of the mobile add-to-cart bar, which is fixed to the
+              same corner of the same viewport on the two detail pages. Below md
+              the toast sits above it; from md up the bar is hidden and the toast
+              returns to the corner. */
+          className="fixed bottom-[6.75rem] left-3 z-40 flex max-w-[15rem] items-start gap-2 rounded-2xl border-[2px] border-teal bg-cream px-3 py-2.5 shadow-lg md:bottom-4 md:left-4"
           role="status"
         >
           <ShoppingBag size={14} className="mt-0.5 shrink-0 text-teal" />

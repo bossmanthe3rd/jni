@@ -5,29 +5,36 @@ const S = '#F3C63B'
 const K = '#071A16'
 const CORAL = '#E85D4C'
 
-export function FlameIcon({ className = '' }) {
+/**
+ * The heat flame. Defaults are the filled "Why Flipo's ?" treatment; the
+ * product page overrides them for the live site's outline-only version, where
+ * the flame sits beside the title in the flavour's own accent.
+ */
+export function FlameIcon({ className = '', fill = S, stroke = K, spark = CORAL }) {
   return (
     <svg className={className} viewBox="0 0 88 88" fill="none" aria-hidden="true">
       <path
         d="M46 78c-16 0-27-11-27-25 0-11 7-18 15-24 1 8 5 12 9 14-3-11 0-22 8-29 2 13 9 17 15 25 5 7 7 12 7 19 0 12-11 20-27 20Z"
-        fill={S}
-        stroke={K}
+        fill={fill}
+        stroke={stroke}
         strokeWidth="3.4"
         strokeLinejoin="round"
       />
       <path
         d="M46 74c-8 0-13-6-13-13 0-6 4-10 8-13 1 5 3 7 6 8-2-6 0-12 4-16 1 7 5 10 8 15 2 4 3 6 3 9 0 6-5 10-16 10Z"
-        fill={S}
-        stroke={K}
+        fill={fill}
+        stroke={stroke}
         strokeWidth="2.6"
         strokeLinejoin="round"
       />
-      <path
-        d="M31 30c-7-5-6-14 2-17 4-1 7 1 8 4"
-        stroke={CORAL}
-        strokeWidth="3.4"
-        strokeLinecap="round"
-      />
+      {spark && (
+        <path
+          d="M31 30c-7-5-6-14 2-17 4-1 7 1 8 4"
+          stroke={spark}
+          strokeWidth="3.4"
+          strokeLinecap="round"
+        />
+      )}
     </svg>
   )
 }

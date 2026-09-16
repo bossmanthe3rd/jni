@@ -274,3 +274,46 @@ export function savingsPercent(price, originalPrice) {
   if (!o || o <= p) return 0
   return Math.round(((o - p) / o) * 100)
 }
+
+/* ---------------------------------------------------------------------------
+   Readable accent on a themed panel
+
+   The PDP paints its info panel in `theme.ink` and then sets the flavour
+   heading (and the heat flame beside the title) in `theme.accent`. For two of
+   the three flavours those are the same hue a shade apart:
+
+     Sweet Chilli  #ef3f23 on #c2410c -> 1.35:1
+     Peri Peri     #9d1636 on #7a1028 -> 1.34:1
+     Jalapeño      #77d21c on #0f6b3a -> 3.46:1
+
+   So on two of three product pages the flavour heading was effectively
+   invisible and the flame read as a smudge. Rather than repaint the brand
+   palette, this picks the first colour in the flavour's own theme that clears
+   3:1 against the panel -- which leaves Jalapeño's green exactly as it was and
+   promotes the other two to the yellow already sitting in `theme.secondary`.
+   --------------------------------------------------------------------------- */
+const CONTRAST_FLOOR = 3
+
+function relativeLuminance(hex) {
+  const v = hex.replace('#', '')
+  const channels = [0, 2, 4].map((i) => {
+    const c = parseInt(v.slice(i, i + 2), 16) / 255
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+  })
+  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
+}
+
+function contrastRatio(a, b) {
+  const la = relativeLuminance(a)
+  const lb = relativeLuminance(b)
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05)
+}
+
+/** The flavour's accent where it is legible on its own panel, else a fallback. */
+export function panelAccent(theme) {
+  if (!theme?.ink) return theme?.accent || '#F3C63B'
+  const candidates = [theme.accent, theme.secondary, '#F3C63B', '#FBF6D0']
+  return (
+    candidates.find((c) => c && contrastRatio(c, theme.ink) >= CONTRAST_FLOOR) || '#FBF6D0'
+  )
+}

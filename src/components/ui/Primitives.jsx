@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 // Resolved from the live bundle's minified constants
 const INK = '#071A16'
@@ -62,14 +62,33 @@ export function Blob({ className = '' }) {
   )
 }
 
-/** Image with the shimmering skeleton placeholder the live site uses. */
+/**
+ * Image with the shimmering skeleton placeholder the live site uses.
+ *
+ * The image starts at opacity 0 and is revealed by `onLoad`, which silently
+ * loses a race: an image served from cache can finish decoding before React has
+ * attached the handler, so `load` fires with nothing listening and the picture
+ * stays invisible behind the skeleton forever. That is not a rare edge -- it is
+ * the second page view, and it is what a reviewer sees when they refresh. The
+ * `complete` check below closes it: on mount and on every `src` change the
+ * element is asked directly whether it already has pixels, instead of waiting
+ * for an event that may already have gone.
+ */
 export function SmartImage({ src, alt, className = '', wrapperClassName = '', ...rest }) {
+  const imgRef = useRef(null)
   const [loaded, setLoaded] = useState(false)
-  useEffect(() => setLoaded(false), [src])
+
+  useEffect(() => {
+    const el = imgRef.current
+    // naturalWidth guards the broken-image case, where `complete` is also true.
+    setLoaded(Boolean(el && el.complete && el.naturalWidth > 0))
+  }, [src])
+
   return (
     <span className={`relative block h-full w-full ${wrapperClassName}`}>
       {!loaded && <span className="img-skeleton absolute inset-0 block" aria-hidden="true" />}
       <img
+        ref={imgRef}
         src={src}
         alt={alt}
         loading="lazy"

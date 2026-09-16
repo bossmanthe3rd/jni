@@ -16,7 +16,7 @@ export default function AccountPage() {
 
   return (
     <div className="min-w-0 flex-grow">
-      <main className="box-border grid min-h-[100dvh] w-full place-items-center bg-cream px-4 pb-10 pt-[calc(var(--site-header-offset)+1rem)]">
+      <div className="box-border grid min-h-[100dvh] w-full place-items-center bg-cream px-4 pb-10 pt-[calc(var(--site-header-offset)+1rem)]">
         <div className="w-full max-w-md text-center">
           <h1 className="font-display text-3xl text-ink md:text-4xl">You are not logged in.</h1>
           <p className="mt-3 text-sm leading-6 text-ink/50">
@@ -26,7 +26,7 @@ export default function AccountPage() {
             <ShoppingBag size={16} /> Log in
           </Link>
         </div>
-      </main>
+      </div>
     </div>
   )
 }

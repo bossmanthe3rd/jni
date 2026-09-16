@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { Trash2, X } from 'lucide-react'
@@ -9,6 +10,24 @@ export default function CartDrawer() {
   const { items, isOpen, closeCart, setQty, removeItem } = useCart()
   const total = items.reduce((n, i) => n + Number(i.price) * i.qty, 0)
   const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - total)
+  const shippingProgress = Math.min(100, Math.round((total / FREE_SHIPPING_THRESHOLD) * 100))
+
+  // A drawer over a dimmed page is a modal, so it gets the two things a modal
+  // owes the reader: Escape closes it, and the page behind it stops scrolling
+  // instead of sliding around under the overlay.
+  useEffect(() => {
+    if (!isOpen) return
+    const onKey = (e) => {
+      if (e.key === 'Escape') closeCart()
+    }
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = prevOverflow
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [isOpen, closeCart])
 
   return (
     <AnimatePresence>
@@ -28,6 +47,7 @@ export default function CartDrawer() {
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 260 }}
             role="dialog"
+            aria-modal="true"
             aria-label="Your cart"
             className="fixed right-0 top-0 z-[61] flex h-full w-full max-w-md flex-col border-l-[3px] border-ink bg-cream"
           >
@@ -97,15 +117,39 @@ export default function CartDrawer() {
                 </div>
 
                 <div className="border-t-[3px] border-ink px-5 py-4">
-                  {remaining > 0 ? (
-                    <p className="mb-3 text-center text-[11px] font-bold text-ink/70">
-                      Add ₹{remaining} more for free delivery
-                    </p>
-                  ) : (
-                    <p className="mb-3 text-center text-[11px] font-black uppercase tracking-wider text-[#0f6b3a]">
-                      Free delivery unlocked
-                    </p>
-                  )}
+                  {/* The free-delivery line was a sentence doing a meter's
+                      job. A filled bar says how close you are at a glance, and
+                      is the one nudge in the cart that raises order value. */}
+                  <div className="mb-4">
+                    {remaining > 0 ? (
+                      <p className="mb-2 text-center text-[11px] font-bold text-ink/70">
+                        Add <span className="font-black text-ink">₹{remaining}</span> more for
+                        free delivery
+                      </p>
+                    ) : (
+                      <p className="mb-2 text-center text-[11px] font-black uppercase tracking-wider text-[#0f6b3a]">
+                        Free delivery unlocked
+                      </p>
+                    )}
+                    <div
+                      className="h-2.5 w-full overflow-hidden rounded-pill border-[2px] border-ink bg-[#F7F1C8]"
+                      role="progressbar"
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={shippingProgress}
+                      aria-label="Progress toward free delivery"
+                    >
+                      <motion.div
+                        className="h-full rounded-pill"
+                        style={{
+                          background: remaining > 0 ? 'var(--color-accent-yellow)' : '#77d21c',
+                        }}
+                        initial={false}
+                        animate={{ width: `${shippingProgress}%` }}
+                        transition={{ type: 'spring', stiffness: 180, damping: 26 }}
+                      />
+                    </div>
+                  </div>
                   <div className="mb-4 flex items-center justify-between">
                     <span className="text-xs font-black uppercase tracking-[0.14em] text-ink/60">
                       Subtotal

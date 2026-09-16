@@ -62,6 +62,13 @@ function shouldPlay() {
   return true
 }
 
+// Promote everything that moves up front, so the compositor is not cutting
+// new layers mid-timeline. The whole subtree is removed when the intro ends,
+// which drops the hints with it.
+const INTRO_CSS =
+  '.jni-intro-doodle{display:block;width:100%;height:auto}' +
+  '[data-p],[data-dood]{will-change:transform,opacity}'
+
 const CREAM = '#fbf6d0'
 const INK = '#231f20'
 const GREEN = '#0b5c2e'
@@ -146,8 +153,10 @@ function LogoCopy() {
 
 export default function NibbleIntro() {
   const shake = useRef(null)
+  const crop = useRef(null)
   const stage = useRef(null)
   const flip = useRef(null)
+  const dark = useRef(null)
   const burst = useRef(null)
   const logo = useRef(null)
   const cream = useRef(null)
@@ -163,8 +172,15 @@ export default function NibbleIntro() {
 
     const anims = []
     const q = (sel) => Array.from(root.querySelectorAll(sel))
+    // Every animation is built paused and released together further down, so
+    // the timeline never starts into the page's own first-paint contention.
     const add = (els, kf, opt) =>
-      [els].flat().forEach((el) => el && anims.push(el.animate(kf, { fill: 'both', ...opt })))
+      [els].flat().forEach((el) => {
+        if (!el) return
+        const a = el.animate(kf, { fill: 'both', ...opt })
+        a.pause()
+        anims.push(a)
+      })
     const fwd = (els, kf, opt) => add(els, kf, { ...opt, fill: 'forwards' })
 
     // --- the three words drop in, from above the viewport, at full ink -------
@@ -329,13 +345,22 @@ export default function NibbleIntro() {
       })
     }
 
+    // Cropping the overlay down to the header strip used to be an animated
+    // inset() clip-path on the full-screen stage, and the green used to settle
+    // to the header's dark via an animated background-colour. Neither property
+    // can run on the compositor, so the last half-second cost two full-screen
+    // main-thread repaints per frame -- which is where the intro stuttered worst.
+    //
+    // Both are pure transform/opacity now. The crop is a translate pair: the
+    // clipping wrapper slides up by the strip's own offset, dragging its
+    // overflow window with it, while the stage slides down by the identical
+    // amount so its contents stay put on screen. The two cancel exactly,
+    // leaving only the shrinking window.
     const barBottom = bar ? Math.max(0, window.innerHeight - bar.bottom) : window.innerHeight * 0.88
-    fwd(stage.current, [{ clipPath: 'inset(0px 0px 0px 0px)' }, { clipPath: `inset(0px 0px ${barBottom}px 0px)` }], {
-      duration: T.collapseDur,
-      delay: T.collapse,
-      easing: ease,
-    })
-    fwd(flip.current, [{ backgroundColor: GREEN }, { backgroundColor: HEADER_DARK }], {
+    const cropOpt = { duration: T.collapseDur, delay: T.collapse, easing: ease }
+    fwd(crop.current, [{ transform: 'translateY(0px)' }, { transform: `translateY(${-barBottom}px)` }], cropOpt)
+    fwd(stage.current, [{ transform: 'translateY(0px)' }, { transform: `translateY(${barBottom}px)` }], cropOpt)
+    fwd(dark.current, [{ opacity: 0 }, { opacity: 1 }], {
       duration: T.collapseDur * 0.7,
       delay: T.collapse,
       easing: 'ease-in-out',
@@ -381,9 +406,30 @@ export default function NibbleIntro() {
 
     root.addEventListener('click', skip)
     window.addEventListener('keydown', onKey)
-    const timer = window.setTimeout(teardown, TOTAL + 40)
+
+    // The whole site mounts underneath this overlay: App's first commit, the
+    // lazy route chunks and the hero images all land inside the first few
+    // hundred ms. Releasing the timeline into that contention is what made the
+    // drop-in stutter, so we wait for a drawn frame plus a gap of idle before
+    // playing -- capped, so the cream hold stays too short to read as a stall.
+    let timer = 0
+    let started = false
+    const start = () => {
+      if (started || done) return
+      started = true
+      anims.forEach((a) => a.play())
+      timer = window.setTimeout(teardown, TOTAL + 40)
+    }
+    // Bound: an unbound native window method throws when called bare.
+    const idle = window.requestIdleCallback?.bind(window)
+    const guard = window.setTimeout(start, 260)
+    let raf = requestAnimationFrame(() => {
+      raf = requestAnimationFrame(() => (idle ? idle(start, { timeout: 120 }) : start()))
+    })
 
     return () => {
+      window.cancelAnimationFrame(raf)
+      window.clearTimeout(guard)
       window.clearTimeout(timer)
       window.removeEventListener('keydown', onKey)
       root.removeEventListener('click', skip)
@@ -405,47 +451,62 @@ export default function NibbleIntro() {
       aria-hidden="true"
       style={{ position: 'fixed', inset: 0, zIndex: 9999, willChange: 'transform', cursor: 'pointer' }}
     >
-      <style>{'.jni-intro-doodle{display:block;width:100%;height:auto}'}</style>
-      <div ref={stage} style={{ ...layerBox, background: CREAM, overflow: 'hidden' }}>
-        <div
-          ref={flip}
-          style={{
-            position: 'absolute',
-            left: `${BX}%`,
-            top: `${BY}%`,
-            width: '300vmax',
-            height: '300vmax',
-            margin: '-150vmax 0 0 -150vmax',
-            borderRadius: '50%',
-            background: GREEN,
-            transform: 'scale(0)',
-          }}
-        />
-        <div ref={burst} style={{ position: 'absolute', left: `${BX}%`, top: `${BY}%`, width: 0, height: 0 }}>
-          {BURST.map(([a, d, size, spin, name], i) => (
-            <Doodle key={i} name={name} a={a} d={d} size={size} spin={spin} />
-          ))}
-        </div>
-
-        <div
-          ref={logo}
-          style={{
-            position: 'absolute',
-            left: '50%',
-            top: '50%',
-            transform: 'translate(-50%,-50%)',
-            width: 'min(56vw, 600px)',
-            aspectRatio: `${VB_W} / ${VB_H}`,
-          }}
-        >
-          <div style={{ ...layerBox, fill: INK }}>
-            <LogoCopy />
-          </div>
+      <style>{INTRO_CSS}</style>
+      {/* crop: the overflow window that shrinks to the header strip. */}
+      <div ref={crop} style={{ ...layerBox, overflow: 'hidden', willChange: 'transform' }}>
+        <div ref={stage} style={{ ...layerBox, background: CREAM, overflow: 'hidden', willChange: 'transform' }}>
           <div
-            ref={cream}
-            style={{ ...layerBox, fill: CREAM, clipPath: `circle(0% at ${BX}% ${BY}%)` }}
+            ref={flip}
+            style={{
+              position: 'absolute',
+              left: `${BX}%`,
+              top: `${BY}%`,
+              width: '300vmax',
+              height: '300vmax',
+              margin: '-150vmax 0 0 -150vmax',
+              borderRadius: '50%',
+              background: GREEN,
+              transform: 'scale(0)',
+              willChange: 'transform',
+            }}
+          />
+          {/* The header's own dark, faded in over the green during the collapse. */}
+          <div ref={dark} style={{ ...layerBox, background: HEADER_DARK, opacity: 0, willChange: 'opacity' }} />
+          <div
+            ref={burst}
+            style={{ position: 'absolute', left: `${BX}%`, top: `${BY}%`, width: 0, height: 0, willChange: 'opacity' }}
           >
-            <LogoCopy />
+            {BURST.map(([a, d, size, spin, name], i) => (
+              <Doodle key={i} name={name} a={a} d={d} size={size} spin={spin} />
+            ))}
+          </div>
+
+          <div
+            ref={logo}
+            style={{
+              position: 'absolute',
+              left: '50%',
+              top: '50%',
+              transform: 'translate(-50%,-50%)',
+              width: 'min(56vw, 600px)',
+              aspectRatio: `${VB_W} / ${VB_H}`,
+              willChange: 'transform',
+            }}
+          >
+            <div style={{ ...layerBox, fill: INK }}>
+              <LogoCopy />
+            </div>
+            <div
+              ref={cream}
+              style={{
+                ...layerBox,
+                fill: CREAM,
+                clipPath: `circle(0% at ${BX}% ${BY}%)`,
+                willChange: 'clip-path',
+              }}
+            >
+              <LogoCopy />
+            </div>
           </div>
         </div>
       </div>

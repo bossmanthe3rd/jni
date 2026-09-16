@@ -3,6 +3,9 @@ import { motion } from 'framer-motion'
 import { whyFeatures } from '../../data/site'
 import { whyIconMap } from '../icons/WhyIcons'
 import { BrandHeading, Sparkle, WaveDivider } from '../ui/Primitives'
+import FlipSpot from '../mascot/FlipSpot'
+import DoodleField from '../ui/DoodleField'
+import BlobPanel from '../ui/BlobPanel'
 
 /**
  * One feature tile. The tile floats once it has scrolled into view, and the
@@ -71,8 +74,18 @@ export default function WhyFlipos() {
   return (
     <section
       id="why-flipos"
-      className="relative overflow-hidden bg-[#071A16] pb-16 pt-8 sm:pb-20 sm:pt-12"
+      className="on-dark relative isolate overflow-hidden bg-[#071A16] pb-20 pt-8 sm:pb-32 sm:pt-12"
     >
+      {/* The pack never leaves a ground flat. Tinted to near-ink so it is
+          texture behind the type, not competition for it. */}
+      <DoodleField
+        flavour="jalapeno-kick"
+        ground="#071A16"
+        intensity="medium"
+        count={22}
+        seed={7}
+      />
+
       <div className="relative z-10 px-3 text-center sm:px-8 lg:px-12">
         <div className="relative mx-auto inline-block">
           <motion.div
@@ -94,17 +107,34 @@ export default function WhyFlipos() {
           </BrandHeading>
         </div>
 
-        <div className="mx-auto mt-10 grid max-w-5xl grid-cols-4 gap-2 sm:mt-16 sm:gap-10">
-          {whyFeatures.map((feature, i) => (
-            <FeatureTile key={feature.id} feature={feature} index={i} />
-          ))}
-        </div>
+        {/* One field holding all four, the way a pouch holds its content --
+            rather than four separate cards, which would read as tiles. */}
+        <BlobPanel
+          role="wide"
+          bg="#0D2818"
+          pad="lg"
+          className="mx-auto mt-10 max-w-5xl sm:mt-16"
+        >
+          <div className="grid grid-cols-4 gap-2 sm:gap-10">
+            {whyFeatures.map((feature, i) => (
+              <FeatureTile key={feature.id} feature={feature} index={i} />
+            ))}
+          </div>
+        </BlobPanel>
       </div>
 
-      <WaveDivider
-        fill="#F3C63B"
-        className="absolute inset-x-0 -bottom-px z-20 h-12 w-full sm:h-16"
-      />
+      {/* The section closes on a drawn wave, so it gets a walker. FlipSpot
+          shares WaveDivider's curve, which is what lets him stand on the
+          crests and lean with the slope instead of hovering near them. */}
+      <div className="absolute inset-x-0 -bottom-px z-20 h-12 w-full sm:h-16">
+        <WaveDivider fill="#F3C63B" className="absolute inset-0 h-full w-full" />
+        <FlipSpot
+          mode="wave"
+          width="clamp(96px, 11.5vw, 168px)"
+          className="inset-0"
+          style={{ inset: 0, zIndex: 1 }}
+        />
+      </div>
     </section>
   )
 }

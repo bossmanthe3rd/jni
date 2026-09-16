@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Check, Minus, Plus, Star } from 'lucide-react'
@@ -6,6 +6,7 @@ import { getBundleBySlug, perPacketPrice, savingsPercent, products } from '../da
 import { useCart } from '../store/cartStore'
 import { ProductCard } from '../components/product/ProductCard'
 import ProductAccordion from '../components/product/ProductAccordion'
+import StickyAtcBar from '../components/product/StickyAtcBar'
 import { SmartImage, Sparkle } from '../components/ui/Primitives'
 
 function buildBundleAccordion(bundle, perPacket) {
@@ -98,6 +99,7 @@ export default function BundleDetailPage() {
   const { slug } = useParams()
   const bundle = getBundleBySlug(slug)
   const [qty, setQty] = useState(1)
+  const ctaRef = useRef(null)
   const { addItem, openCart } = useCart()
 
   useEffect(() => {
@@ -118,7 +120,7 @@ export default function BundleDetailPage() {
 
   return (
     <div className="min-w-0 flex-grow">
-      <main className="bg-cream pb-20 pt-[var(--site-header-offset)] md:pb-0">
+      <div className="bg-cream pb-20 pt-[var(--site-header-offset)] md:pb-0">
         <section className="px-5 py-5 sm:px-8 sm:py-6 lg:px-12">
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
             <Link
@@ -216,7 +218,12 @@ export default function BundleDetailPage() {
                 </div>
               </div>
 
-              <button type="button" onClick={handleAdd} className="jni-btn mt-4 w-full text-base">
+              <button
+                ref={ctaRef}
+                type="button"
+                onClick={handleAdd}
+                className="jni-btn mt-4 w-full text-base"
+              >
                 Nibble Now
               </button>
 
@@ -264,7 +271,15 @@ export default function BundleDetailPage() {
             ))}
           </div>
         </section>
-      </main>
+      </div>
+
+      <StickyAtcBar
+        name={bundle.shortName || bundle.name}
+        price={bundle.price}
+        originalPrice={bundle.originalPrice}
+        onAdd={handleAdd}
+        watchRef={ctaRef}
+      />
     </div>
   )
 }

@@ -5,6 +5,7 @@ import SiteFooter from './components/layout/SiteFooter'
 import CartDrawer from './components/layout/CartDrawer'
 import RecentPurchaseToast from './components/layout/RecentPurchaseToast'
 import NibbleIntro from './components/layout/NibbleIntro'
+import { BlobClipDefs } from './components/ui/BlobShapes'
 import HomePage from './pages/HomePage'
 
 // Route-level code splitting, mirroring the live site's chunk boundaries.
@@ -13,6 +14,8 @@ const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'))
 const BundleDetailPage = lazy(() => import('./pages/BundleDetailPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 const ContentPage = lazy(() => import('./pages/ContentPage'))
+const FlavoursPage = lazy(() => import('./pages/FlavoursPage'))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'))
 const ShippingReturnPage = lazy(() => import('./pages/ShippingReturnPage'))
 const RefundPolicyPage = lazy(() => import('./pages/RefundPolicyPage'))
@@ -55,6 +58,7 @@ function ScrollManager() {
 export default function App() {
   return (
     <>
+      <BlobClipDefs />
       <NibbleIntro />
       <SiteHeader />
       <ScrollManager />
@@ -62,7 +66,7 @@ export default function App() {
         <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/flavours" element={<HomePage />} />
+            <Route path="/flavours" element={<FlavoursPage />} />
             <Route path="/flavours/:slug" element={<ProductDetailPage />} />
             <Route path="/snacks/:slug" element={<ProductDetailPage />} />
             <Route path="/combos" element={<CombosPage />} />
@@ -82,11 +86,18 @@ export default function App() {
             <Route path="/my-crates" element={<AccountPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
             {/*
-              The live site uses ContentPage as its catch-all: /contact, /terms, /faq,
-              /ingredients, /sustainability and /press all render it, and any other
-              unmatched path falls back to its /faq entry.
+              ContentPage backs six real pages. The live site also used it as the
+              catch-all, so any typo rendered the FAQ with a 200 and nothing ever
+              said "not found" -- bad for readers and for indexing. Those six are
+              now routed explicitly and everything else falls to NotFoundPage.
             */}
-            <Route path="*" element={<ContentPage />} />
+            <Route path="/contact" element={<ContentPage />} />
+            <Route path="/terms" element={<ContentPage />} />
+            <Route path="/faq" element={<ContentPage />} />
+            <Route path="/ingredients" element={<ContentPage />} />
+            <Route path="/sustainability" element={<ContentPage />} />
+            <Route path="/press" element={<ContentPage />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
       </main>

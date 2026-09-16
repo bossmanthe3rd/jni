@@ -7,13 +7,22 @@
     <meta name="description" content="Just Nibble It - bold baked FMCG snacks, real ingredients, zero guilt, maximum crunch." />
     <meta name="theme-color" content="#0D2818" />
     <title>Just Nibble It - Bold Baked Snacks</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preload" as="image" href="/assets/hero/hero-bg-peri.jpg" fetchpriority="high" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Lilita+One&family=Inter:wght@400;500;600;700;800;900&display=swap"
-      rel="stylesheet"
-    />
+
+    <!-- LCP is the first hero slide, which is the SWEET CHILLI background.
+         This used to preload hero-bg-peri.jpg -- slide two, which is not on
+         screen at first paint -- so the real LCP image was discovered late and
+         a second, unused image competed with it for bandwidth. -->
+    <link rel="preload" as="image" href="/assets/hero/hero-bg-sweet.jpg" fetchpriority="high" />
+
+    <!-- Both brand faces are self-hosted (see @font-face in src/index.css), so
+         the render-blocking Google Fonts stylesheet is gone: it was fetching
+         Fredoka, Lilita One and Inter, none of which the page reaches any more
+         once Milkyway and ComicSansMS3 load. Preloading the two woff2 files
+         instead means headings and body text paint in the brand faces on the
+         first frame rather than swapping in after a round trip. -->
+    <link rel="preload" as="font" type="font/woff2" href="/assets/fonts/milkyway.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/assets/fonts/comic-sans-ms3.woff2" crossorigin />
+
     <!--
       NOTE (clone): the live site loads Meta Pixel (id 2022133325079975), GA4 (G-VN0WE6J114),
       Wigzo, Firebase and the Shiprocket/GoKwik checkout widget here. They are intentionally

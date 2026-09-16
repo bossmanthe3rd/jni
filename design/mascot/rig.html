@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Flip rig</title>
+    <!--
+      Pose board for the live rig. flip-v1.png is the approved concept sheet;
+      this is the shipped component held still, one cell per state the page can
+      put him in, so a change to poseFlip() can be eyeballed across the whole
+      range before it goes anywhere near the site.
+
+      The site drives idle, walk, run and peek, through the three FlipSpots in
+      src/components/mascot/FlipSpot.jsx. Roll and the speed darts are still in
+      the rig and still on this board -- the approved sheet has a Tumble pose --
+      but every spot passes roll: 0 and darts: 0, because a chip cartwheeling in
+      your peripheral vision while you are trying to read is the thing that got
+      cut first.
+
+      Run the dev server and open /design/mascot/rig.html.
+    -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;900&display=swap" rel="stylesheet" />
+    <style>
+      * { box-sizing: border-box; margin: 0; }
+      body {
+        background: #fbf6d0;
+        font-family: Inter, system-ui, sans-serif;
+        padding: 18px;
+        --flip-base: #e8b34a;
+        --flip-lattice: #c88a26;
+        --flip-rim: #b87a1c;
+        --flip-dust: #c88a26;
+        --flip-dust-dark: #b87a1c;
+      }
+      #root { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+      .cell {
+        background: #f5f0dc; border: 3px solid #0d2818; border-radius: 20px;
+        display: flex; flex-direction: column; align-items: center;
+        padding: 8px 8px 0; overflow: hidden;
+      }
+      .art { display: grid; place-items: center; height: 250px; }
+      .art svg { filter: drop-shadow(5px 6px 0 rgba(13,40,24,0.18)); }
+      .lab {
+        width: 100%; border-top: 2px solid #0d2818; padding: 7px 4px;
+        font-size: 10px; font-weight: 900; letter-spacing: .14em;
+        text-transform: uppercase; text-align: center; color: #0d2818;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module">
+      import React from 'react'
+      import { createRoot } from 'react-dom/client'
+      import FlipArt, { poseFlip } from '/src/components/mascot/FlipArt.jsx'
+
+      const base = {
+        phase: 0, time: 0.4, facing: 1, rot: -3, rush: 0, walk: 0, roll: 0,
+        wave: 0, chomp: 0, squash: 0, blink: 1, look: [3, 2],
+      }
+      const F = {
+        jalapeno: ['#e4c552', '#bfa130', '#a88c1e', '#77d21c', '#4f8f12'],
+        peri: ['#d9702f', '#b25419', '#9c4512', '#c8102e', '#8e0a20'],
+      }
+      const poses = [
+        { label: 'idle', },
+        { label: 'idle · look left', look: [-9, 1] },
+        { label: 'blink', blink: 0.08 },
+        { label: 'wave (hover)', wave: 1 },
+        { label: 'walk · 0', walk: 1, rush: 0.22, phase: 0, rot: 2 },
+        { label: 'walk · ¼', walk: 1, rush: 0.22, phase: Math.PI * 0.5, rot: 2 },
+        { label: 'walk · ½', walk: 1, rush: 0.22, phase: Math.PI, rot: 2 },
+        { label: 'walk · ¾', walk: 1, rush: 0.22, phase: Math.PI * 1.5, rot: 2 },
+        { label: 'run', walk: 1, rush: 0.85, phase: Math.PI * 0.35, rot: 10, look: [8, -2] },
+        { label: 'run · facing left', walk: 1, rush: 0.85, phase: Math.PI * 1.2, rot: -10, facing: -1 },
+        { label: 'tumble', roll: 1, rush: 1, rot: 48 },
+        { label: 'tumble · late', roll: 1, rush: 1, rot: 168, time: 0.9 },
+        { label: 'peek (on a ledge)', peek: 1 },
+        { label: 'chomp (poke)', chomp: 1, squash: -0.15 },
+        { label: 'land squash', squash: -0.2, rush: 0.2, walk: 0.4, phase: 0.1 },
+        { label: 'jalapeño', tint: F.jalapeno },
+        { label: 'peri peri', tint: F.peri },
+        { label: 'jalapeño · tumble', tint: F.jalapeno, roll: 1, rush: 1, rot: 100 },
+        { label: 'peri · wave', tint: F.peri, wave: 1 },
+      ]
+
+      const VARS = ['--flip-base', '--flip-lattice', '--flip-rim', '--flip-dust', '--flip-dust-dark']
+      const root = document.getElementById('root')
+
+      poses.forEach((p) => {
+        const cell = document.createElement('div')
+        cell.className = 'cell'
+        const art = document.createElement('div')
+        art.className = 'art'
+        if (p.tint) VARS.forEach((v, i) => cell.style.setProperty(v, p.tint[i]))
+        const lab = document.createElement('div')
+        lab.className = 'lab'
+        lab.textContent = p.label
+        cell.append(art, lab)
+        root.append(cell)
+
+        const ref = { current: {} }
+        createRoot(art).render(
+          React.createElement(FlipArt, {
+            partsRef: ref,
+            style: { display: 'block', width: '230px', overflow: 'visible' },
+          })
+        )
+        setTimeout(() => poseFlip(ref.current, { ...base, ...p }), 250)
+      })
+    </script>
+  </body>
+</html>
