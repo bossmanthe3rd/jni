@@ -9,12 +9,16 @@ import { TriangleCluster } from './FlavourGrid'
 import DoodleField from '../ui/DoodleField'
 import FlipSpot from '../mascot/FlipSpot'
 
-const FOAM = '#f5f0dc'
-const CREAM = '#fbf6d0'
+const INK = '#0D2818'
 // The hero now holds one fixed brand colour rather than repainting itself per
 // flavour like the scroll stage does -- flavour identity lives in the pack,
 // the doodle tint, the heat-rail pips and Flip's own colours instead.
-const HERO_GROUND = '#071A16'
+//
+// That colour is the site's cream. Every other page already sits its content
+// on cream directly under the near-black header, so this is what puts the
+// homepage on the same ground as the rest of the site -- and it means the
+// hero no longer hard-cuts into the cream Why Flipo's section below it.
+const HERO_GROUND = '#fbf6d0'
 
 /** flavourStages carries the heat label and propped pack shot already built
  * for the scroll stage below -- keyed by slug so the hero can borrow them. */
@@ -36,7 +40,7 @@ const HERO_EMOTES = {
  * anchored.
  */
 const PACK_SLOTS = [
-  { left: '18%', top: '20%', width: '58%', rotate: -6, zIndex: 30, opacity: 1 },
+  { left: '12%', top: '20%', width: '70%', rotate: -6, zIndex: 30, opacity: 1 },
   { left: '56%', top: '0%', width: '38%', rotate: 14, zIndex: 20, opacity: 0.6 },
   { left: '0%', top: '4%', width: '36%', rotate: -18, zIndex: 10, opacity: 0.55 },
 ]
@@ -48,13 +52,13 @@ function ArrowDoodle({ className = '' }) {
     <svg className={className} viewBox="0 0 96 78" fill="none" aria-hidden="true">
       <path
         d="M8 8c10 26 4 46 30 58 14 6.5 30 4 44-4"
-        stroke={CREAM}
+        stroke={INK}
         strokeWidth="3.4"
         strokeLinecap="round"
       />
       <path
         d="M64 56 82 62 76 44"
-        stroke={CREAM}
+        stroke={INK}
         strokeWidth="3.4"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -94,7 +98,7 @@ function BlobPack({ blobName, lineColor, children }) {
         preserveAspectRatio="none"
         aria-hidden="true"
       >
-        <path d={BLOB_PATHS[blobName]} fill="none" stroke={FOAM} strokeWidth="0.024" />
+        <path d={BLOB_PATHS[blobName]} fill="none" stroke={lineColor} strokeWidth="0.024" />
       </svg>
     </div>
   )
@@ -295,7 +299,7 @@ export default function HeroCarousel() {
                 animate={{ rotate: 360 }}
                 transition={{ repeat: Infinity, duration: 7, ease: 'linear' }}
               >
-                <Sparkle className="h-7 w-7 sm:h-9 sm:w-9" />
+                <Sparkle color={palette.line} className="h-7 w-7 sm:h-9 sm:w-9" />
               </motion.div>
               <motion.div
                 aria-hidden="true"
@@ -308,7 +312,7 @@ export default function HeroCarousel() {
 
               <p
                 className="mb-3 text-[11px] font-black uppercase tracking-[0.32em] sm:text-xs"
-                style={{ color: palette.fill }}
+                style={{ color: palette.line }}
               >
                 {slide.kicker} &middot; {stage.heat}
               </p>
@@ -325,7 +329,7 @@ export default function HeroCarousel() {
 
             <p
               className="mx-auto mt-4 max-w-[28rem] text-[0.95rem] font-bold leading-6 sm:text-base sm:leading-7 md:mx-0"
-              style={{ color: FOAM }}
+              style={{ color: INK }}
             >
               {slide.product.subtitle}
             </p>
@@ -337,11 +341,11 @@ export default function HeroCarousel() {
                   Shop {slide.product.shortName}
                 </Link>
               </span>
-              <p className="text-sm font-black" style={{ color: FOAM }}>
+              <p className="text-sm font-black" style={{ color: INK }}>
                 &#8377;{slide.product.price}
                 <span
                   className="ml-2 text-[11px] font-bold uppercase tracking-[0.14em]"
-                  style={{ color: palette.fill }}
+                  style={{ color: palette.line }}
                 >
                   {slide.product.weight}
                 </span>
@@ -353,8 +357,8 @@ export default function HeroCarousel() {
                   and on mobile the pack sits in normal flow, so an extra
                   row would push both down. Swaps per slide like the rest
                   of the copy -- it is inside the crossfade block. */}
-              <p className="flex items-center gap-2 text-sm font-black" style={{ color: FOAM }}>
-                <Stars value={slide.product.rating.value} color={palette.fill} size={13} />
+              <p className="flex items-center gap-2 text-sm font-black" style={{ color: INK }}>
+                <Stars value={slide.product.rating.value} color={palette.line} size={13} />
                 <span className="sr-only">
                   Rated {slide.product.rating.value} out of 5 from {slide.product.rating.count} reviews
                 </span>
@@ -362,7 +366,7 @@ export default function HeroCarousel() {
                   {slide.product.rating.value}
                   <span
                     className="ml-1.5 text-[11px] font-bold uppercase tracking-[0.14em]"
-                    style={{ color: palette.fill }}
+                    style={{ color: palette.line }}
                   >
                     ({slide.product.rating.count})
                   </span>
@@ -390,7 +394,7 @@ export default function HeroCarousel() {
           </Link>
         </div>
 
-        <div className="relative z-10 hidden md:absolute md:right-[1vw] md:top-[4%] md:block md:h-[38vw] md:max-h-[27rem] md:w-[38vw] md:max-w-[27rem]">
+        <div className="relative z-10 hidden md:absolute md:right-[6vw] md:top-[4%] md:block md:h-[38vw] md:max-h-[27rem] md:w-[38vw] md:max-w-[27rem]">
           {heroSlides.map((s, i) => {
             const offset = (i - index + heroSlides.length) % heroSlides.length
             const slot = PACK_SLOTS[offset]
@@ -489,7 +493,7 @@ export default function HeroCarousel() {
                   aria-label={`Show ${s.kicker}`}
                   aria-current={on ? 'true' : undefined}
                   className="flex items-center gap-2.5 rounded-pill py-1 pr-1 outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-                  style={{ '--tw-ring-color': FOAM, '--tw-ring-offset-color': HERO_GROUND }}
+                  style={{ '--tw-ring-color': INK, '--tw-ring-offset-color': HERO_GROUND }}
                 >
                   <span
                     className="block rounded-pill border-2 transition-all duration-300"
@@ -497,7 +501,7 @@ export default function HeroCarousel() {
                       width: 18 + i * 11,
                       height: on ? 9 : 6,
                       borderColor: on ? p.line : 'transparent',
-                      backgroundColor: on ? p.fill : FOAM,
+                      backgroundColor: on ? p.fill : INK,
                       opacity: on ? 1 : 0.4,
                     }}
                   />

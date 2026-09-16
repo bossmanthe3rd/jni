@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { bundles, products } from '../../data/products'
 import { BundleCard, ProductCard } from '../product/ProductCard'
 import FlipSpot from '../mascot/FlipSpot'
+import DoodleField from '../ui/DoodleField'
 import { BrandHeading, Blob, Sparkle } from '../ui/Primitives'
 
 const DOODLES = [
@@ -81,7 +82,21 @@ export default function FlavourGrid() {
   const ordered = ORDER.map((slug) => products.find((p) => p.slug === slug)).filter(Boolean)
 
   return (
-    <section id="products" className="overflow-x-clip bg-cream py-12 sm:py-16">
+    <section
+      id="products"
+      className="relative isolate overflow-x-clip bg-cream py-12 sm:py-16"
+    >
+      {/* The only homepage section that had no doodle ground: its own doodles
+          (FallingIngredients) live in a ~16px strip at the very bottom, so
+          everything above them was bare cream. DoodleField is absolutely
+          positioned at -z-10, hence the relative/isolate on the section. */}
+      <DoodleField
+        flavour="peri-peri-punch"
+        ground="#fbf6d0"
+        intensity="subtle"
+        count={20}
+        seed={41}
+      />
       <div className="px-3 sm:px-8 lg:px-12">
         {/* The confetti hangs off the wordmark's own box -- right-full / left-full
             against a relative wrapper sized by the heading -- so it can never
@@ -146,6 +161,15 @@ export default function FlavourGrid() {
         </div>
 
         <div className="relative">
+          {/* This panel used to be bg-cream on a bg-cream section, so it drew
+              an outline and nothing else -- the cards had no ground to sit on.
+              It needs a fill that carries both kinds of card: the product
+              cards are cream, the bundle cards are a hardcoded near-black
+              (#0C1B17), so a dark panel would have swallowed the latter and
+              their ink borders with them. Sunshine is spoken for by the
+              testimonials panel directly below. Teal is the brand accent that
+              was not yet doing any work, and both card treatments read on it. */
+          }
           {/* Same trick as the testimonials panel: Flip is a previous sibling of
               the bordered box, so its own border and fill cut him off at the
               rim. Hands on the edge, the rest of him genuinely behind it --
@@ -158,7 +182,7 @@ export default function FlavourGrid() {
             style={{ top: 0 }}
           />
 
-          <div className="relative overflow-hidden rounded-[28px] border-[4px] border-ink bg-cream p-2.5 sm:rounded-[36px] sm:p-6 lg:p-8">
+          <div className="relative overflow-hidden rounded-[28px] border-[4px] border-ink bg-teal p-2.5 shadow-doodle-lg sm:rounded-[36px] sm:p-6 lg:p-8">
             <div className="grid grid-cols-3 gap-2 sm:gap-5">
               {ordered.map((product, i) => (
                 <ProductCard key={product.slug} product={product} index={i} />

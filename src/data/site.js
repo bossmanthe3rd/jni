@@ -57,6 +57,7 @@ export const HERO_INTERVAL = 4200
 export const whyFeatures = [
   {
     id: 'flavour',
+    image: '/assets/why-flipos/bold-flavour.webp',
     lines: ['Bold', 'Flavour'],
     blurb: 'Real heat, baked right in. No shy flavours here.',
     loopClass: 'why-icon-flame',
@@ -64,6 +65,7 @@ export const whyFeatures = [
   },
   {
     id: 'desk',
+    image: '/assets/why-flipos/desk-crunch.webp',
     lines: ['Desk', 'Crunch'],
     blurb: 'Clean fingers. Nothing greasy near the keyboard.',
     loopClass: 'why-icon-keys',
@@ -71,6 +73,7 @@ export const whyFeatures = [
   },
   {
     id: 'creative',
+    image: '/assets/why-flipos/creative-sidekick.webp',
     lines: ['Creative', 'Sidekick'],
     blurb: 'Snack now, big idea later. Usually.',
     loopClass: 'why-icon-pencils',
@@ -78,6 +81,7 @@ export const whyFeatures = [
   },
   {
     id: 'brain',
+    image: '/assets/why-flipos/brain-break.webp',
     lines: ['Brain', 'Break'],
     blurb: 'The ninety-second reset your afternoon needs.',
     loopClass: 'why-icon-burst',
@@ -134,7 +138,6 @@ export const testimonials = [
 ]
 
 export const TESTIMONIAL_INTERVAL = 5000
-export const TESTIMONIAL_STAR_COLOR = '#1D4ED8'
 
 export const socialLinks = [
   { label: 'Instagram', href: 'https://www.instagram.com/justnibbleit/' },

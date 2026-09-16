@@ -1,23 +1,31 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Star } from 'lucide-react'
-import {
-  TESTIMONIAL_INTERVAL,
-  TESTIMONIAL_STAR_COLOR,
-  testimonials,
-} from '../../data/site'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { TESTIMONIAL_INTERVAL, testimonials } from '../../data/site'
 import { BrandHeading, useMediaQuery } from '../ui/Primitives'
 import { StarDoodle } from '../icons/WhyIcons'
 import { TriangleCluster } from './FlavourGrid'
 import FlipSpot from '../mascot/FlipSpot'
 import DoodleField from '../ui/DoodleField'
 
-function ReviewCard({ review }) {
+/** A small alternating tilt, so a row of reviews reads as a pinned-up wall
+ * rather than a grid. Kept under 2deg: the cards still have to line up. */
+const CARD_TILT = [-1.6, 1.1, -0.7]
+
+function ReviewCard({ review, index }) {
   return (
-    <blockquote className="flex h-full flex-col rounded-[22px] border-[3px] border-ink bg-cream p-5 shadow-doodle">
-      <div className="mb-3 flex items-center gap-0.5" style={{ color: TESTIMONIAL_STAR_COLOR }}>
+    <blockquote
+      className="flex h-full flex-col rounded-[22px] border-[3px] border-ink bg-cream p-5 shadow-doodle"
+      style={{ transform: `rotate(${CARD_TILT[index % CARD_TILT.length]}deg)` }}
+    >
+      {/* The brand's own drawn star, in sunshine. This row used to render
+          lucide's geometric star in a blue that appears nowhere else on the
+          site, while the hand-drawn StarDoodle was used as heading ornament
+          either side of the title -- the drawn asset decorating and the stock
+          icon carrying the actual rating. */}
+      <div className="mb-3 flex items-center gap-1">
         {[0, 1, 2, 3, 4].map((i) => (
-          <Star key={i} size={14} fill="currentColor" strokeWidth={0} />
+          <StarDoodle key={i} fill="#F3C63B" className="h-4 w-4" />
         ))}
       </div>
       <p className="flex-1 text-sm font-bold leading-6 text-ink">&ldquo;{review.text}&rdquo;</p>
@@ -105,8 +113,8 @@ export default function Testimonials() {
               transition={{ duration: 0.3, ease: 'easeOut' }}
               className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3"
             >
-              {visible.map((review) => (
-                <ReviewCard key={review.name} review={review} />
+              {visible.map((review, i) => (
+                <ReviewCard key={review.name} review={review} index={i} />
               ))}
             </motion.div>
           </div>

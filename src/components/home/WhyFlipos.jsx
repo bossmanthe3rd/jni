@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { whyFeatures } from '../../data/site'
-import { whyIconMap } from '../icons/WhyIcons'
 import { BrandHeading, Sparkle, WaveDivider } from '../ui/Primitives'
 import FlipSpot from '../mascot/FlipSpot'
 import DoodleField from '../ui/DoodleField'
@@ -14,7 +13,6 @@ import BlobPanel from '../ui/BlobPanel'
 function FeatureTile({ feature, index }) {
   const ref = useRef(null)
   const [seen, setSeen] = useState(false)
-  const Icon = whyIconMap[feature.id]
 
   useEffect(() => {
     const el = ref.current
@@ -42,7 +40,20 @@ function FeatureTile({ feature, index }) {
           ref={ref}
           className={`why-icon relative ${feature.loopClass} ${seen ? 'why-loop' : ''}`}
         >
-          <Icon className="h-20 w-20 sm:h-24 sm:w-24 lg:h-28 lg:w-28" />
+          {/* The real artwork, replacing the transcribed placeholder SVGs.
+              Each one already carries its own ink outline and hard offset
+              shadow, so it needs no treatment here. Empty alt: the h3 below
+              already names the feature, and the placeholders it replaces were
+              aria-hidden for the same reason. */}
+          <img
+            src={feature.image}
+            alt=""
+            width="512"
+            height="512"
+            loading="lazy"
+            decoding="async"
+            className="h-20 w-20 object-contain sm:h-24 sm:w-24 lg:h-28 lg:w-28"
+          />
 
           {feature.overlay === 'keys' && (
             <span className="why-keys text-[#071A16]">
@@ -134,7 +145,7 @@ export default function WhyFlipos() {
           shares WaveDivider's curve, which is what lets him stand on the
           crests and lean with the slope instead of hovering near them. */}
       <div className="absolute inset-x-0 -bottom-px z-20 h-12 w-full sm:h-16">
-        <WaveDivider fill="#F3C63B" className="absolute inset-0 h-full w-full" />
+        <WaveDivider fill="#7d1206" className="absolute inset-0 h-full w-full" />
         <FlipSpot
           mode="wave"
           width="clamp(96px, 11.5vw, 168px)"
