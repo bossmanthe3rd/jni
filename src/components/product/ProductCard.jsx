@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Minus, Plus } from 'lucide-react'
 import { useCart } from '../../store/cartStore'
 import { savingsPercent, toCartProduct } from '../../data/products'
+import { PROBE_DWELL } from '../../data/site'
 import { packPalettes } from '../icons/PackDoodles'
 import { SmartImage } from '../ui/Primitives'
 import HeatMeter from './HeatMeter'
@@ -20,6 +21,13 @@ import HeatMeter from './HeatMeter'
  * photo rather than from the card because the photo is what the gesture is
  * about -- pointing at the price is not asking to read the pouch. The card is
  * otherwise untouched: same price, same stepper, same add-to-cart.
+ *
+ * When `onLive` is wired the tile also grows a fuse: a bar that burns along
+ * its bottom edge in the pack's own ink for exactly PROBE_DWELL and completes
+ * as the probe opens. Nothing used to say the gesture existed at all, so the
+ * best moment on the page went unfound; and with no feedback a brush past a
+ * card was indistinguishable from a deliberate hold. Pure CSS, driven off
+ * :hover and :focus-visible, so it costs no state and unwinds by itself.
  */
 export function ProductCard({ product, index = 0, onLive }) {
   const { addItem, openCart } = useCart()
@@ -65,7 +73,10 @@ export function ProductCard({ product, index = 0, onLive }) {
         className={`jni-probe-media relative mx-2 mt-2 block shrink-0 overflow-hidden border-2 bg-[#F7F1C8] text-left sm:mx-6 sm:mt-6 ${
           product.isBundle ? 'aspect-[16/10] min-h-[180px]' : 'aspect-square'
         }`}
-        style={{ borderColor: palette?.line || 'var(--color-border)' }}
+        style={{
+          borderColor: palette?.line || 'var(--color-border)',
+          '--jni-dwell': `${PROBE_DWELL}ms`,
+        }}
       >
         <SmartImage
           src={image}
@@ -81,6 +92,13 @@ export function ProductCard({ product, index = 0, onLive }) {
           >
             {product.flavor}
           </span>
+        )}
+        {onLive && (
+          <span
+            aria-hidden="true"
+            className="jni-probe-fuse"
+            style={{ backgroundColor: palette?.fill || 'var(--color-accent-yellow)' }}
+          />
         )}
       </Link>
 

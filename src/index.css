@@ -542,70 +542,148 @@
 
 
 /* ---------------------------------------------------------------------------
-   THE PROBE — hold the pointer on a pack and it annotates itself.
+   THE PROBE -- hold the pointer on a pack and it opens as a spread.
 
-   The flood above is instant; this is the second, slower state behind a
-   two-second dwell (DWELL in FlavourGrid.jsx). Reading the pouch is something
-   you stop to do, and firing it on contact would strobe arrows across all
-   three cards on the way down to the bundles.
+   The flood above is the first beat and lands on contact. This is the second,
+   behind PROBE_DWELL (src/data/site.js). Reading the pouch is something you
+   stop to do, and firing it on contact would strobe arrows across all three
+   cards on the way down to the bundles.
 
-   Everything in the section blurs except the pack. That cannot be done by
-   excluding a descendant from an ancestor's filter -- a filter applies to the
-   whole subtree -- so the blur goes on the grid wrapper and the sharp pouch is
-   a second copy of the photograph, drawn in a sibling layer sitting exactly on
-   top of the original. It is the same file the card already decoded.
+   WHAT CHANGED. The probe used to be one pouch annotated with three cream
+   notes, opened at the card's own position. On a wide screen that left the
+   pack in the left third and most of the viewport bare colour, the notes ran
+   at 10.5px, two of the three said the same thing on every flavour, and the
+   layer was pointer-events:none -- so a deliberate hold took away the price,
+   the heat and the add-to-cart that were already on the card and gave nothing
+   back. It is now a spread: pouch on the left, the flavour's own writing and
+   a buy block on the right, ending at checkout rather than in a cart drawer.
+
+   Everything in the section still blurs except the pack. That cannot be done
+   by excluding a descendant from an ancestor's filter -- a filter applies to
+   the whole subtree -- so the blur goes on the grid wrapper and the sharp
+   pouch is a second copy of the photograph in a sibling layer. It is the same
+   file the card already decoded.
 
    That layer also has to live outside .jni-flavour-panel, which clips its own
    overflow for its rounded corners: notes hung inside it would be cut at the
-   rim. Ported from prototypes/flavour-probe.html. */
+   rim. Ported from prototypes/flavour-probe-checkout.html.
+   --------------------------------------------------------------------------- */
+
+/* THE FUSE. Nothing used to say the gesture existed, so the best moment on
+   the page went unfound -- and with no feedback, brushing past a card was
+   indistinguishable from holding on one. A bar burns along the tile's bottom
+   edge in the pack's own ink for exactly as long as the dwell. Pure CSS off
+   :hover / :focus-visible, so it costs no state and unwinds by itself. */
+.jni-probe-fuse {
+  position: absolute;
+  inset-inline-start: 0;
+  bottom: 0;
+  height: 6px;
+  width: 0;
+  border-end-end-radius: 4px;
+  pointer-events: none;
+}
+.jni-probe-media:hover .jni-probe-fuse,
+.jni-probe-media:focus-visible .jni-probe-fuse {
+  width: 100%;
+  transition: width var(--jni-dwell, 1000ms) linear;
+}
 
 /* The photo tile. The uneven radius is the site's own torn-edge idiom -- the
    same one the CTA shape and the pack badges use -- rather than a machined
    corner, and it scales with the viewport so a 120px tile on a phone is not
    wearing a 30px round. */
 .jni-probe-media,
-.jni-probe-overlay {
+.jni-probe-frame {
   border-radius: clamp(13px, 2.3vw, 30px) clamp(10px, 1.8vw, 24px)
     clamp(14px, 2.5vw, 32px) clamp(9px, 1.6vw, 22px);
 }
 
-/* The grid does not merely soften -- it goes. Blurring it left the cards, the
-   heading and the mascot as recognisable pale shapes behind the pouch, so the
-   pack read as a second image pasted over a blurred page rather than the one
-   thing left in the room. Blur dissolves the edges; the opacity drop takes the
-   cream and the teal with them, and what shows through is the section's own
-   flood. Layout is untouched, so nothing moves and the card keeps receiving the
-   pointer that is holding all this open. */
+/* The grid does not merely soften -- it goes. Blurring alone left the cards,
+   the heading and the mascot as recognisable pale shapes behind the pouch, so
+   the pack read as a second image pasted over a blurred page rather than the
+   one thing left in the room. The opacity drop takes the cream and the teal
+   with them, and what shows through is the section's own flood. Layout is
+   untouched, so nothing moves. */
 .jni-probe-stage {
   transition: filter 520ms ease, opacity 520ms ease;
 }
-.jni-flavour-section[data-flavour-live] .jni-probe-stage {
+.jni-flavour-section[data-flavour-probe] .jni-probe-stage {
   filter: blur(26px) saturate(0.5);
   opacity: 0;
+  /* The card is no longer the thing holding this open -- the overlay is -- so
+     the dissolved grid must stop swallowing the pointer. */
+  pointer-events: none;
 }
 
-/* Opens at the card photo's exact frame -- same 2px keyline in the same pack
-   ink -- so the moment it appears is invisible. The rise and the shadow are
-   animated from there; see LIFT/GROW in FlavourProbeOverlay.jsx. It stays
-   transparent to the pointer, because the hover that is holding it open is on
-   the card underneath and must not be stolen by the thing it opened. */
+/* ---- the layer ---------------------------------------------------------- */
 .jni-probe-overlay {
+  /* Fixed, not absolute. Absolute centred the spread inside a section that is
+     most of two screens tall, so it opened half a viewport below the fold and
+     the buy block was never on screen. The probe takes the screen over, so it
+     is anchored to the screen -- and the flood is on the section behind it,
+     which at this point fills the viewport in every direction.
+
+     z-index sits UNDER the site header (z-50) on purpose: the cart, the
+     account and the nav stay reachable while the panel is open, and the close
+     button is inset far enough not to fight them. */
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: grid;
+  grid-template-columns: minmax(0, 44fr) minmax(0, 56fr);
+  gap: clamp(20px, 3.4vw, 56px);
+  align-content: center;
+  /* Clears the fixed header, which the overlay now shares a viewport with. */
+  padding: calc(var(--site-header-offset) + 8px) clamp(20px, 4vw, 64px)
+    clamp(20px, 4vw, 64px);
+  color: var(--color-text-light);
+}
+
+.jni-probe-close {
   position: absolute;
-  z-index: 20;
-  background: #f7f1c8;
+  /* Below the fixed header, not behind it: at 26px it landed in the header's
+     own band, next to the cart pebble. */
+  top: calc(var(--site-header-offset) + 8px);
+  right: clamp(12px, 2vw, 26px);
+  z-index: 9;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 3px solid var(--color-border);
+  border-radius: 15px 10px 17px 9px / 10px 16px 9px 15px;
+  background: var(--color-bg-cream);
+  box-shadow: 3px 4px 0 var(--color-border);
+  color: var(--color-text-dark);
+  transition: transform 0.16s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.jni-probe-close:hover {
+  transform: scale(1.07);
+}
+
+/* ---- the pouch ---------------------------------------------------------- */
+.jni-probe-pack {
+  justify-self: center;
+  width: 100%;
+  max-width: min(38vw, 430px);
+}
+.jni-probe-frame {
+  position: relative;
+  aspect-ratio: 1;
   border: 2px solid;
-  pointer-events: none;
+  background: #f7f1c8;
+  box-shadow: 14px 16px 0 rgba(7, 26, 22, 0.55);
 }
 .jni-probe-photo {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  border-radius: inherit;
 }
 
-/* Sized to the CONTAINED photograph, not to the tile. The source is square and
-   the tile is 5:4, so the pouch occupies a full-height square in the middle --
-   which is the box the prototype's arrow coordinates were drawn against. Match
-   it here and the geometry ports across without being remapped. */
+/* Sized to the CONTAINED photograph, not to the tile -- both are square, so
+   the arrow coordinates port across from the prototype without remapping. */
 .jni-probe-marks {
   position: absolute;
   top: 50%;
@@ -645,59 +723,47 @@
   transition-delay: calc(var(--i, 0) * 110ms + 70ms);
 }
 
-/* Pinned by hand: three positions, three angles, three widths. A grid of four
-   identical boxes is what made the first pass read as a spec sheet. */
+/* Two notes, pinned by hand, and only the two that are about the OBJECT --
+   the zip and the bake are true of every flavour, which is why they belong on
+   the photograph. Everything about taste moved into the panel, where it can
+   be set at a size that is actually readable. */
 .jni-probe-note {
   position: absolute;
   z-index: 5;
-  padding: 8px 10px 9px;
-  border: 3px solid #071a16;
+  width: 9.4rem;
+  padding: 9px 11px 10px;
+  border: 3px solid var(--color-border);
   border-radius: 15px 10px 17px 9px / 10px 16px 9px 15px;
-  background: #fbf6d0;
-  box-shadow: 4px 5px 0 #071a16;
-  color: #071a16;
-  font-size: 10.5px;
-  line-height: 1.32;
+  background: var(--color-bg-cream);
+  box-shadow: 4px 5px 0 var(--color-border);
+  color: var(--color-text-dark);
+  font-size: 13px;
+  line-height: 1.34;
   text-align: left;
   text-wrap: pretty;
   animation: jni-probe-tag-in 420ms cubic-bezier(0.34, 1.4, 0.64, 1) both;
-  animation-delay: calc(180ms + var(--i, 0) * 120ms);
+  animation-delay: calc(200ms + var(--i, 0) * 120ms);
 }
 .jni-probe-note b {
   display: block;
   width: fit-content;
   margin-bottom: 5px;
   padding-bottom: 1px;
-  border-bottom: 3px solid var(--pin, #071a16);
+  border-bottom: 3px solid var(--pin, var(--color-border));
   font-family: var(--font-brand);
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 400;
   letter-spacing: 0.015em;
 }
 .jni-probe-note.p-a {
-  left: -19%;
-  top: 3%;
-  width: 8.2rem;
+  left: -17%;
+  top: 2%;
   --turn: -2.8deg;
 }
 .jni-probe-note.p-b {
-  right: -17%;
+  right: -15%;
   top: 38%;
-  width: 7.4rem;
   --turn: 2.2deg;
-}
-.jni-probe-note.p-c {
-  left: -13%;
-  bottom: 5%;
-  width: 9rem;
-  --turn: -1.6deg;
-}
-.jni-probe-pip {
-  position: absolute;
-  top: -15px;
-  right: -12px;
-  width: 28px;
-  rotate: 16deg;
 }
 
 @keyframes jni-probe-tag-in {
@@ -711,15 +777,280 @@
   }
 }
 
-/* Narrow screens have no room either side of a card for a 8rem note, and no
-   hover to open one with. The flood stays; the annotation does not. */
-@media (max-width: 767px) {
-  .jni-probe-overlay {
-    display: none;
+/* ---- the panel: why you would buy it, and how ---------------------------- */
+.jni-probe-panel {
+  align-self: center;
+  max-width: min(34rem, 100%);
+  min-width: 0;
+}
+
+.jni-probe-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.jni-probe-badge {
+  padding: 4px 11px 5px;
+  border: 2.5px solid var(--color-border);
+  border-radius: 999px;
+  box-shadow: 2px 3px 0 var(--color-border);
+  color: var(--color-text-dark);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.jni-probe-heat {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+}
+.jni-probe-heat > span {
+  display: block;
+  width: 18px;
+  flex: 0 0 auto;
+}
+/* A rising scale: each chilli a little taller than the last, so the ramp is
+   legible before the colour is. Unlit ones drop to a wash of the same ink
+   rather than a second colour. */
+.jni-probe-heat > span:nth-child(1) {
+  transform: translateY(3px);
+}
+.jni-probe-heat > span:nth-child(2) {
+  transform: translateY(1.5px);
+}
+.jni-probe-heat > span[data-off] {
+  opacity: 0.3;
+}
+.jni-probe-heat em {
+  align-self: center;
+  margin-left: 5px;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  opacity: 0.8;
+}
+.jni-probe-rating {
+  font-size: 14px;
+  opacity: 0.88;
+}
+.jni-probe-rating i {
+  font-style: normal;
+  opacity: 0.6;
+}
+
+.jni-probe-headline {
+  margin-bottom: 14px;
+  font-family: var(--font-brand);
+  font-weight: 400;
+  line-height: 0.94;
+  font-size: clamp(2.2rem, 4.4vw, 4rem);
+  -webkit-text-stroke: 0.055em var(--color-bg-dark);
+  paint-order: stroke fill;
+  text-shadow: 0.045em 0.06em 0 var(--color-bg-dark);
+  text-wrap: balance;
+}
+.jni-probe-blurb {
+  margin-bottom: 20px;
+  max-width: 34ch;
+  font-size: clamp(15px, 1.1vw, 17px);
+  line-height: 1.5;
+  opacity: 0.92;
+  text-wrap: pretty;
+}
+
+/* The ingredients, drawn with the pack's own artwork instead of set as a
+   comma list. Three words in a row was the whole of what the old third note
+   said, and it said it at 10.5px. */
+.jni-probe-ings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-bottom: 22px;
+}
+.jni-probe-ings li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px 6px 8px;
+  border: 2.5px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-bg-cream);
+  box-shadow: 2px 3px 0 var(--color-border);
+  color: var(--color-text-dark);
+  font-size: 12.5px;
+}
+.jni-probe-ings img {
+  width: 17px;
+  flex: 0 0 auto;
+}
+
+/* Chips, not a stepper. A stepper costs one click per pack and cannot show
+   what the next step is worth while you are deciding. */
+.jni-probe-qty {
+  display: flex;
+  gap: 9px;
+  margin-bottom: 16px;
+}
+.jni-probe-chip {
+  min-width: 76px;
+  padding: 9px 12px 10px;
+  border: 3px solid var(--color-border);
+  border-radius: 15px 10px 17px 9px / 10px 16px 9px 15px;
+  background: var(--color-bg-cream);
+  box-shadow: 3px 4px 0 var(--color-border);
+  color: var(--color-text-dark);
+  text-align: center;
+  line-height: 1.15;
+  transition: transform 0.16s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.jni-probe-chip:hover {
+  transform: translateY(-2px);
+}
+.jni-probe-chip[aria-pressed='true'] {
+  transform: translateY(-3px);
+  box-shadow: 4px 6px 0 var(--color-border);
+}
+.jni-probe-chip b {
+  display: block;
+  font-family: var(--font-brand);
+  font-weight: 400;
+  font-size: 19px;
+}
+.jni-probe-chip i {
+  display: block;
+  font-style: normal;
+  font-size: 10.5px;
+  opacity: 0.7;
+}
+
+/* ₹499 unlocks free shipping and nothing on the site said so until the
+   checkout page. One pack leaves ₹329 on the table; this is the only place
+   that number is visible while it can still change the order. */
+.jni-probe-ship {
+  margin-bottom: 18px;
+}
+.jni-probe-ship-track {
+  height: 13px;
+  border: 2.5px solid var(--color-border);
+  border-radius: 999px;
+  background: rgba(251, 246, 208, 0.22);
+  overflow: hidden;
+}
+.jni-probe-ship-fill {
+  height: 100%;
+  transition: width 420ms cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+.jni-probe-ship p {
+  margin-top: 7px;
+  font-size: 12.5px;
+  opacity: 0.9;
+}
+.jni-probe-ship b {
+  font-family: var(--font-brand);
+  font-weight: 400;
+  font-size: 15px;
+  /* The same PANEL_ACCENT the headline and the chosen chip use, handed down
+     from the component, so the three highlights on this panel are one colour
+     rather than three near-misses. */
+  color: var(--jni-probe-accent, var(--color-accent-yellow));
+}
+
+.jni-probe-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+/* Wears the brand's traced CTA shape via .jni-btn; only the scale is set here,
+   because this is the one primary action on the screen. */
+.jni-probe-buy {
+  min-height: 3.5rem;
+  padding: 0.85rem 2.4rem;
+  font-size: 1.25rem;
+}
+.jni-probe-ghost {
+  padding: 0.7rem 1.3rem;
+  border: 2.5px dashed rgba(245, 240, 220, 0.55);
+  border-radius: 999px;
+  font-size: 14px;
+  transition: border-color 0.16s ease, background-color 0.16s ease;
+}
+.jni-probe-ghost:hover {
+  border-color: var(--color-text-light);
+  background: rgba(245, 240, 220, 0.1);
+}
+.jni-probe-trust {
+  margin-top: 16px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+}
+.jni-probe-more {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  opacity: 0.72;
+}
+.jni-probe-more:hover {
+  opacity: 1;
+}
+
+/* The social-proof toast is fixed to the viewport and cannot see this section
+   from where it renders, so FlavourGrid flags <body> and it stands down --
+   two things shouting from one screen is one too many. */
+body[data-flavour-probe] .jni-recent-toast {
+  /* NOT opacity: framer-motion animates this element and writes
+     `opacity: 1` inline, which no stylesheet rule can outrank. Visibility is
+     the one channel it does not touch. */
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* ---- narrow screens ----------------------------------------------------- */
+/* The old probe switched itself off below 768px and left phones the flood and
+   nothing else. The spread stacks, so they get the whole thing -- and since
+   touch never fires hover, the card's own tap opens it. */
+@media (max-width: 1023px) {
+  .jni-probe-note {
+    display: none; /* no room either side of the pack */
   }
-  .jni-flavour-section[data-flavour-live] .jni-probe-stage {
-    filter: none;
-    opacity: 1;
+  .jni-probe-overlay {
+    grid-template-columns: 1fr;
+    gap: 22px;
+    align-content: start;
+    overflow-y: auto;
+  }
+  .jni-probe-pack {
+    justify-self: start;
+    max-width: min(52vw, 320px);
+  }
+}
+@media (max-width: 639px) {
+  .jni-probe-overlay {
+    /* Long-hand top, because the shorthand here was resetting the header
+       offset set above and sliding the pouch up behind the fixed header. */
+    padding: calc(var(--site-header-offset) + 8px) 16px 16px;
+  }
+  .jni-probe-pack {
+    max-width: min(60vw, 240px);
+  }
+  .jni-probe-headline {
+    font-size: clamp(1.7rem, 7.4vw, 2.3rem);
+  }
+  .jni-probe-qty {
+    flex-wrap: wrap;
+  }
+  .jni-probe-buy {
+    width: 100%;
   }
 }
 
@@ -727,7 +1058,12 @@
   .jni-flavour-section,
   .jni-flavour-panel,
   .jni-flavour-doodles,
-  .jni-probe-stage {
+  .jni-probe-stage,
+  .jni-probe-ship-fill {
+    transition: none;
+  }
+  .jni-probe-media:hover .jni-probe-fuse,
+  .jni-probe-media:focus-visible .jni-probe-fuse {
     transition: none;
   }
   .jni-probe-note {

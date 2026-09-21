@@ -7,6 +7,7 @@ import DoodleField from '../ui/DoodleField'
 import FlavourProbeOverlay from './FlavourProbeOverlay'
 import { packPalettes } from '../icons/PackDoodles'
 import { BrandHeading, Sparkle } from '../ui/Primitives'
+import { PROBE_DWELL } from '../../data/site'
 import { Rosette } from '../icons/WhyIcons'
 
 const DOODLES = [
@@ -82,12 +83,19 @@ export function TriangleCluster({ className = '' }) {
 
 const ORDER = ['sweet-chilli-rush', 'jalapeno-kick', 'peri-peri-punch']
 
-/* One gesture, two delays. Hold the pointer on a pack for OPEN and the whole
-   thing arrives together -- flood, dissolve, lifted pouch, arrows; take the
-   pointer off it and the section waits CLOSE before coming back, so crossing
-   the grid on the way to the bundles neither fires it nor makes it flicker. */
-const OPEN = 1000
-const CLOSE = 1000
+/* One gesture, two beats.
+ *
+ * Touching a pack floods the section with its colour straight away -- that is
+ * the answer to "is this thing listening", and it costs nothing to undo. The
+ * probe is the second beat, behind PROBE_DWELL, because reading the pouch is
+ * something you stop to do, and firing it on contact would strobe arrows
+ * across all three cards on the way down to the bundles.
+ *
+ * Taking the pointer off waits CLOSE before anything unwinds, so crossing the
+ * grid neither fires it nor makes it flicker -- and so the pointer can travel
+ * from the card onto the panel the card opened without the panel dying on the
+ * way across the gap. */
+const CLOSE = 420
 
 export default function FlavourGrid() {
   const ordered = ORDER.map((slug) => products.find((p) => p.slug === slug)).filter(Boolean)
@@ -97,9 +105,11 @@ export default function FlavourGrid() {
    * an earlier pass had the colour arrive on contact and the annotation follow
    * later, which read as two effects stacked on each other rather than one.
    */
-  const [live, setLive] = useState(null)
+  const [live, setLive] = useState(null) // flooded -- instant
+  const [probe, setProbe] = useState(null) // opened  -- after the dwell
   const [rect, setRect] = useState(null)
-  const liveProduct = ordered.find((p) => p.slug === live) || null
+  const liveProduct = ordered.find((p) => p.slug === probe) || null
+  const floodProduct = ordered.find((p) => p.slug === live) || null
   const sectionRef = useRef(null)
   const open = useRef(0)
   const close = useRef(0)
@@ -108,15 +118,50 @@ export default function FlavourGrid() {
     window.clearTimeout(open.current)
     window.clearTimeout(close.current)
     if (!slug) {
-      close.current = window.setTimeout(() => setLive(null), CLOSE)
+      close.current = window.setTimeout(() => {
+        setLive(null)
+        setProbe(null)
+      }, CLOSE)
       return
     }
-    if (live === slug) return
+    setLive(slug)
+    if (probe === slug) return
     // Moving from one pack to another drops the first immediately rather than
     // holding it through the new one's wait, which would show the wrong pouch.
-    if (live) setLive(null)
-    open.current = window.setTimeout(() => setLive(slug), OPEN)
+    if (probe) setProbe(null)
+    open.current = window.setTimeout(() => setProbe(slug), PROBE_DWELL)
   }
+
+  const dismiss = () => {
+    window.clearTimeout(open.current)
+    window.clearTimeout(close.current)
+    setLive(null)
+    setProbe(null)
+  }
+
+  /* Escape closes it. A pointer can always be moved away, but someone who
+     tabbed into a card had no way back out of the panel it opened. */
+  useEffect(() => {
+    if (!probe) return
+    const onKey = (e) => {
+      if (e.key === 'Escape') dismiss()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [probe])
+
+  /* The social-proof toast is fixed to the viewport and knows nothing about
+     this section, so while the probe is open the two compete for the same
+     corner of the same screen. A flag on <body> is the only handle the toast
+     can see from where it is rendered; index.css reads it. */
+  useEffect(() => {
+    if (probe) document.body.dataset.flavourProbe = probe
+    else delete document.body.dataset.flavourProbe
+    return () => {
+      delete document.body.dataset.flavourProbe
+    }
+  }, [probe])
+
   useEffect(
     () => () => {
       window.clearTimeout(open.current)
@@ -129,37 +174,34 @@ export default function FlavourGrid() {
   // so it has to be told where the card's photo is. Section-relative, so only a
   // resize can invalidate it -- scrolling moves both together.
   useLayoutEffect(() => {
-    if (!live) return setRect(null)
+    if (!probe) return setRect(null)
     const measure = () => {
-      const tile = sectionRef.current?.querySelector(`[data-slug="${live}"] .jni-probe-media`)
+      const tile = sectionRef.current?.querySelector(`[data-slug="${probe}"] .jni-probe-media`)
       if (!tile) return setRect(null)
-      const s = sectionRef.current.getBoundingClientRect()
       const t = tile.getBoundingClientRect()
-      // With the grid gone the section is an empty colour field, and an outer
-      // pack left where its card used to be sits badly off to one side. A
-      // twelfth of the way to the middle evens that up and gives the outer
-      // notes room, while leaving the pointer well inside the pack it is
-      // holding open -- pull it all the way to centre and the cursor ends up
-      // stranded on bare ground, one twitch from closing the thing.
-      const pull = (s.width / 2 - (t.left - s.left + t.width / 2)) * 0.12
-      setRect({
-        left: t.left - s.left,
-        top: t.top - s.top,
-        width: t.width,
-        height: t.height,
-        pull,
-      })
+      // `pull` is gone with the layout that needed it: the pouch used to stay
+      // where its card was, so an outer one sat badly off to one side and had
+      // to be nudged in. The probe now lays itself out as a spread, and this
+      // rect is only the frame the pack animates away from.
+      //
+      // Measured once per open. These are viewport coordinates now, so
+      // scrolling does invalidate them -- but nothing reads them after the
+      // pack has travelled, and re-measuring mid-scroll would restart the
+      // journey on every frame.
+      // Viewport coordinates, because the probe layer is position:fixed.
+      setRect({ left: t.left, top: t.top, width: t.width, height: t.height })
     }
     measure()
     window.addEventListener('resize', measure)
     return () => window.removeEventListener('resize', measure)
-  }, [live])
+  }, [probe])
 
   return (
     <section
       ref={sectionRef}
       id="products"
       data-flavour-live={live || undefined}
+      data-flavour-probe={probe || undefined}
       onPointerLeave={() => point(null)}
       onBlur={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget)) point(null)
@@ -244,9 +286,9 @@ export default function FlavourGrid() {
             the panel around when the text swaps. */}
         <div className="relative mx-auto mb-7 grid min-h-[3.75rem] max-w-xl place-items-center text-center sm:mb-9">
           <AnimatePresence mode="wait" initial={false}>
-            {liveProduct ? (
+            {floodProduct ? (
               <motion.p
-                key={liveProduct.slug}
+                key={floodProduct.slug}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
@@ -255,11 +297,11 @@ export default function FlavourGrid() {
               >
                 <span
                   className="font-brand text-2xl sm:text-3xl"
-                  style={{ color: packPalettes[liveProduct.slug]?.fill }}
+                  style={{ color: packPalettes[floodProduct.slug]?.fill }}
                 >
-                  {liveProduct.shortName}.
+                  {floodProduct.shortName}.
                 </span>{' '}
-                <span className="text-sm sm:text-base">{liveProduct.tagline}</span>
+                <span className="text-sm sm:text-base">{floodProduct.tagline}</span>
               </motion.p>
             ) : null}
           </AnimatePresence>
@@ -330,7 +372,13 @@ export default function FlavourGrid() {
           instead of vanishing off the top of the lift. */}
       <AnimatePresence>
         {liveProduct && rect && (
-          <FlavourProbeOverlay key={liveProduct.slug} product={liveProduct} rect={rect} />
+          <FlavourProbeOverlay
+            key={liveProduct.slug}
+            product={liveProduct}
+            rect={rect}
+            onHold={point}
+            onClose={dismiss}
+          />
         )}
       </AnimatePresence>
     </section>

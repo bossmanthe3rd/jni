@@ -6,6 +6,17 @@ const P = '/assets/products'
 
 export const FREE_SHIPPING_THRESHOLD = 499
 
+/** Flat delivery charge below the threshold. Was a bare 49 inside
+ *  CheckoutPage; the probe now quotes a delivered total up front, so the two
+ *  have to read from the same number or the price will change under the
+ *  customer between the button and the bill. */
+export const SHIPPING_FLAT = 49
+
+/** What the order actually costs, delivered. */
+export function deliveredTotal(subtotal) {
+  return subtotal + (subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FLAT)
+}
+
 export const products = [
   {
     id: 1,

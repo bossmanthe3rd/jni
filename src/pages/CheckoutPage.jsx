@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ShoppingBag } from 'lucide-react'
 import { useCart } from '../store/cartStore'
-import { FREE_SHIPPING_THRESHOLD } from '../data/products'
+import { FREE_SHIPPING_THRESHOLD, SHIPPING_FLAT } from '../data/products'
 
 /**
  * Checkout.
@@ -15,7 +15,7 @@ import { FREE_SHIPPING_THRESHOLD } from '../data/products'
 export default function CheckoutPage() {
   const { items } = useCart()
   const total = items.reduce((n, i) => n + Number(i.price) * i.qty, 0)
-  const shipping = total >= FREE_SHIPPING_THRESHOLD ? 0 : 49
+  const shipping = total >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FLAT
 
   useEffect(() => {
     document.title = 'Checkout | Just Nibble It'
