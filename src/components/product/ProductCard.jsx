@@ -14,7 +14,14 @@ import HeatMeter from './HeatMeter'
  * same black price, nothing said which one was the hot one. Each now carries
  * its own pack palette: a flavour badge over the image, the card's own ink
  * border colour, and the price in the pack's own dark ink. */
-export function ProductCard({ product, index = 0 }) {
+/**
+ * `onLive` is opt-in and unused everywhere but the homepage grid, where holding
+ * the pointer on a pack photo takes the section over. It is reported from the
+ * photo rather than from the card because the photo is what the gesture is
+ * about -- pointing at the price is not asking to read the pouch. The card is
+ * otherwise untouched: same price, same stepper, same add-to-cart.
+ */
+export function ProductCard({ product, index = 0, onLive }) {
   const { addItem, openCart } = useCart()
   const [qty, setQty] = useState(1)
   const price = Number(product.price)
@@ -41,20 +48,31 @@ export function ProductCard({ product, index = 0 }) {
       transition={{ duration: 0.35, delay: index * 0.05 }}
       className="flex h-full flex-col overflow-hidden rounded-2xl border-[3px] bg-cream sm:rounded-[22px]"
       style={{ borderColor: palette?.line || 'var(--color-border)' }}
+      data-slug={product.slug}
     >
+      {/* The photo sits in the card as its own tile rather than filling the
+          top edge: inset on all four sides and cut with the same uneven radius
+          the packs and buttons use, so the corners look torn rather than
+          machined. The inset is the padding the image already carried, moved
+          from inside the box to outside it, so the pouch does not change size. */}
       <Link
         to={to}
         aria-label={`View ${product.name}`}
-        className={`relative block shrink-0 overflow-hidden bg-[#F7F1C8] text-left ${
-          product.isBundle ? 'aspect-[16/10] min-h-[180px]' : 'aspect-[5/4]'
+        onFocus={onLive ? () => onLive(product.slug) : undefined}
+        onBlur={onLive ? () => onLive(null) : undefined}
+        onPointerEnter={onLive ? () => onLive(product.slug) : undefined}
+        onPointerLeave={onLive ? () => onLive(null) : undefined}
+        className={`jni-probe-media relative mx-2 mt-2 block shrink-0 overflow-hidden border-2 bg-[#F7F1C8] text-left sm:mx-6 sm:mt-6 ${
+          product.isBundle ? 'aspect-[16/10] min-h-[180px]' : 'aspect-square'
         }`}
+        style={{ borderColor: palette?.line || 'var(--color-border)' }}
       >
         <SmartImage
           src={image}
           alt={`${product.name} pack`}
           width="1200"
           height="1200"
-          className="h-full w-full object-contain p-1.5 sm:p-3"
+          className="h-full w-full object-contain"
         />
         {palette && product.flavor && (
           <span
@@ -149,8 +167,7 @@ export function BundleCard({ bundle, index = 0 }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.18 }}
       transition={{ duration: 0.35, delay: index * 0.05 }}
-      className="flex h-full flex-col overflow-hidden rounded-2xl border-[3px] border-ink sm:rounded-[22px]"
-      style={{ backgroundColor: '#0C1B17' }}
+      className="flex h-full flex-col overflow-hidden rounded-2xl border-[3px] border-ink bg-cream sm:rounded-[22px]"
     >
       <Link
         to={`/combos/${bundle.slug}`}
@@ -169,25 +186,25 @@ export function BundleCard({ bundle, index = 0 }) {
         </span>
       </Link>
 
-      <div className="flex flex-1 flex-col px-2.5 pb-2.5 pt-2 text-white sm:px-4 sm:pb-4 sm:pt-3">
+      <div className="flex flex-1 flex-col px-2.5 pb-2.5 pt-2 text-ink sm:px-4 sm:pb-4 sm:pt-3">
         <Link
           to={`/combos/${bundle.slug}`}
-          className="font-brand text-base leading-tight text-sunshine hover:underline sm:text-2xl"
+          className="font-brand text-base leading-tight text-ink hover:underline sm:text-2xl"
         >
           {bundle.shortName || bundle.name}
         </Link>
-        <p className="mt-1.5 line-clamp-2 text-[11px] font-medium leading-4 text-white/60 sm:min-h-10 sm:text-base sm:leading-6">
+        <p className="mt-1.5 line-clamp-2 text-[11px] font-medium leading-4 text-ink/70 sm:min-h-10 sm:text-base sm:leading-6">
           {bundle.description}
         </p>
 
         <div className="mt-auto flex flex-col gap-1.5 pt-3 sm:flex-row sm:items-end sm:justify-between sm:gap-3 sm:pt-4">
           <div className="flex items-baseline gap-1.5 sm:gap-2">
-            <span className="font-brand text-xl text-sunshine sm:text-3xl">₹{bundle.price}</span>
-            <span className="text-[11px] font-semibold text-white/40 line-through sm:text-sm">
+            <span className="font-brand text-xl text-ink sm:text-3xl">₹{bundle.price}</span>
+            <span className="text-[11px] font-semibold text-ink/40 line-through sm:text-sm">
               ₹{bundle.originalPrice}
             </span>
           </div>
-          <span className="w-fit rounded-pill border-[2px] border-teal px-2 py-0.5 text-[9px] font-black uppercase text-teal sm:px-2.5 sm:py-1 sm:text-[10px]">
+          <span className="w-fit rounded-pill border-[2px] border-ink bg-teal px-2 py-0.5 text-[9px] font-black uppercase text-ink sm:px-2.5 sm:py-1 sm:text-[10px]">
             Save {save}%
           </span>
         </div>

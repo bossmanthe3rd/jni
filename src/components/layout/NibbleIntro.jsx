@@ -72,7 +72,7 @@ const INTRO_CSS =
 const CREAM = '#fbf6d0'
 const INK = '#231f20'
 const GREEN = '#0b5c2e'
-const HEADER_DARK = '#071A16' // matches SiteHeader's bar
+const HEADER_DARK = '#071A16' // matches SiteHeader's badge
 
 const T = {
   dur: 380,
@@ -87,8 +87,9 @@ const T = {
   doodle: 780,
   collapse: 1900,
   collapseDur: 520,
+  dissolve: 200,
 }
-const TOTAL = T.collapse + T.collapseDur
+const TOTAL = T.collapse + T.collapseDur + T.dissolve
 
 // angle°, distance vw, size px, spin°, doodle name
 const BURST = [
@@ -312,10 +313,9 @@ export default function NibbleIntro() {
     })
 
     // --- collapse into the header -------------------------------------------
-    // The lockup is cream by now and the site header is a dark bar, so the ink
-    // stays inverted: the overlay simply shrinks to the header strip and its
-    // green settles to the header's own dark. Both are dark, so nothing muddies,
-    // and the final frame already *is* the header — the cut is invisible.
+    // The lockup is cream by now and it lands on a dark badge, so the ink stays
+    // inverted: the overlay shrinks to the header row and its green settles to
+    // the badge's own dark. Both are dark, so nothing muddies.
     const target = document.querySelector('[data-intro-logo]')?.getBoundingClientRect()
     const bar = document.querySelector('[data-intro-bar]')?.getBoundingClientRect()
     const box = logo.current.getBoundingClientRect()
@@ -368,6 +368,17 @@ export default function NibbleIntro() {
     fwd(burst.current, [{ opacity: 1 }, { opacity: 0 }], {
       duration: 200,
       delay: T.collapse,
+    })
+
+    // The collapse used to end on a full-width dark strip that the header
+    // underneath matched pixel for pixel, so the overlay could just be removed.
+    // The header is three islands now and paints no strip, so that same last
+    // frame would blink off against the page. Dissolve it instead: the lockup
+    // has already landed on the real wordmark, which is what stays behind.
+    fwd(crop.current, [{ opacity: 1 }, { opacity: 0 }], {
+      duration: T.dissolve,
+      delay: T.collapse + T.collapseDur,
+      easing: 'ease-in',
     })
 
     // --- lifecycle ----------------------------------------------------------

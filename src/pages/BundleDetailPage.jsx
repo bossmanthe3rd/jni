@@ -7,7 +7,10 @@ import { useCart } from '../store/cartStore'
 import { ProductCard } from '../components/product/ProductCard'
 import ProductAccordion from '../components/product/ProductAccordion'
 import StickyAtcBar from '../components/product/StickyAtcBar'
-import { SmartImage, Sparkle } from '../components/ui/Primitives'
+import { Sparkle } from '../components/ui/Primitives'
+import ProductGallery from '../components/product/ProductGallery'
+import LaunchBanner from '../components/promo/LaunchBanner'
+import { launchOffer } from '../data/site'
 
 function buildBundleAccordion(bundle, perPacket) {
   return [
@@ -131,22 +134,20 @@ export default function BundleDetailPage() {
             </Link>
           </motion.div>
 
+          {/* The offer's own page. Shown only on the pack it prices, so the
+              trio never carries a banner advertising the six. */}
+          {bundle.slug === launchOffer.slug && (
+            <LaunchBanner tone="dark" className="mb-7 overflow-hidden rounded-[28px] border-[3px] border-ink" />
+          )}
+
           <div className="grid gap-5 lg:grid-cols-[1.05fr,0.95fr] lg:gap-7">
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="jni-card relative aspect-[4/5] max-h-[560px] overflow-hidden bg-[#F7F1C8]"
-            >
-              <SmartImage
-                src={bundle.imageUrl}
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+              <ProductGallery
+                key={bundle.slug}
+                images={bundle.gallery}
+                badge={bundle.badge}
                 alt={`${bundle.name} party snack combo`}
-                width="1400"
-                height="1750"
-                className="h-full w-full object-cover"
               />
-              <span className="absolute left-3 top-3 z-[2] rounded-pill border-thick border-outline bg-sunshine px-3 py-1.5 text-[10px] font-black uppercase text-ink">
-                {bundle.badge}
-              </span>
             </motion.div>
 
             <motion.div

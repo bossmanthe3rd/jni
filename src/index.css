@@ -1,3 +1,5 @@
+@import './styles/cta-shape.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -34,6 +36,7 @@
    --------------------------------------------------------------------------- */
 :root {
   --site-header-offset: 6.5rem;
+  --site-ticker-height: 1.75rem;
   --color-bg-cream: #fbf6d0;
   --color-bg-dark: #071a16;
   --color-accent-teal: #4db8ae;
@@ -108,16 +111,24 @@
     color: var(--color-text-light);
   }
 
+  /* The button wears the brand's own traced shape -- keyline and field both
+     inside one stretched background image. See src/styles/cta-shape.css. The
+     border and radius are gone with it: they were the approximation. Padding
+     runs a little wider than the old rule to clear the bowed edges, which cut
+     in further at the middle than a radius ever did. */
   .jni-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    min-height: 2.75rem;
-    padding: 0.6rem 1.6rem;
-    border: var(--border-width-cta) solid var(--color-border);
-    border-radius: var(--radius-organic);
-    background: var(--color-cta-yellow);
+    min-height: 2.9rem;
+    padding: 0.7rem 2rem;
+    border: 0;
+    border-radius: 0;
+    background-color: transparent;
+    background-image: var(--jni-cta-shape);
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
     color: var(--color-text-dark);
     font-family: var(--font-brand);
     font-size: 0.95rem;
@@ -128,8 +139,8 @@
     transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.16s ease;
   }
   .jni-btn:hover {
-    background: var(--color-cta-yellow-hover);
     transform: scale(1.05);
+    filter: brightness(1.06);
   }
   .jni-btn:active {
     transform: scale(0.95);
@@ -486,3 +497,304 @@
   width: 100%;
   height: auto;
 }
+
+/* "Our flavours" takes the colour of whatever you point at.
+
+   Hovering or focusing a flavour floods the section and its panel with that
+   pouch's own packPalettes ground, names the flavour under the heading, and
+   steps the other packs back. Ported from prototypes/flavour-probe.html.
+
+   Progressive enhancement, deliberately: touch devices never fire hover, and
+   what they miss is colour and a restatement of the heat -- every price, every
+   add-to-cart and every fact is still on the card and on the PDP. Nothing is
+   hidden behind the interaction.
+
+   The panel has to flood too. It is a teal block filling most of the section,
+   so colouring only the section behind it would have shown the flavour in a
+   thin frame around the outside and nowhere else. */
+.jni-flavour-section,
+.jni-flavour-panel {
+  transition: background-color 560ms cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+
+.jni-flavour-section[data-flavour-live='sweet-chilli-rush'],
+.jni-flavour-section[data-flavour-live='sweet-chilli-rush'] .jni-flavour-panel {
+  background-color: #c8180d;
+}
+.jni-flavour-section[data-flavour-live='jalapeno-kick'],
+.jni-flavour-section[data-flavour-live='jalapeno-kick'] .jni-flavour-panel {
+  background-color: #0b5c2e;
+}
+.jni-flavour-section[data-flavour-live='peri-peri-punch'],
+.jni-flavour-section[data-flavour-live='peri-peri-punch'] .jni-flavour-panel {
+  background-color: #5c0d16;
+}
+
+/* Both doodle grounds are tinted for the colour they were sitting on -- cream
+   outside, teal inside. Once the flood lands neither tint is right, so they
+   step aside and the drift of the flavour itself carries the texture. */
+.jni-flavour-section[data-flavour-live] .jni-flavour-doodles {
+  opacity: 0;
+}
+.jni-flavour-doodles {
+  transition: opacity 560ms ease;
+}
+
+
+/* ---------------------------------------------------------------------------
+   THE PROBE — hold the pointer on a pack and it annotates itself.
+
+   The flood above is instant; this is the second, slower state behind a
+   two-second dwell (DWELL in FlavourGrid.jsx). Reading the pouch is something
+   you stop to do, and firing it on contact would strobe arrows across all
+   three cards on the way down to the bundles.
+
+   Everything in the section blurs except the pack. That cannot be done by
+   excluding a descendant from an ancestor's filter -- a filter applies to the
+   whole subtree -- so the blur goes on the grid wrapper and the sharp pouch is
+   a second copy of the photograph, drawn in a sibling layer sitting exactly on
+   top of the original. It is the same file the card already decoded.
+
+   That layer also has to live outside .jni-flavour-panel, which clips its own
+   overflow for its rounded corners: notes hung inside it would be cut at the
+   rim. Ported from prototypes/flavour-probe.html. */
+
+/* The photo tile. The uneven radius is the site's own torn-edge idiom -- the
+   same one the CTA shape and the pack badges use -- rather than a machined
+   corner, and it scales with the viewport so a 120px tile on a phone is not
+   wearing a 30px round. */
+.jni-probe-media,
+.jni-probe-overlay {
+  border-radius: clamp(13px, 2.3vw, 30px) clamp(10px, 1.8vw, 24px)
+    clamp(14px, 2.5vw, 32px) clamp(9px, 1.6vw, 22px);
+}
+
+/* The grid does not merely soften -- it goes. Blurring it left the cards, the
+   heading and the mascot as recognisable pale shapes behind the pouch, so the
+   pack read as a second image pasted over a blurred page rather than the one
+   thing left in the room. Blur dissolves the edges; the opacity drop takes the
+   cream and the teal with them, and what shows through is the section's own
+   flood. Layout is untouched, so nothing moves and the card keeps receiving the
+   pointer that is holding all this open. */
+.jni-probe-stage {
+  transition: filter 520ms ease, opacity 520ms ease;
+}
+.jni-flavour-section[data-flavour-live] .jni-probe-stage {
+  filter: blur(26px) saturate(0.5);
+  opacity: 0;
+}
+
+/* Opens at the card photo's exact frame -- same 2px keyline in the same pack
+   ink -- so the moment it appears is invisible. The rise and the shadow are
+   animated from there; see LIFT/GROW in FlavourProbeOverlay.jsx. It stays
+   transparent to the pointer, because the hover that is holding it open is on
+   the card underneath and must not be stolen by the thing it opened. */
+.jni-probe-overlay {
+  position: absolute;
+  z-index: 20;
+  background: #f7f1c8;
+  border: 2px solid;
+  pointer-events: none;
+}
+.jni-probe-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Sized to the CONTAINED photograph, not to the tile. The source is square and
+   the tile is 5:4, so the pouch occupies a full-height square in the middle --
+   which is the box the prototype's arrow coordinates were drawn against. Match
+   it here and the geometry ports across without being remapped. */
+.jni-probe-marks {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  height: 100%;
+  aspect-ratio: 1;
+  overflow: visible;
+  pointer-events: none;
+}
+.jni-probe-marks path {
+  fill: none;
+  stroke: #fbf6d0;
+  /* Width in viewBox units, NOT non-scaling-stroke: with that on, dash lengths
+     are measured in user units and drawn in screen units, and every arrow
+     renders as a dashed line instead of hiding. */
+  stroke-width: 0.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: var(--len) var(--len);
+  stroke-dashoffset: var(--len);
+  filter: drop-shadow(0 0 1.6px rgba(7, 26, 22, 0.75));
+}
+/* The second pass of each line, a hair off the first, the way a pen goes over
+   a line twice. Two clean strokes read as a diagram; two that disagree
+   slightly read as drawn. */
+.jni-probe-marks path.ghost {
+  opacity: 0.45;
+  stroke-width: 0.62;
+}
+.jni-probe-marks.lit path {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 620ms cubic-bezier(0.4, 0.75, 0.3, 1);
+  transition-delay: calc(var(--i, 0) * 110ms);
+}
+.jni-probe-marks.lit path.ghost {
+  transition-delay: calc(var(--i, 0) * 110ms + 70ms);
+}
+
+/* Pinned by hand: three positions, three angles, three widths. A grid of four
+   identical boxes is what made the first pass read as a spec sheet. */
+.jni-probe-note {
+  position: absolute;
+  z-index: 5;
+  padding: 8px 10px 9px;
+  border: 3px solid #071a16;
+  border-radius: 15px 10px 17px 9px / 10px 16px 9px 15px;
+  background: #fbf6d0;
+  box-shadow: 4px 5px 0 #071a16;
+  color: #071a16;
+  font-size: 10.5px;
+  line-height: 1.32;
+  text-align: left;
+  text-wrap: pretty;
+  animation: jni-probe-tag-in 420ms cubic-bezier(0.34, 1.4, 0.64, 1) both;
+  animation-delay: calc(180ms + var(--i, 0) * 120ms);
+}
+.jni-probe-note b {
+  display: block;
+  width: fit-content;
+  margin-bottom: 5px;
+  padding-bottom: 1px;
+  border-bottom: 3px solid var(--pin, #071a16);
+  font-family: var(--font-brand);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.015em;
+}
+.jni-probe-note.p-a {
+  left: -19%;
+  top: 3%;
+  width: 8.2rem;
+  --turn: -2.8deg;
+}
+.jni-probe-note.p-b {
+  right: -17%;
+  top: 38%;
+  width: 7.4rem;
+  --turn: 2.2deg;
+}
+.jni-probe-note.p-c {
+  left: -13%;
+  bottom: 5%;
+  width: 9rem;
+  --turn: -1.6deg;
+}
+.jni-probe-pip {
+  position: absolute;
+  top: -15px;
+  right: -12px;
+  width: 28px;
+  rotate: 16deg;
+}
+
+@keyframes jni-probe-tag-in {
+  from {
+    opacity: 0;
+    transform: translate(5px, 12px) scale(0.88) rotate(0deg);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(var(--turn, 0deg));
+  }
+}
+
+/* Narrow screens have no room either side of a card for a 8rem note, and no
+   hover to open one with. The flood stays; the annotation does not. */
+@media (max-width: 767px) {
+  .jni-probe-overlay {
+    display: none;
+  }
+  .jni-flavour-section[data-flavour-live] .jni-probe-stage {
+    filter: none;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jni-flavour-section,
+  .jni-flavour-panel,
+  .jni-flavour-doodles,
+  .jni-probe-stage {
+    transition: none;
+  }
+  .jni-probe-note {
+    animation: none;
+    opacity: 1;
+    transform: rotate(var(--turn, 0deg));
+  }
+  .jni-probe-marks path,
+  .jni-probe-marks.lit path {
+    stroke-dashoffset: 0;
+    transition: none;
+  }
+}
+
+/* The launch bar runs like a news ticker: the message repeats along a track
+   that slides by exactly one run and starts over.
+
+   It travels right to left, the way a news crawl does, so each message enters
+   at the right edge and is read on its way across. Sent the other way the
+   words arrive left-first and you read each one as it leaves.
+
+   Paused on hover, because the bar is a link and a moving target is a poor one
+   to aim at -- and not run at all under reduced motion, where the track simply
+   sits at its start and fills the width. */
+@keyframes jni-ticker-crawl {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.jni-ticker {
+  animation: jni-ticker-crawl 32s linear infinite;
+  will-change: transform;
+}
+
+.jni-ticker:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jni-ticker {
+    animation: none;
+  }
+}
+
+/* The doodle edge in DoodleBorder: every doodle runs the same 0 -> 100% of
+   its shared motion path, spaced by a negative delay rather than by a start
+   offset, so the loop closes on itself with no seam. */
+@keyframes jni-border-drift {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+
+/* Motion path is what the doodle edge is built on. Where it is missing the
+   doodles cannot be placed at all, so the panel takes its keyline back. */
+@supports not (offset-path: path('M 0 0')) {
+  .jni-doodle-edge {
+    border: var(--border-width-thick) solid var(--color-border);
+    border-bottom: 0;
+  }
+}
+
+

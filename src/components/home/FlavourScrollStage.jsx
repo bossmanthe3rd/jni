@@ -11,7 +11,7 @@ import {
 import { flavourStages } from '../../data/site'
 import { getProductBySlug } from '../../data/products'
 import { ASPECT, doodleComponents, packPalettes } from '../icons/PackDoodles'
-import { BrandHeading, WaveDivider, useMediaQuery } from '../ui/Primitives'
+import { BrandHeading, useMediaQuery } from '../ui/Primitives'
 import FlipSpot from '../mascot/FlipSpot'
 
 /*
@@ -33,8 +33,6 @@ import FlipSpot from '../mascot/FlipSpot'
  * heat ramp — sweet, fresh, big — which is what the rail's rising bars measure.
  */
 
-const CREAM = '#fbf6d0'
-const SUNSHINE = '#f3c63b'
 const FOAM = '#f5f0dc'
 
 // Doodle viewBox heights, so `weight` can be normalised to one on-screen
@@ -214,6 +212,11 @@ function DoodleLayer({ stage, slots, index, count, progress, reduce }) {
   )
 }
 
+// Transparent through the ticker, full strength a little below it.
+const DOODLE_MASK =
+  'linear-gradient(to bottom, transparent 0, transparent var(--site-ticker-height, 0px),' +
+  ' #000 calc(var(--site-ticker-height, 0px) + 3.5rem), #000 100%)'
+
 export default function FlavourScrollStage() {
   const trackRef = useRef(null)
   const reduce = useReducedMotion()
@@ -250,12 +253,7 @@ export default function FlavourScrollStage() {
   const crimpFill = useTransform(scrollYProgress, crimpFillStops, crimpFillValues)
   const crimpLine = useTransform(scrollYProgress, crimpLineStops, crimpLineValues)
 
-  // WhyFlipos closes on a sunshine wave: carry it over, then peel it off as the
-  // stage takes hold. The cream page pours back in as the pin releases.
-  const topWaveOpacity = useTransform(scrollYProgress, [0, 0.1], [1, 0])
-  const topWaveY = useTransform(scrollYProgress, [0, 0.1], ['0%', '-100%'])
-  const bottomWaveOpacity = useTransform(scrollYProgress, [0.9, 1], [0, 1])
-  const bottomWaveY = useTransform(scrollYProgress, [0.9, 1], ['100%', '0%'])
+  // The cream page pours back in as the pin releases.
 
   // Pack shot parallax, opposite the doodles so the two planes separate. Only
   // at md and up: in the stacked layout the offset would ride over the CTA.
@@ -287,33 +285,81 @@ export default function FlavourScrollStage() {
   const palette = palettes[active]
 
   return (
-    <section
+    // The track's own ground rides the same ramp as the panel's. It used to be
+    // pinned to flavourStages[0], which meant Sweet Chilli's #7d1206 was what
+    // showed anywhere the sticky panel did not cover -- rubber-band overscroll
+    // at either end of the 320vh track, and the moment the pin releases --
+    // however far into the Jalapeno chapter you were.
+    <motion.section
       id="flavour-stage"
       ref={trackRef}
-      className="relative h-[320vh] md:h-[380vh]"
-      style={{ backgroundColor: flavourStages[0].ground }}
+      // The track is padded by exactly the distance the ground reaches up from
+      // the sticky panel below. Without it the bleed would start above the
+      // section itself and lay a band of the flavour's colour over the bottom
+      // of Why Flipo's for as long as the stage was scrolling into view --
+      // visible only in the moments before the panel pins, which is the worst
+      // kind of bug to find later. Padded, the reach lands on the track's own
+      // top edge and can never escape it.
+      className="relative h-[320vh] pt-[var(--site-header-offset)] md:h-[380vh]"
+      style={{ backgroundColor: ground }}
       aria-label="The three flavours"
     >
-      <div className="sticky top-[var(--site-header-offset)] h-[calc(100vh-var(--site-header-offset))] overflow-hidden">
-        <motion.div className="absolute inset-0" style={{ backgroundColor: ground }} />
+      <div className="sticky top-[var(--site-header-offset)] h-[calc(100vh-var(--site-header-offset))]">
+        {/* The ground and its doodles run up behind the header; everything else
+            stays clipped to the panel.
 
-        {/* Ingredient doodles, one set per flavour, cross-faded on scroll. */}
-        <div className="absolute inset-0 z-10">
-          {flavourStages.map((item, i) => (
-            <DoodleLayer
-              key={item.slug}
-              stage={item}
-              slots={slots}
-              index={i}
-              count={count}
-              progress={scrollYProgress}
-              reduce={reduce}
-            />
-          ))}
+            The panel is pinned below the header, so the strip behind the header
+            fell through to the track's background and sat there in one flavour's
+            colour while the panel underneath was in another's. Reaching up from
+            here rather than repositioning the panel is what keeps the copy, the
+            pack, Flip, the crimp and the heat rail on the exact pixels they were
+            already on.
+
+            The clip moves off the sticky box and onto the two boxes below,
+            because it was the thing that made the bleed impossible -- and the
+            second one still has to exist, or the waves would slide out of the
+            panel instead of being wiped away by its edge. */}
+        <div
+          className="absolute inset-x-0 bottom-0 overflow-hidden"
+          style={{ top: 'calc(var(--site-header-offset) * -1)' }}
+        >
+          <motion.div className="absolute inset-0" style={{ backgroundColor: ground }} />
+
+          {/* Ingredient doodles, one set per flavour, cross-faded on scroll.
+
+              Masked away behind the ticker. The ground reaches y=0 so the
+              strip behind the header carries the flavour's colour, but the
+              ticker paints solid over the top of it, and a doodle that ran
+              under the bar came back out with a flat edge sliced across it.
+              The mask is in absolute lengths off the ticker's own measured
+              height rather than in per cent, so it lands on the bar's edge
+              exactly whatever the panel is tall. The slots stay where they
+              are -- they are composed positions, not a generated field. */}
+          <div
+            className="absolute inset-0 z-10"
+            style={{
+              maskImage: DOODLE_MASK,
+              WebkitMaskImage: DOODLE_MASK,
+            }}
+          >
+            {flavourStages.map((item, i) => (
+              <DoodleLayer
+                key={item.slug}
+                stage={item}
+                slots={slots}
+                index={i}
+                count={count}
+                progress={scrollYProgress}
+                reduce={reduce}
+              />
+            ))}
+          </div>
         </div>
 
-        {/* Copy and pack shot. */}
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center px-6 pb-16 pt-10 sm:px-10 sm:pb-20 sm:pt-16 md:flex-row md:items-center md:justify-between md:gap-10 md:px-[8vw] md:pb-16 md:pt-16 lg:gap-16">
+        {/* Copy and pack shot. Clipped in its own right now that the sticky box
+            no longer clips: the pack shot drifts +-42px on the parallax and
+            used to be trimmed by the panel's edge. */}
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center overflow-hidden px-6 pb-16 pt-10 sm:px-10 sm:pb-20 sm:pt-16 md:flex-row md:items-center md:justify-between md:gap-10 md:px-[8vw] md:pb-16 md:pt-16 lg:gap-16">
           <div className="w-full max-w-[34rem] text-center md:w-[46%] md:text-left">
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
@@ -393,23 +439,6 @@ export default function FlavourScrollStage() {
           </motion.div>
         </div>
 
-        {/* WhyFlipos closes on a sunshine wave: carry it over, peel it away as
-            the stage takes hold, then pour the cream page back in at the end. */}
-        <motion.div
-          className="absolute inset-x-0 top-0 z-[45] h-[52px] sm:h-[74px]"
-          style={{ opacity: topWaveOpacity, y: topWaveY }}
-          aria-hidden="true"
-        >
-          <WaveDivider fill={SUNSHINE} flip className="h-full w-full" />
-        </motion.div>
-        <motion.div
-          className="absolute inset-x-0 bottom-0 z-[45] h-[52px] sm:h-[74px]"
-          style={{ opacity: bottomWaveOpacity, y: bottomWaveY }}
-          aria-hidden="true"
-        >
-          <WaveDivider fill={CREAM} className="h-full w-full" />
-        </motion.div>
-
         {/* A loose chip in the pouch, between the copy and the pack shot. He
             re-seasons as the stage does, so he reads the heat with you. */}
         <FlipSpot
@@ -470,6 +499,6 @@ export default function FlavourScrollStage() {
           </ol>
         </nav>
       </div>
-    </section>
+    </motion.section>
   )
 }

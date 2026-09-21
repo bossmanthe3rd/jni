@@ -1,9 +1,13 @@
-import { motion } from 'framer-motion'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { bundles, products } from '../../data/products'
 import { BundleCard, ProductCard } from '../product/ProductCard'
 import FlipSpot from '../mascot/FlipSpot'
 import DoodleField from '../ui/DoodleField'
-import { BrandHeading, Blob, Sparkle } from '../ui/Primitives'
+import FlavourProbeOverlay from './FlavourProbeOverlay'
+import { packPalettes } from '../icons/PackDoodles'
+import { BrandHeading, Sparkle } from '../ui/Primitives'
+import { Rosette } from '../icons/WhyIcons'
 
 const DOODLES = [
   '/assets/doodles/sweet.png',
@@ -78,13 +82,89 @@ export function TriangleCluster({ className = '' }) {
 
 const ORDER = ['sweet-chilli-rush', 'jalapeno-kick', 'peri-peri-punch']
 
+/* One gesture, two delays. Hold the pointer on a pack for OPEN and the whole
+   thing arrives together -- flood, dissolve, lifted pouch, arrows; take the
+   pointer off it and the section waits CLOSE before coming back, so crossing
+   the grid on the way to the bundles neither fires it nor makes it flicker. */
+const OPEN = 1000
+const CLOSE = 1000
+
 export default function FlavourGrid() {
   const ordered = ORDER.map((slug) => products.find((p) => p.slug === slug)).filter(Boolean)
+  /*
+   * A single state. The flood, the dissolved background, the raised pouch and
+   * its arrows are one thing that is either happening to a flavour or is not --
+   * an earlier pass had the colour arrive on contact and the annotation follow
+   * later, which read as two effects stacked on each other rather than one.
+   */
+  const [live, setLive] = useState(null)
+  const [rect, setRect] = useState(null)
+  const liveProduct = ordered.find((p) => p.slug === live) || null
+  const sectionRef = useRef(null)
+  const open = useRef(0)
+  const close = useRef(0)
+
+  const point = (slug) => {
+    window.clearTimeout(open.current)
+    window.clearTimeout(close.current)
+    if (!slug) {
+      close.current = window.setTimeout(() => setLive(null), CLOSE)
+      return
+    }
+    if (live === slug) return
+    // Moving from one pack to another drops the first immediately rather than
+    // holding it through the new one's wait, which would show the wrong pouch.
+    if (live) setLive(null)
+    open.current = window.setTimeout(() => setLive(slug), OPEN)
+  }
+  useEffect(
+    () => () => {
+      window.clearTimeout(open.current)
+      window.clearTimeout(close.current)
+    },
+    []
+  )
+
+  // The raised pouch is a sibling of the grid rather than a child of the card,
+  // so it has to be told where the card's photo is. Section-relative, so only a
+  // resize can invalidate it -- scrolling moves both together.
+  useLayoutEffect(() => {
+    if (!live) return setRect(null)
+    const measure = () => {
+      const tile = sectionRef.current?.querySelector(`[data-slug="${live}"] .jni-probe-media`)
+      if (!tile) return setRect(null)
+      const s = sectionRef.current.getBoundingClientRect()
+      const t = tile.getBoundingClientRect()
+      // With the grid gone the section is an empty colour field, and an outer
+      // pack left where its card used to be sits badly off to one side. A
+      // twelfth of the way to the middle evens that up and gives the outer
+      // notes room, while leaving the pointer well inside the pack it is
+      // holding open -- pull it all the way to centre and the cursor ends up
+      // stranded on bare ground, one twitch from closing the thing.
+      const pull = (s.width / 2 - (t.left - s.left + t.width / 2)) * 0.12
+      setRect({
+        left: t.left - s.left,
+        top: t.top - s.top,
+        width: t.width,
+        height: t.height,
+        pull,
+      })
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [live])
 
   return (
     <section
+      ref={sectionRef}
       id="products"
-      className="relative isolate overflow-x-clip bg-cream py-12 sm:py-16"
+      data-flavour-live={live || undefined}
+      onPointerLeave={() => point(null)}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) point(null)
+      }}
+      className="jni-flavour-section relative isolate overflow-x-clip bg-cream py-12 sm:py-16"
     >
       {/* The only homepage section that had no doodle ground: its own doodles
           (FallingIngredients) live in a ~16px strip at the very bottom, so
@@ -96,8 +176,9 @@ export default function FlavourGrid() {
         intensity="subtle"
         count={20}
         seed={41}
+        className="jni-flavour-doodles"
       />
-      <div className="px-3 sm:px-8 lg:px-12">
+      <div className="jni-probe-stage px-3 sm:px-8 lg:px-12">
         {/* The confetti hangs off the wordmark's own box -- right-full / left-full
             against a relative wrapper sized by the heading -- so it can never
             land on the letters no matter how wide the brand face renders.
@@ -119,6 +200,10 @@ export default function FlavourGrid() {
               <BrandHeading as="h2" fill="#F3C63B" className="text-5xl sm:text-6xl">
                 Our flavours
               </BrandHeading>
+              {/* The rosette is the owner's own heading ornament -- it flanks
+                  every section title in the designs. */}
+              <Rosette className="absolute -left-14 top-3 hidden h-8 w-8 xs:block" />
+              <Rosette className="absolute -right-14 top-3 hidden h-8 w-8 xs:block" />
             </motion.div>
 
             {/* Triangles need ~7rem of clear margin either side, so they only
@@ -141,14 +226,6 @@ export default function FlavourGrid() {
               </motion.div>
             </div>
 
-            <div className="absolute right-full top-7 hidden -translate-x-[1.75rem] sm:block">
-              <motion.div
-                animate={{ scale: [1, 1.22, 1], opacity: [0.75, 1, 0.75] }}
-                transition={{ repeat: Infinity, duration: 2.9, ease: 'easeInOut' }}
-              >
-                <Blob className="h-7 w-7 sm:h-8 sm:w-8" />
-              </motion.div>
-            </div>
             <div className="absolute left-full top-7 hidden translate-x-[1.25rem] sm:block">
               <motion.div
                 animate={{ rotate: 360 }}
@@ -158,6 +235,34 @@ export default function FlavourGrid() {
               </motion.div>
             </div>
           </motion.div>
+        </div>
+
+        {/* The section says what it is being pointed at. The big heading is
+            left alone -- it is a brand asset with its own confetti anchored to
+            its box, and renaming it would move all of that on every hover -- so
+            the naming happens here, in a cell of fixed height that cannot push
+            the panel around when the text swaps. */}
+        <div className="relative mx-auto mb-7 grid min-h-[3.75rem] max-w-xl place-items-center text-center sm:mb-9">
+          <AnimatePresence mode="wait" initial={false}>
+            {liveProduct ? (
+              <motion.p
+                key={liveProduct.slug}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+                className="col-start-1 row-start-1 text-foam"
+              >
+                <span
+                  className="font-brand text-2xl sm:text-3xl"
+                  style={{ color: packPalettes[liveProduct.slug]?.fill }}
+                >
+                  {liveProduct.shortName}.
+                </span>{' '}
+                <span className="text-sm sm:text-base">{liveProduct.tagline}</span>
+              </motion.p>
+            ) : null}
+          </AnimatePresence>
         </div>
 
         <div className="relative">
@@ -182,7 +287,7 @@ export default function FlavourGrid() {
             style={{ top: 0 }}
           />
 
-          <div className="relative isolate overflow-hidden rounded-[28px] border-[4px] border-ink bg-teal p-2.5 shadow-doodle-lg sm:rounded-[36px] sm:p-6 lg:p-8">
+          <div className="jni-flavour-panel relative isolate overflow-hidden rounded-[28px] border-[4px] border-ink bg-teal p-2.5 shadow-doodle-lg sm:rounded-[36px] sm:p-6 lg:p-8">
             {/* The panel's own doodle ground: the outer field behind the whole
                 section stops at the panel's opaque edge, so everything inside
                 it -- the gutters between cards, the space above the bottom
@@ -194,10 +299,16 @@ export default function FlavourGrid() {
               intensity="subtle"
               count={16}
               seed={55}
+              className="jni-flavour-doodles"
             />
             <div className="relative grid grid-cols-3 gap-2 sm:gap-5">
               {ordered.map((product, i) => (
-                <ProductCard key={product.slug} product={product} index={i} />
+                <ProductCard
+                  key={product.slug}
+                  product={product}
+                  index={i}
+                  onLive={point}
+                />
               ))}
             </div>
             <div className="relative mt-2.5 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-5">
@@ -211,6 +322,17 @@ export default function FlavourGrid() {
           </div>
         </div>
       </div>
+
+      {/* Outside .jni-probe-stage on purpose: it is the one thing that must not
+          dissolve with the rest, and outside the panel too, which clips its own
+          overflow and would otherwise cut the notes off at its rim.
+          AnimatePresence so it can settle back onto the card on the way out
+          instead of vanishing off the top of the lift. */}
+      <AnimatePresence>
+        {liveProduct && rect && (
+          <FlavourProbeOverlay key={liveProduct.slug} product={liveProduct} rect={rect} />
+        )}
+      </AnimatePresence>
     </section>
   )
 }

@@ -32,6 +32,9 @@ function mixHex(hex, toward, t) {
 // hero no longer hard-cuts into the cream Why Flipo's section below it.
 const HERO_GROUND = '#fbf6d0'
 
+// The bold field's inner edge, dissolved rather than cut.
+const BOLD_FIELD_MASK = 'linear-gradient(to right, transparent 0, #000 26%)'
+
 /** flavourStages carries the heat label and propped pack shot already built
  * for the scroll stage below -- keyed by slug so the hero can borrow them. */
 const stageBySlug = Object.fromEntries(flavourStages.map((s) => [s.slug, s]))
@@ -222,7 +225,7 @@ export default function HeroCarousel() {
 
   return (
     <section
-      className="relative isolate mt-[var(--site-header-offset)] w-full overflow-hidden"
+      className="relative isolate w-full overflow-hidden pt-[var(--site-header-offset)]"
       style={{ backgroundColor: HERO_GROUND }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -273,33 +276,73 @@ export default function HeroCarousel() {
         </div>
       )}
 
-      <div className="relative isolate min-h-[560px] px-5 pb-24 pt-10 sm:px-8 sm:pb-28 sm:pt-14 md:min-h-[640px] md:px-[6vw] md:pb-24 md:pt-20">
+      {/* Both doodle fields hang off the SECTION, not off the padded box
+          below, so they run the full height of the hero -- the strip behind
+          the header included.
+
+          The header paints nothing between its three islands, so whatever the
+          hero puts there is what shows. Inset to the content box these stopped
+          dead on the header's bottom edge and left a bland band across the top
+          of the page. Inset to the section they carry the flavour's own colour
+          all the way up, and re-tint with it when the slide changes.
+
+          The offset stays as padding on the section and on nothing else: that
+          is what holds every piece of content -- eyebrow, headline, CTA, the
+          packs, Flip -- at exactly the position it had before the field moved.
+          Counts are up by the same proportion as the height so the ground
+          keeps its density rather than thinning out to cover the extra.
+
+          They stop at the ticker rather than at y=0, and fade in from it. The
+          ticker is the one part of the header that paints solid, so a doodle
+          that reached under it came back out with a flat edge sliced across it
+          -- which one does at some widths and not others, depending on where
+          the field's grid happens to land. Starting below the bar and fading
+          over the first few per cent means there is nothing left at the line
+          for it to cut. */}
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0"
+        style={{ top: 'var(--site-ticker-height, 0px)' }}
+      >
         <DoodleField
           flavour={slide.product.slug}
           ground={HERO_GROUND}
           intensity="medium"
-          count={20}
+          count={23}
           seed={101}
-          fadeEdges={{ bottom: 14 }}
+          fadeEdges={{ top: 6, bottom: 12 }}
         />
+      </div>
 
-        {/* A bolder, second doodle layer confined to the pack side of the
-            hero -- away from the body copy, so it can run louder than the
-            base field without ever competing with anything readable. */}
-        <div
-          className="pointer-events-none absolute inset-y-0 right-0 isolate hidden w-[46%] md:block"
-          aria-hidden="true"
-        >
-          <DoodleField
-            flavour={slide.product.slug}
-            ground={HERO_GROUND}
-            intensity="bold"
-            count={16}
-            seed={202}
-            fadeEdges={{ bottom: 32 }}
-          />
-        </div>
+      {/* A bolder, second doodle layer confined to the pack side of the
+          hero -- away from the body copy, so it can run louder than the
+          base field without ever competing with anything readable.
 
+          It ramps up from its inner edge instead of starting at full strength.
+          The box cuts off at 54% of the hero and the field inside it clips to
+          that box, so any doodle straddling the line was sliced clean down one
+          side -- a hard vertical seam through the middle of the hero. Fading
+          across the first quarter leaves nothing at the seam to cut, and it
+          suits what this layer is for: loudest by the pack, gone by the copy. */}
+      <div
+        className="pointer-events-none absolute bottom-0 right-0 isolate hidden w-[46%] md:block"
+        style={{
+          top: 'var(--site-ticker-height, 0px)',
+          maskImage: BOLD_FIELD_MASK,
+          WebkitMaskImage: BOLD_FIELD_MASK,
+        }}
+        aria-hidden="true"
+      >
+        <DoodleField
+          flavour={slide.product.slug}
+          ground={HERO_GROUND}
+          intensity="bold"
+          count={18}
+          seed={202}
+          fadeEdges={{ top: 6, bottom: 28 }}
+        />
+      </div>
+
+      <div className="relative isolate min-h-[560px] px-5 pb-24 pt-10 sm:px-8 sm:pb-28 sm:pt-14 md:min-h-[640px] md:px-[6vw] md:pb-24 md:pt-20">
         {/* Copy is the only thing that still crossfades per slide -- the
             packs and Flip below stay mounted and just reshuffle. */}
         <AnimatePresence mode="wait">

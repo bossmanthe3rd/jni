@@ -12,12 +12,12 @@ import DoodleField from '../components/ui/DoodleField'
 import HeatMeter from '../components/product/HeatMeter'
 import StickyAtcBar from '../components/product/StickyAtcBar'
 import { FlameIcon } from '../components/icons/WhyIcons'
+import ProductGallery from '../components/product/ProductGallery'
 
 export default function ProductDetailPage() {
   const { slug } = useParams()
   const product = getProductBySlug(slug)
   const [qty, setQty] = useState(1)
-  const [activeImage, setActiveImage] = useState(0)
   const ctaRef = useRef(null)
   const { addItem, openCart } = useCart()
 
@@ -47,7 +47,6 @@ export default function ProductDetailPage() {
   }, [product])
 
   useEffect(() => {
-    setActiveImage(0)
     setQty(1)
   }, [slug])
 
@@ -58,7 +57,6 @@ export default function ProductDetailPage() {
   // see panelAccent in data/products.js.
   const accentOnPanel = panelAccent(theme)
   const gallery = product.gallery
-  const current = gallery[activeImage] || gallery[0]
 
   const handleAdd = () => {
     addItem(toCartProduct(product), qty)
@@ -81,47 +79,7 @@ export default function ProductDetailPage() {
           <div className="grid gap-5 lg:grid-cols-[1.05fr,0.95fr] lg:gap-7">
             {/* Gallery */}
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-              <div className="flex flex-row gap-2.5 sm:gap-4">
-                <div className="flex w-16 flex-none flex-col gap-2 sm:w-20 sm:gap-3">
-                  {gallery.map((img, i) => (
-                    <button
-                      key={img.thumb}
-                      type="button"
-                      aria-label={`View image ${i + 1} of ${gallery.length}`}
-                      aria-current={i === activeImage}
-                      onClick={() => setActiveImage(i)}
-                      className={`aspect-square w-full shrink-0 overflow-hidden rounded-xl border-[3px] bg-[#F7F1C8] transition sm:rounded-2xl ${
-                        i === activeImage
-                          ? 'border-ink shadow-doodle'
-                          : 'border-ink/15 hover:border-ink/40'
-                      }`}
-                    >
-                      <img
-                        src={img.thumb}
-                        alt=""
-                        loading="lazy"
-                        decoding="async"
-                        className="h-full w-full object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
-
-                <div className="jni-card relative aspect-[4/5] max-h-[560px] min-w-0 flex-1 overflow-hidden bg-[#F7F1C8]">
-                  <motion.img
-                    key={current.src}
-                    src={current.src}
-                    alt={current.alt}
-                    initial={{ opacity: 0, scale: 1.02 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                    className="absolute inset-0 h-full w-full object-cover"
-                  />
-                  <span className="absolute left-3 top-3 z-[1] rounded-pill border-thick border-outline bg-sunshine px-3 py-1.5 text-[10px] font-black uppercase text-ink">
-                    {product.badge}
-                  </span>
-                </div>
-              </div>
+              <ProductGallery key={slug} images={gallery} badge={product.badge} alt={product.name} />
             </motion.div>
 
             {/* Themed info panel */}

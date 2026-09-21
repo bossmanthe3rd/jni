@@ -3,10 +3,38 @@ import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { TESTIMONIAL_INTERVAL, testimonials } from '../../data/site'
 import { BrandHeading, useMediaQuery } from '../ui/Primitives'
-import { StarDoodle } from '../icons/WhyIcons'
+import { Rosette, StarDoodle } from '../icons/WhyIcons'
 import { TriangleCluster } from './FlavourGrid'
 import FlipSpot from '../mascot/FlipSpot'
 import DoodleField from '../ui/DoodleField'
+import DoodleBorder from '../ui/DoodleBorder'
+
+/*
+ * The wavy cream lip along the panel's bottom, as data.
+ *
+ * Both the <svg> below and the doodle edge need this curve: one fills it, the
+ * other walks it. Kept in one place so they cannot drift apart and leave the
+ * doodles riding a wave that is no longer there.
+ */
+const BOTTOM_WAVE = {
+  vw: 1440,
+  vh: 80,
+  height: 56, // matches the svg's h-14
+  start: [0, 24],
+  cubics: [
+    [180, 72, 360, 4, 540, 36],
+    [720, 68, 900, 8, 1080, 40],
+    [1260, 72, 1380, 20, 1440, 36],
+  ],
+}
+
+const BOTTOM_WAVE_D = [
+  `M${BOTTOM_WAVE.start[0]} ${BOTTOM_WAVE.start[1]}`,
+  ...BOTTOM_WAVE.cubics.map((c) => `C ${c[0]} ${c[1]}, ${c[2]} ${c[3]}, ${c[4]} ${c[5]}`),
+  `L${BOTTOM_WAVE.vw} ${BOTTOM_WAVE.vh}`,
+  `L0 ${BOTTOM_WAVE.vh}`,
+  'Z',
+].join(' ')
 
 /** A small alternating tilt, so a row of reviews reads as a pinned-up wall
  * rather than a grid. Kept under 2deg: the cards still have to line up. */
@@ -70,13 +98,13 @@ export default function Testimonials() {
             past both edges of the viewport, and a confetti triangle is not
             worth a page that scrolls sideways. */}
         <TriangleCluster className="absolute left-1/2 top-1 hidden -translate-x-[12rem] xs:block sm:-translate-x-[16rem]" />
-        <StarDoodle className="absolute left-1/2 top-2 hidden h-8 w-8 -translate-x-[9rem] xs:block sm:-translate-x-[12rem]" />
+        <Rosette className="absolute left-1/2 top-2 hidden h-8 w-8 -translate-x-[9rem] xs:block sm:-translate-x-[12rem]" />
 
         <BrandHeading as="h2" fill="#F3C63B" className="text-5xl sm:text-6xl">
           Testimonials
         </BrandHeading>
 
-        <StarDoodle className="absolute left-1/2 top-2 hidden h-8 w-8 translate-x-[8.5rem] xs:block sm:translate-x-[11.5rem]" />
+        <Rosette className="absolute left-1/2 top-2 hidden h-8 w-8 translate-x-[8.5rem] xs:block sm:translate-x-[11.5rem]" />
         <TriangleCluster className="absolute left-1/2 top-1 hidden translate-x-[10rem] scale-x-[-1] xs:block sm:translate-x-[14rem]" />
       </div>
 
@@ -91,8 +119,11 @@ export default function Testimonials() {
           style={{ left: '21%', top: 0 }}
         />
 
+        {/* No keyline. The edge is the doodle procession below, laid over the
+            panel rather than inside it -- the panel clips its own field, and a
+            border that sits ON the edge has to be half outside it. */}
         <div
-          className="relative isolate overflow-hidden rounded-t-[48px] border-[4px] border-b-0 border-ink bg-sunshine px-5 pb-20 pt-9 sm:px-10 sm:pt-10"
+          className="jni-doodle-edge relative isolate overflow-hidden rounded-t-[48px] bg-sunshine px-5 pb-20 pt-9 sm:px-10 sm:pt-10"
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
         >
@@ -158,14 +189,11 @@ export default function Testimonials() {
             preserveAspectRatio="none"
             aria-hidden="true"
           >
-            <path
-              fill="#FBF6D0"
-              stroke="#071A16"
-              strokeWidth="6"
-              d="M0 24 C 180 72 360 4 540 36 C 720 68 900 8 1080 40 C 1260 72 1380 20 1440 36 L1440 80 L0 80 Z"
-            />
+            <path fill="#FBF6D0" d={BOTTOM_WAVE_D} />
           </svg>
         </div>
+
+        <DoodleBorder radius={48} spacing={118} duration={26} wave={BOTTOM_WAVE} className="z-30" />
       </div>
     </section>
   )

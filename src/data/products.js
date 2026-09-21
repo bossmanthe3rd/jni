@@ -16,8 +16,8 @@ export const products = [
     tagline: 'Sweet, Spicy, Irresistible.',
     description:
       'A glossy sweet-chilli crunch with a slow, playful heat built for movie nights and desk drawers.',
-    price: 169,
-    originalPrice: 199,
+    price: 170,
+    originalPrice: 190,
     stockQuantity: 180,
     badge: 'Crowd pleaser',
     category: "FLIPO's",
@@ -74,8 +74,8 @@ export const products = [
     tagline: 'A spicy little kick.',
     description:
       'A crisp jalapeño-led bite with fresh pepper character and a clean finish that keeps the hand going back.',
-    price: 169,
-    originalPrice: 199,
+    price: 170,
+    originalPrice: 190,
     stockQuantity: 160,
     badge: 'Fresh drop',
     category: "FLIPO's",
@@ -137,8 +137,8 @@ export const products = [
     tagline: 'Fire with every crunch.',
     description:
       'A deep peri-peri hit with chilli warmth, a savoury finish, and enough crunch to headline any snack break.',
-    price: 169,
-    originalPrice: 199,
+    price: 170,
+    originalPrice: 190,
     stockQuantity: 220,
     badge: 'Heat hero',
     category: "FLIPO's",
@@ -197,10 +197,29 @@ export const bundles = [
     description:
       'Sweet Chilli Rush, Jalapeño Kick, and Peri Peri Punch in one first-date-with-the-brand box.',
     price: 499,
-    originalPrice: 507,
+    // Three singles at list price. Derived, not quoted: the brand folder shows
+    // the trio at 499 without a strike-through.
+    originalPrice: 570,
     packetCount: 3,
     badge: 'Launch favourite',
-    imageUrl: '/assets/brand/bundle-of-3.jpeg',
+    imageUrl: '/assets/pick/flipos-flavour-trio-1.webp',
+    gallery: [
+      {
+        src: '/assets/pick/flipos-flavour-trio-1.webp',
+        thumb: '/assets/pick/flipos-flavour-trio-1-thumb.webp',
+        alt: "All three FLIPO's packs stood together on a studio plinth",
+      },
+      {
+        src: '/assets/pick/flipos-flavour-trio-2.webp',
+        thumb: '/assets/pick/flipos-flavour-trio-2-thumb.webp',
+        alt: "The trio with loose chips and fresh chillies scattered around them",
+      },
+      {
+        src: '/assets/pick/flipos-flavour-trio-3.webp',
+        thumb: '/assets/pick/flipos-flavour-trio-3-thumb.webp',
+        alt: "The three flavours laid out side by side, front facing",
+      },
+    ],
     includes: products.map((p) => p.shortName),
     lineItems: products.map((p) => ({ productId: p.id, productSlug: p.slug, quantity: 1 })),
     isBundle: true,
@@ -220,10 +239,29 @@ export const bundles = [
     description:
       'A six-pack flavour stack made for house parties, office tables, and people who do not share nicely.',
     price: 299,
-    originalPrice: 1014,
+    // The launch banner in the brand folder strikes 949, not the sum of six
+    // singles at list price.
+    originalPrice: 949,
     packetCount: 6,
     badge: 'Launch price',
-    imageUrl: '/assets/products/flipos-promo.webp',
+    imageUrl: '/assets/pick/flipos-party-six-1.webp',
+    gallery: [
+      {
+        src: '/assets/pick/flipos-party-six-1.webp',
+        thumb: '/assets/pick/flipos-party-six-1-thumb.webp',
+        alt: "Six FLIPO's packs lined up, two of each flavour",
+      },
+      {
+        src: '/assets/pick/flipos-party-six-2.webp',
+        thumb: '/assets/pick/flipos-party-six-2-thumb.webp',
+        alt: 'The six-pack stack with chillies and loose chips around it',
+      },
+      {
+        src: '/assets/pick/flipos-party-six-3.webp',
+        thumb: '/assets/pick/flipos-party-six-3-thumb.webp',
+        alt: 'The party six spread across a table, ready to share',
+      },
+    ],
     includes: products.map((p) => `2x ${p.shortName}`),
     lineItems: products.map((p) => ({ productId: p.id, productSlug: p.slug, quantity: 2 })),
     isBundle: true,

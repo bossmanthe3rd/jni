@@ -1,11 +1,12 @@
 import { useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowDown, Check, ShoppingBag } from 'lucide-react'
+import { Check, ShoppingBag } from 'lucide-react'
 import { bundles, perPacketPrice, savingsPercent } from '../data/products'
 import { useCart } from '../store/cartStore'
 import { SmartImage, Sparkle, Blob } from '../components/ui/Primitives'
 import { StarDoodle } from '../components/icons/WhyIcons'
 import DoodleField from '../components/ui/DoodleField'
+import LaunchBanner from '../components/promo/LaunchBanner'
 
 function ComboCard({ bundle, index }) {
   const { addItem, openCart } = useCart()
@@ -93,39 +94,17 @@ export default function CombosPage() {
   return (
     <div className="min-w-0 flex-grow">
       <div className="bg-forest pt-[var(--site-header-offset)]">
-        {/* Hero banner */}
-        <section
-          className="relative aspect-[4/5] min-h-[430px] overflow-hidden md:aspect-[2.4/1] md:min-h-[340px]"
-        >
-          <img
-            src="/assets/products/flipos-promo.webp"
-            alt="FLIPO's party snack combo banner"
-            width="1920"
-            height="800"
-            loading="eager"
-            decoding="async"
-            className="h-full w-full object-cover"
-          />
-          {/* The banner art is a three-panel composite, so a scrim with a hard
-              edge lands as a fourth vertical seam across it -- and the seam fell
-              right where the jalapeno panel begins. Both scrims are gradients
-              now: they hold full strength under the headline and fade out over
-              the photography instead of cutting it. */}
-          <div className="absolute inset-0 bg-forest/45 md:bg-forest/20" />
-          <div className="absolute inset-y-0 left-0 hidden w-[72%] bg-gradient-to-r from-forest via-forest/85 to-transparent md:block" />
-          <div className="absolute inset-x-0 bottom-0 h-[78%] bg-gradient-to-t from-forest via-forest/90 to-transparent md:hidden" />
-          <div className="absolute inset-0 flex max-w-3xl flex-col justify-end px-5 pb-7 text-foam sm:px-8 md:justify-center md:px-[6vw] md:pb-0">
-            <p className="text-xs font-black uppercase text-sunshine">Three flavours, one box</p>
-            <h1 className="mt-2 font-display text-4xl leading-[0.98] text-teal sm:text-5xl lg:text-6xl">
-              Build the loudest
-              <br />
-              snack table.
-            </h1>
-            <a href="#bundles" className="jni-btn mt-5 w-fit">
-              See combo pricing <ArrowDown size={16} />
-            </a>
-          </div>
-        </section>
+        {/* Hero banner.
+
+            It used to be a photo composite under a forest scrim with an
+            overlaid headline. The launch artwork carries its own headline,
+            price and timer, so scrimming it would bury the thing it exists to
+            say -- it runs unscrimmed, and the offer is restated as text
+            underneath where a crawler and a screen reader can reach it. */}
+        {/* A little ground above it: the header badge carries the lockup too,
+            and with the banner flush to the row the two stacked up a few pixels
+            apart. */}
+        <LaunchBanner className="pt-3 sm:pt-5" />
 
         {/* Bundles */}
         <section

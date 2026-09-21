@@ -8,12 +8,31 @@ import { products } from './products'
  *   { text: "Launch drop: all 3 FLIPO'S flavours for Rs. 499",
  *     backgroundColor: '#E85D4C', textColor: '#FBF6D0' }
  */
+/**
+ * The launch-offer banner. `endsAt` is an ISO string: set it and the banner
+ * counts down and then removes itself. Left null the offer runs open-ended,
+ * and the "only for 24 hours" painted into the artwork is the one claim on it
+ * that code cannot keep honest.
+ */
+export const launchOffer = {
+  slug: 'flipos-party-six',
+  alt: "Launch offer: six FLIPO's packets for Rs. 299, down from Rs. 949",
+  endsAt: null,
+}
+
+/*
+ * The two ticker lines used to disagree with each other and with the
+ * catalogue: desktop offered three flavours for 399 when the trio is 499, and
+ * mobile offered the six-pack. Both now carry the launch offer, and the link
+ * goes to the pack being offered rather than the combos index.
+ */
 export const ticker = {
-  text: "Launch drop: all 3 FLIPO's flavours for Rs. 399",
-  mobileText: "Launch Drop: FLIPO'S Pack of 6 for 299/-",
+  // One line for every width: the bar scrolls now, so a shorter phone variant
+  // has nothing left to solve.
+  text: "Launch offer: FLIPO's pack of 6 for Rs. 299",
   backgroundColor: '#f8d43a',
   textColor: '#111111',
-  link: '/combos',
+  link: '/combos/flipos-party-six',
   active: true,
 }
 
