@@ -498,16 +498,16 @@
   height: auto;
 }
 
-/* "Our flavours" takes the colour of whatever you point at.
+/* "Our flavours" takes the colour of the flavour it is showing you.
 
-   Hovering or focusing a flavour floods the section and its panel with that
-   pouch's own packPalettes ground, names the flavour under the heading, and
-   steps the other packs back. Ported from prototypes/flavour-probe.html.
+   The flood is NOT a hover state. It lands with the probe, once the pointer
+   has rested on a pack for PROBE_DWELL, and it names that flavour under the
+   heading at the same moment. Driven on contact it repainted the whole page
+   every time the pointer crossed the grid on its way somewhere else.
 
-   Progressive enhancement, deliberately: touch devices never fire hover, and
-   what they miss is colour and a restatement of the heat -- every price, every
-   add-to-cart and every fact is still on the card and on the PDP. Nothing is
-   hidden behind the interaction.
+   Touch never fires hover, so there a tap opens the same thing outright --
+   and either way every price, every add-to-cart and every fact is still on
+   the card and on the PDP. Nothing is hidden behind the interaction.
 
    The panel has to flood too. It is a teal block filling most of the section,
    so colouring only the section behind it would have shown the flavour in a
@@ -544,10 +544,10 @@
 /* ---------------------------------------------------------------------------
    THE PROBE -- hold the pointer on a pack and it opens as a spread.
 
-   The flood above is the first beat and lands on contact. This is the second,
-   behind PROBE_DWELL (src/data/site.js). Reading the pouch is something you
-   stop to do, and firing it on contact would strobe arrows across all three
-   cards on the way down to the bundles.
+   The flood above and everything here land together, behind PROBE_DWELL
+   (src/data/site.js). Reading the pouch is something you stop to do, and
+   firing any of it on contact meant the section changed colour under the
+   pointer every time it crossed the grid.
 
    WHAT CHANGED. The probe used to be one pouch annotated with three cream
    notes, opened at the card's own position. On a wide screen that left the

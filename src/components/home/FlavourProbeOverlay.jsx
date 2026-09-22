@@ -227,11 +227,15 @@ export default function FlavourProbeOverlay({ product, rect, onHold, onClose }) 
       ref={hostRef}
       className="jni-probe-overlay"
       style={{ '--jni-probe-accent': accent }}
-      /* Takes over holding itself open from the card underneath: without this
-         the close timer starts the moment the pointer crosses onto the panel,
-         and the buy button would be unclickable. */
-      onPointerEnter={() => onHold?.(product.slug)}
-      onPointerLeave={() => onHold?.(null)}
+      /* The layer is a backdrop, not a hold target. Holding on the layer meant
+         that once it opened -- fixed, covering the whole viewport -- the
+         pointer could never leave it, so moving the mouse away no longer
+         closed anything and Escape was the only way out. The hold lives on the
+         pack and the panel instead (below), and the bare flood between and
+         around them dismisses on click. */
+      onPointerDown={(e) => {
+        if (e.target === e.currentTarget) onClose?.()
+      }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -244,7 +248,13 @@ export default function FlavourProbeOverlay({ product, rect, onHold, onClose }) 
       </button>
 
       {/* ---- the pouch ---- */}
-      <motion.div ref={packRef} animate={controls} className="jni-probe-pack">
+      <motion.div
+        ref={packRef}
+        animate={controls}
+        className="jni-probe-pack"
+        onPointerEnter={() => onHold?.(product.slug)}
+        onPointerLeave={() => onHold?.(null)}
+      >
         <div
           className="jni-probe-frame"
           style={{ borderColor: palette?.line || '#071a16' }}
@@ -269,7 +279,11 @@ export default function FlavourProbeOverlay({ product, rect, onHold, onClose }) 
       </motion.div>
 
       {/* ---- the reason to buy it ---- */}
-      <div className="jni-probe-panel">
+      <div
+        className="jni-probe-panel"
+        onPointerEnter={() => onHold?.(product.slug)}
+        onPointerLeave={() => onHold?.(null)}
+      >
         <div className="jni-probe-eyebrow">
           {product.badge && (
             <span className="jni-probe-badge" style={{ backgroundColor: palette?.fill }}>

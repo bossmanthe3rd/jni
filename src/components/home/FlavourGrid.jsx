@@ -83,13 +83,15 @@ export function TriangleCluster({ className = '' }) {
 
 const ORDER = ['sweet-chilli-rush', 'jalapeno-kick', 'peri-peri-punch']
 
-/* One gesture, two beats.
+/* One gesture, one beat.
  *
- * Touching a pack floods the section with its colour straight away -- that is
- * the answer to "is this thing listening", and it costs nothing to undo. The
- * probe is the second beat, behind PROBE_DWELL, because reading the pouch is
- * something you stop to do, and firing it on contact would strobe arrows
- * across all three cards on the way down to the bundles.
+ * NOTHING happens to the section on contact. A pass at this had the flood land
+ * the moment the pointer touched a pack, as an "is this listening" signal; in
+ * use it just meant the whole page changed colour whenever the pointer crossed
+ * the grid on its way to the bundles, which is most of the time. The colour,
+ * the dissolve and the pouch now arrive together, behind PROBE_DWELL, and
+ * until then the only thing that moves is the fuse on the card's own edge --
+ * contained to the card the pointer is actually on.
  *
  * Taking the pointer off waits CLOSE before anything unwinds, so crossing the
  * grid neither fires it nor makes it flicker -- and so the pointer can travel
@@ -102,14 +104,12 @@ export default function FlavourGrid() {
   /*
    * A single state. The flood, the dissolved background, the raised pouch and
    * its arrows are one thing that is either happening to a flavour or is not --
-   * an earlier pass had the colour arrive on contact and the annotation follow
-   * later, which read as two effects stacked on each other rather than one.
+   * splitting them so the colour arrived first read as two effects stacked on
+   * each other rather than one, and made the section twitch under the pointer.
    */
-  const [live, setLive] = useState(null) // flooded -- instant
-  const [probe, setProbe] = useState(null) // opened  -- after the dwell
+  const [probe, setProbe] = useState(null)
   const [rect, setRect] = useState(null)
   const liveProduct = ordered.find((p) => p.slug === probe) || null
-  const floodProduct = ordered.find((p) => p.slug === live) || null
   const sectionRef = useRef(null)
   const open = useRef(0)
   const close = useRef(0)
@@ -118,13 +118,9 @@ export default function FlavourGrid() {
     window.clearTimeout(open.current)
     window.clearTimeout(close.current)
     if (!slug) {
-      close.current = window.setTimeout(() => {
-        setLive(null)
-        setProbe(null)
-      }, CLOSE)
+      close.current = window.setTimeout(() => setProbe(null), CLOSE)
       return
     }
-    setLive(slug)
     if (probe === slug) return
     // Moving from one pack to another drops the first immediately rather than
     // holding it through the new one's wait, which would show the wrong pouch.
@@ -135,7 +131,6 @@ export default function FlavourGrid() {
   const dismiss = () => {
     window.clearTimeout(open.current)
     window.clearTimeout(close.current)
-    setLive(null)
     setProbe(null)
   }
 
@@ -200,7 +195,7 @@ export default function FlavourGrid() {
     <section
       ref={sectionRef}
       id="products"
-      data-flavour-live={live || undefined}
+      data-flavour-live={probe || undefined}
       data-flavour-probe={probe || undefined}
       onPointerLeave={() => point(null)}
       onBlur={(e) => {
@@ -286,9 +281,9 @@ export default function FlavourGrid() {
             the panel around when the text swaps. */}
         <div className="relative mx-auto mb-7 grid min-h-[3.75rem] max-w-xl place-items-center text-center sm:mb-9">
           <AnimatePresence mode="wait" initial={false}>
-            {floodProduct ? (
+            {liveProduct ? (
               <motion.p
-                key={floodProduct.slug}
+                key={liveProduct.slug}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
@@ -297,11 +292,11 @@ export default function FlavourGrid() {
               >
                 <span
                   className="font-brand text-2xl sm:text-3xl"
-                  style={{ color: packPalettes[floodProduct.slug]?.fill }}
+                  style={{ color: packPalettes[liveProduct.slug]?.fill }}
                 >
-                  {floodProduct.shortName}.
+                  {liveProduct.shortName}.
                 </span>{' '}
-                <span className="text-sm sm:text-base">{floodProduct.tagline}</span>
+                <span className="text-sm sm:text-base">{liveProduct.tagline}</span>
               </motion.p>
             ) : null}
           </AnimatePresence>
