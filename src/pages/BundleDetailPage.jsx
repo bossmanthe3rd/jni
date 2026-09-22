@@ -55,7 +55,7 @@ function buildBundleAccordion(bundle, perPacket) {
         <>
           <p>
             Jalapeño seasoning, sweet chilli seasoning, peri peri seasoning, green pepper, red
-            chilli, crisp baked base.
+            chilli, crisp fried base.
           </p>
           <p className="mt-2 text-xs text-white/45">
             May contain traces of milk, soy and nuts. Manufactured in a facility that also processes

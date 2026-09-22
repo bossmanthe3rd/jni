@@ -121,7 +121,7 @@ export function buildAccordionItems(product) {
         <div className="space-y-3">
           <div>
             <p className="font-bold text-sunshine">Is it baked or fried?</p>
-            <p>Baked, not fried — crisp without the greasy aftertaste.</p>
+            <p>Fried. That is where the crunch comes from.</p>
           </div>
           <div>
             <p className="font-bold text-sunshine">How spicy is it really?</p>

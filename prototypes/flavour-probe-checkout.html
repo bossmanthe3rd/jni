@@ -14,7 +14,7 @@
   ===========================================================================
   v2 shipped as FlavourProbeOverlay.jsx. Screenshot reference/captures/7.png
   shows the problem: one pouch in the left third of a 1920 viewport, ~60% bare
-  flood, three notes at 10.5px of which two ("Reseal it", "Baked") are
+  flood, three notes at 10.5px of which two are
   hardcoded identical for all three flavours. Price, heat, weight, rating and
   Add to cart were all on the card and all dissolved away, and the layer is
   pointer-events:none, so a deliberate hold is rewarded with strictly less
@@ -566,7 +566,7 @@ const PRODUCTS = [
     flavourDescription:'A glossy sweet-chilli crunch balanced with real heat, delivering craveable sweetness first, fire right after.',
     price:170, originalPrice:190, weight:'100 gms', badge:'Crowd pleaser',
     rating:{value:4.7,count:98},
-    ingredients:['Sweet chilli seasoning','Red chilli','Crisp baked base'],
+    ingredients:['Sweet chilli seasoning','Red chilli','Crisp fried base'],
     palette:{ground:'#c8180d',fill:'#f59120',stem:'#7a1408',line:'#5a0f08',seed:'#f7ead9'},
     accent:'#f8d43a',
     img:'/assets/products/sweet-chilli-rush-plp.webp',
@@ -578,7 +578,7 @@ const PRODUCTS = [
     flavourDescription:'A crisp jalapeño-led bite with fresh pepper character, delivering clean heat that keeps the hand going back.',
     price:170, originalPrice:190, weight:'100 gms', badge:'Fresh drop',
     rating:{value:4.6,count:143},
-    ingredients:['Jalapeño seasoning','Green pepper','Crisp baked base'],
+    ingredients:['Jalapeño seasoning','Green pepper','Crisp fried base'],
     palette:{ground:'#0b5c2e',fill:'#c3d92e',stem:'#0e4a26',line:'#0d3f22',seed:'#dfe7bd'},
     accent:'#f3c63b',
     img:'/assets/products/jalapeno-kick-plp.webp',
@@ -590,7 +590,7 @@ const PRODUCTS = [
     flavourDescription:'A lively kick balanced with savoury depth, delivering flavour first, heat second.',
     price:170, originalPrice:190, weight:'100 gms', badge:'Heat hero',
     rating:{value:4.8,count:125},
-    ingredients:['Peri peri seasoning','Red chilli','Crisp baked base'],
+    ingredients:['Peri peri seasoning','Red chilli','Crisp fried base'],
     palette:{ground:'#5c0d16',fill:'#c8102e',stem:'#4a0a11',line:'#3d060c',seed:'#e8c7c1'},
     accent:'#f4bd1a',
     img:'/assets/products/peri-peri-punch-plp.webp',
@@ -739,7 +739,7 @@ function packBlock(p, notes){
    Everything about taste moved into the panel, where it can be read. */
 const OBJECT_NOTES = [
   { k:'a', t:'Reseal it', b:'Zip-lock stand-up pouch — stash the rest for later.' },
-  { k:'b', t:'Baked',     b:'Not fried. Crisp without the greasy aftertaste.' },
+  { k:'b', t:'Fried crisp', b:'Fried for the snap — the crunch is the whole point.' },
 ];
 
 function buyBlock(p, opts = {}){

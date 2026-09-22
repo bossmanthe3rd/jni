@@ -78,7 +78,7 @@ export const whyFeatures = [
     id: 'flavour',
     image: '/assets/why-flipos/bold-flavour.webp',
     lines: ['Bold', 'Flavour'],
-    blurb: 'Real heat, baked right in. No shy flavours here.',
+    blurb: 'Real heat, in every single piece. No shy flavours here.',
     loopClass: 'why-icon-flame',
     overlay: null,
   },

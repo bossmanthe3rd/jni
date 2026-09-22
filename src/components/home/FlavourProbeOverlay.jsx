@@ -11,8 +11,8 @@ import { useCart } from '../../store/cartStore'
  *
  * WHAT THIS REPLACES
  * An earlier pass opened the pack at the card's own position and hung three
- * cream notes off it. Two of those notes ("Reseal it", "Baked") were the same
- * for all three flavours, the third printed the ingredient list, and the layer
+ * cream notes off it. Two of those notes were the same for all three
+ * flavours, the third printed the ingredient list, and the layer
  * was pointer-events:none. On a wide screen that left one pouch in the left
  * third and most of the viewport bare colour -- and because the whole grid
  * dissolves behind it, the price, the heat, the weight and the add-to-cart
@@ -55,7 +55,7 @@ const ARROWS = [
    they belong on the photograph and not in the panel. */
 const OBJECT_NOTES = [
   { cls: 'p-a', title: 'Reseal it', body: 'Zip-lock stand-up pouch — stash the rest for later.' },
-  { cls: 'p-b', title: 'Baked', body: 'Not fried. Crisp without the greasy aftertaste.' },
+  { cls: 'p-b', title: 'Fried crisp', body: 'Fried for the snap — the crunch is the whole point.' },
 ]
 
 /* One doodle per ingredient, in the order products.js lists them: the
