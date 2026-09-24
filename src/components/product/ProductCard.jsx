@@ -4,7 +4,6 @@ import { motion } from 'framer-motion'
 import { Minus, Plus } from 'lucide-react'
 import { useCart } from '../../store/cartStore'
 import { savingsPercent, toCartProduct } from '../../data/products'
-import { PROBE_DWELL } from '../../data/site'
 import { packPalettes } from '../icons/PackDoodles'
 import { SmartImage } from '../ui/Primitives'
 import HeatMeter from './HeatMeter'
@@ -16,20 +15,11 @@ import HeatMeter from './HeatMeter'
  * its own pack palette: a flavour badge over the image, the card's own ink
  * border colour, and the price in the pack's own dark ink. */
 /**
- * `onLive` is opt-in and unused everywhere but the homepage grid, where holding
- * the pointer on a pack photo takes the section over. It is reported from the
- * photo rather than from the card because the photo is what the gesture is
- * about -- pointing at the price is not asking to read the pouch. The card is
- * otherwise untouched: same price, same stepper, same add-to-cart.
- *
- * When `onLive` is wired the tile also grows a fuse: a bar that burns along
- * its bottom edge in the pack's own ink for exactly PROBE_DWELL and completes
- * as the probe opens. Nothing used to say the gesture existed at all, so the
- * best moment on the page went unfound; and with no feedback a brush past a
- * card was indistinguishable from a deliberate hold. Pure CSS, driven off
- * :hover and :focus-visible, so it costs no state and unwinds by itself.
+ * The photo is a link to the flavour's own page, which is where the long
+ * read lives now. The card carries the hold-to-open probe no longer: `onLive`,
+ * the pointer timers and the fuse along the tile's edge went with it.
  */
-export function ProductCard({ product, index = 0, onLive }) {
+export function ProductCard({ product, index = 0 }) {
   const { addItem, openCart } = useCart()
   const [qty, setQty] = useState(1)
   const price = Number(product.price)
@@ -66,17 +56,10 @@ export function ProductCard({ product, index = 0, onLive }) {
       <Link
         to={to}
         aria-label={`View ${product.name}`}
-        onFocus={onLive ? () => onLive(product.slug) : undefined}
-        onBlur={onLive ? () => onLive(null) : undefined}
-        onPointerEnter={onLive ? () => onLive(product.slug) : undefined}
-        onPointerLeave={onLive ? () => onLive(null) : undefined}
-        className={`jni-probe-media relative mx-2 mt-2 block shrink-0 overflow-hidden border-2 bg-[#F7F1C8] text-left sm:mx-6 sm:mt-6 ${
+        className={`jni-card-media relative mx-2 mt-2 block shrink-0 overflow-hidden border-2 bg-[#F7F1C8] text-left sm:mx-6 sm:mt-6 ${
           product.isBundle ? 'aspect-[16/10] min-h-[180px]' : 'aspect-square'
         }`}
-        style={{
-          borderColor: palette?.line || 'var(--color-border)',
-          '--jni-dwell': `${PROBE_DWELL}ms`,
-        }}
+        style={{ borderColor: palette?.line || 'var(--color-border)' }}
       >
         <SmartImage
           src={image}
@@ -92,13 +75,6 @@ export function ProductCard({ product, index = 0, onLive }) {
           >
             {product.flavor}
           </span>
-        )}
-        {onLive && (
-          <span
-            aria-hidden="true"
-            className="jni-probe-fuse"
-            style={{ backgroundColor: palette?.fill || 'var(--color-accent-yellow)' }}
-          />
         )}
       </Link>
 

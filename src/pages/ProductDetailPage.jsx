@@ -1,23 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Minus, Plus, Star } from 'lucide-react'
-import { bundles, getProductBySlug, panelAccent, toCartProduct } from '../data/products'
+import { ArrowLeft } from 'lucide-react'
+import { bundles, getProductBySlug, toCartProduct } from '../data/products'
 import { useCart } from '../store/cartStore'
 import Testimonials from '../components/home/Testimonials'
 import { ProductCard } from '../components/product/ProductCard'
 import ProductAccordion, { buildAccordionItems } from '../components/product/ProductAccordion'
-import { Sparkle } from '../components/ui/Primitives'
 import DoodleField from '../components/ui/DoodleField'
-import HeatMeter from '../components/product/HeatMeter'
 import StickyAtcBar from '../components/product/StickyAtcBar'
-import { FlameIcon } from '../components/icons/WhyIcons'
-import ProductGallery from '../components/product/ProductGallery'
+import FlavourDossier from '../components/product/FlavourDossier'
 
 export default function ProductDetailPage() {
   const { slug } = useParams()
   const product = getProductBySlug(slug)
-  const [qty, setQty] = useState(1)
   const ctaRef = useRef(null)
   const { addItem, openCart } = useCart()
 
@@ -46,26 +42,25 @@ export default function ProductDetailPage() {
     return () => tag.remove()
   }, [product])
 
-  useEffect(() => {
-    setQty(1)
-  }, [slug])
-
   if (!product) return <Navigate to="/flavours" replace />
 
-  const theme = product.theme
-  // theme.accent is a near-neighbour of theme.ink on two of the three flavours;
-  // see panelAccent in data/products.js.
-  const accentOnPanel = panelAccent(theme)
-  const gallery = product.gallery
-
+  /* The sticky mobile bar's own add: it is outside the dossier, so it has no
+     access to the chip the reader chose, and one pack is the honest default
+     for a bar that shows a single-pack price. */
   const handleAdd = () => {
-    addItem(toCartProduct(product), qty)
+    addItem(toCartProduct(product), 1)
     openCart()
   }
 
   return (
     <div className="min-w-0 flex-grow">
-      <div className="bg-cream pb-20 pt-[var(--site-header-offset)] md:pb-0">
+      <div className="bg-cream pb-20 md:pb-0">
+        {/* The flavour dossier is the hero now -- the annotated pouch and the
+            buy block that used to be a hold-to-open overlay on the homepage.
+            It brings its own ground, so it sits outside the cream wrapper's
+            padding and runs full width. */}
+        <FlavourDossier product={product} ctaRef={ctaRef} />
+
         <section className="px-5 py-5 sm:px-8 sm:py-6 lg:px-12">
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
             <Link
@@ -76,145 +71,10 @@ export default function ProductDetailPage() {
             </Link>
           </motion.div>
 
-          <div className="grid gap-5 lg:grid-cols-[1.05fr,0.95fr] lg:gap-7">
-            {/* Gallery */}
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-              <ProductGallery key={slug} images={gallery} badge={product.badge} alt={product.name} />
-            </motion.div>
-
-            {/* Themed info panel */}
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.08 }}
-              className="flex flex-col rounded-[28px] border-[3px] border-ink p-6 sm:p-9"
-              style={{ backgroundColor: theme.ink, color: '#ffffff' }}
-            >
-              {/* Kicker, rating and price are chips on the live site, not bare
-                  text. On a saturated panel the flat versions all landed at the
-                  same weight, so nothing in the column had a hierarchy -- the
-                  price read no louder than the weight under it. */}
-              <span className="inline-flex w-fit items-center rounded-pill border-[3px] border-ink bg-teal px-4 py-1.5 font-brand text-sm text-ink shadow-doodle sm:text-base">
-                {product.category}
-              </span>
-              <h1 className="mt-4 flex items-center gap-3 font-display text-4xl leading-[0.98] sm:text-5xl lg:text-6xl">
-                {product.shortName}
-                {/* Outlined flame in the flavour's accent, the way the live PDP
-                    marks heat -- the sparkle here rendered as a dark blot
-                    against the panel. */}
-                <FlameIcon
-                  className="h-7 w-7 shrink-0 sm:h-9 sm:w-9"
-                  fill="none"
-                  stroke={accentOnPanel}
-                  spark={null}
-                />
-              </h1>
-              <p className="mt-3 text-lg font-black leading-snug text-white/90 sm:text-xl">
-                {product.subtitle}
-              </p>
-
-              <div className="mt-4 inline-flex w-fit items-center gap-2 rounded-pill border-2 border-white/30 px-3.5 py-1.5">
-                <div className="flex items-center gap-0.5 text-sunshine">
-                  {[0, 1, 2, 3, 4].map((i) => (
-                    <Star key={i} size={16} fill="currentColor" strokeWidth={0} />
-                  ))}
-                </div>
-                <span className="text-sm font-bold text-white/80">
-                  {product.rating.value}/5 | {product.rating.count} Reviews
-                </span>
-              </div>
-
-              {/* The brand has a heat ramp and the homepage shows it, but the
-                  page where you actually decide never mentioned heat. */}
-              <HeatMeter
-                product={product}
-                flavour={product.slug}
-                litFill={accentOnPanel}
-                className="mt-3.5"
-              />
-
-              <div
-                className="mt-5 flex flex-wrap items-center gap-4"
-                data-pdp-atc-sentinel="true"
-              >
-                <span className="rounded-[18px] border-[3px] border-ink bg-[var(--color-cta-yellow)] px-4 py-1.5 font-display text-4xl text-ink shadow-doodle sm:text-5xl">
-                  ₹{product.price}
-                </span>
-                <span className="text-lg font-bold text-white/40 line-through">
-                  ₹{product.originalPrice}
-                </span>
-                {product.originalPrice > product.price && (
-                  <span className="rounded-pill border-2 border-teal px-3 py-1 text-xs font-black uppercase tracking-wide text-teal">
-                    Save ₹{product.originalPrice - product.price}
-                  </span>
-                )}
-              </div>
-              <p className="mt-2 text-xs font-bold uppercase tracking-wide text-white/50">
-                {product.weight}
-              </p>
-
-              <div className="mt-4 flex items-center gap-3">
-                <div className="flex h-12 items-center justify-between rounded-pill border-[3px] border-white/25 bg-white/10 p-1">
-                  <button
-                    type="button"
-                    aria-label="Decrease quantity"
-                    onClick={() => setQty((q) => Math.max(1, q - 1))}
-                    className="grid h-9 w-9 place-items-center rounded-pill text-white"
-                  >
-                    <Minus size={15} />
-                  </button>
-                  <span className="w-6 text-center text-sm font-black">{qty}</span>
-                  <button
-                    type="button"
-                    aria-label="Increase quantity"
-                    onClick={() => setQty((q) => q + 1)}
-                    className="grid h-9 w-9 place-items-center rounded-pill text-white"
-                  >
-                    <Plus size={15} />
-                  </button>
-                </div>
-              </div>
-
-              {/* A pill, centred -- not a full-bleed bar. Stretched edge to edge
-                  the CTA lost the organic button silhouette the rest of the site
-                  uses and read as a form submit. */}
-              <button
-                ref={ctaRef}
-                type="button"
-                onClick={handleAdd}
-                className="jni-btn mt-6 self-center px-10 py-3 text-base sm:text-lg"
-              >
-                Nibble Now
-              </button>
-
-              <div className="mt-6 border-t border-white/15 pt-5">
-                <p className="text-xs font-black uppercase tracking-[0.15em] text-white/50">
-                  The Flavour
-                </p>
-                <h2 className="mt-1 font-display text-2xl" style={{ color: accentOnPanel }}>
-                  {product.flavourHeading}
-                </h2>
-                <p className="mt-2 text-sm font-medium leading-6 text-white/70">
-                  {product.flavourDescription}
-                </p>
-              </div>
-
-              <div className="mt-5 border-t border-white/15 pt-5">
-                <p className="flex items-center gap-2 font-display text-2xl">
-                  Designed for Your Desk <Sparkle className="h-4 w-4" color={accentOnPanel} />
-                </p>
-                <p className="mt-2 text-sm font-medium leading-6 text-white/70">
-                  Between meetings. During that 4 PM slump. While finishing the last email.
-                </p>
-              </div>
-            </motion.div>
-          </div>
-
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.1 }}
-            className="mt-6"
           >
             <ProductAccordion items={buildAccordionItems(product)} />
           </motion.div>

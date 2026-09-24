@@ -47,7 +47,7 @@ export default function RecentPurchaseToast() {
               same corner of the same viewport on the two detail pages. Below md
               the toast sits above it; from md up the bar is hidden and the toast
               returns to the corner. */
-          className="jni-recent-toast fixed bottom-[6.75rem] left-3 z-40 flex max-w-[15rem] items-start gap-2 rounded-2xl border-[2px] border-teal bg-cream px-3 py-2.5 shadow-lg md:bottom-4 md:left-4"
+          className="fixed bottom-[6.75rem] left-3 z-40 flex max-w-[15rem] items-start gap-2 rounded-2xl border-[2px] border-teal bg-cream px-3 py-2.5 shadow-lg md:bottom-4 md:left-4"
           role="status"
         >
           <ShoppingBag size={14} className="mt-0.5 shrink-0 text-teal" />

@@ -158,19 +158,6 @@ export const testimonials = [
 
 export const TESTIMONIAL_INTERVAL = 5000
 
-/**
- * How long the pointer has to rest on a flavour photo before the probe opens.
- *
- * Lives here rather than in FlavourGrid because three places need the same
- * number and two of them cannot import from the grid without a cycle: the
- * grid sets the timer, ProductCard drives the fuse that counts it down, and
- * index.css reads it off the element as `--jni-dwell`. One source, so the
- * fuse can never finish early or late.
- *
- * Reading the pouch is something you stop to do. Firing on contact would
- * strobe the section across all three cards on the way down to the bundles.
- */
-export const PROBE_DWELL = 1000
 
 export const socialLinks = [
   { label: 'Instagram', href: 'https://www.instagram.com/justnibbleit/' },
