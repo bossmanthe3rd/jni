@@ -1,21 +1,47 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link, Navigate, useParams } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { ArrowLeft } from 'lucide-react'
-import { bundles, getProductBySlug, toCartProduct } from '../data/products'
+import { useEffect, useRef } from 'react'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
+import { deliveredTotal, getProductBySlug, toCartProduct } from '../data/products'
 import { useCart } from '../store/cartStore'
-import Testimonials from '../components/home/Testimonials'
-import { ProductCard } from '../components/product/ProductCard'
-import ProductAccordion, { buildAccordionItems } from '../components/product/ProductAccordion'
-import DoodleField from '../components/ui/DoodleField'
 import StickyAtcBar from '../components/product/StickyAtcBar'
 import FlavourDossier from '../components/product/FlavourDossier'
+import HeatClimb from '../components/product/HeatClimb'
+import PouchFacts from '../components/product/PouchFacts'
+import DeskMoments from '../components/product/DeskMoments'
+import FlavourReviews from '../components/product/FlavourReviews'
+import FlavourFlight from '../components/product/FlavourFlight'
+import PdpFaq from '../components/product/PdpFaq'
+import SectionSeam from '../components/product/SectionSeam'
+import TypeBands from '../components/product/TypeBands'
+import { packPalettes } from '../components/icons/PackDoodles'
 
+const CREAM = '#fbf6d0'
+const FOREST = '#071a16'
+const SUNSHINE = '#f3c63b'
+
+/*
+ * The product page, top to bottom:
+ *
+ *   dossier       the pouch, the flavour switcher and the buy block
+ *   heat climb    "flavour first, heat second", five bites deep
+ *   pouch facts   weight, shelf life, zip, ingredients -- all on show
+ *   desk moments  the flavour's lifestyle shots, captioned
+ *   reviews       quotes about this flavour, beside its own rating
+ *   flight        this pack plus the other two, then the bundles
+ *   faq           the three questions people ask
+ *
+ * Every section after the hero takes its colour or its words from the
+ * flavour, so no two product pages read as the same template with a new
+ * photo in it.
+ *
+ * No two sections meet on a straight line: each boundary is a wave, a torn
+ * edge, or a pair of type bands crossing it.
+ */
 export default function ProductDetailPage() {
   const { slug } = useParams()
   const product = getProductBySlug(slug)
   const ctaRef = useRef(null)
-  const { addItem, openCart } = useCart()
+  const navigate = useNavigate()
+  const { addItem } = useCart()
 
   // The live site injects Product JSON-LD per PDP.
   useEffect(() => {
@@ -44,76 +70,39 @@ export default function ProductDetailPage() {
 
   if (!product) return <Navigate to="/flavours" replace />
 
-  /* The sticky mobile bar's own add: it is outside the dossier, so it has no
+  const ground = packPalettes[product.slug]?.ground || product.theme?.ink
+
+  /* The sticky mobile bar's own buy: it is outside the dossier, so it has no
      access to the chip the reader chose, and one pack is the honest default
      for a bar that shows a single-pack price. */
-  const handleAdd = () => {
+  const handleBuy = () => {
     addItem(toCartProduct(product), 1)
-    openCart()
+    navigate('/checkout')
   }
 
   return (
-    <div className="min-w-0 flex-grow">
-      <div className="bg-cream pb-20 md:pb-0">
-        {/* The flavour dossier is the hero now -- the annotated pouch and the
-            buy block that used to be a hold-to-open overlay on the homepage.
-            It brings its own ground, so it sits outside the cream wrapper's
-            padding and runs full width. */}
-        <FlavourDossier product={product} ctaRef={ctaRef} />
-
-        <section className="px-5 py-5 sm:px-8 sm:py-6 lg:px-12">
-          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
-            <Link
-              to="/"
-              className="group mb-5 inline-flex h-12 items-center gap-2 rounded-pill border-[3px] border-ink bg-sunshine px-5 text-sm font-black text-ink shadow-doodle transition hover:-translate-y-0.5 hover:shadow-doodle-lg"
-            >
-              <ArrowLeft size={16} /> Back home
-            </Link>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.1 }}
-          >
-            <ProductAccordion items={buildAccordionItems(product)} />
-          </motion.div>
-        </section>
-
-        {/* Bundle upsell */}
-        <section
-          className="jni-section-dark relative isolate overflow-hidden px-5 py-10 sm:px-8 sm:py-12 lg:px-12"
-        >
-          {/* Tinted to the flavour being viewed, so the band belongs to this
-              product rather than being the same dark slab on every PDP. */}
-          <DoodleField
-            flavour={product.slug}
-            ground="#071A16"
-            intensity="medium"
-            count={26}
-            seed={product.id * 13 + 3}
-          />
-          <div className="relative z-10">
-          <p className="text-xs font-black uppercase text-sunshine">Do not stop now</p>
-          <h2 className="mb-7 mt-1 font-display text-3xl text-teal sm:text-4xl">
-            Go for the pack of 3 or the pack of 6.
-          </h2>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4">
-            {bundles.map((bundle, i) => (
-              <ProductCard key={bundle.slug} product={bundle} index={i} />
-            ))}
-          </div>
-        </div>
-        </section>
-      </div>
-
-      <Testimonials />
+    <div className="min-w-0 flex-grow bg-cream pb-24 md:pb-0">
+      <FlavourDossier product={product} ctaRef={ctaRef} />
+      <SectionSeam fill={ground} hang />
+      <HeatClimb product={product} />
+      <SectionSeam fill={CREAM} variant="torn" />
+      <PouchFacts product={product} />
+      <TypeBands product={product} from={CREAM} to={FOREST} />
+      <DeskMoments product={product} />
+      <SectionSeam fill={SUNSHINE} />
+      <FlavourReviews product={product} />
+      <TypeBands product={product} from={SUNSHINE} to={ground} />
+      <FlavourFlight product={product} />
+      <SectionSeam fill={CREAM} variant="torn" />
+      <PdpFaq product={product} />
 
       <StickyAtcBar
         name={product.shortName || product.name}
         price={product.price}
         originalPrice={product.originalPrice}
-        onAdd={handleAdd}
+        image={product.gallery?.[0]?.thumb || product.images.thumb}
+        ctaLabel={`Buy · ₹${deliveredTotal(Number(product.price))}`}
+        onAdd={handleBuy}
         watchRef={ctaRef}
       />
     </div>

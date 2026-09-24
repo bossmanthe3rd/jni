@@ -105,6 +105,11 @@ const ANCHOR = {
  *   emote     'hero' mode only -- 'delighted' | 'cheeky' | 'shocked', one per
  *             flavour; unset falls back to the plain wave-and-bounce greeting
  *   progress  optional () => 0..1 for modes that ride a parent's own scroll
+ *   heat      optional () => 0..1 (or a number): how hot he is. Opens his
+ *             mouth and sets him trembling as it climbs, and takes over from
+ *             the hero emote -- the product page's heat climb drives it
+ *   chompAt   optional timestamp (Date.now()); for ~0.7s after it he chomps,
+ *             which is how the product page has him bite on Add to cart
  *   style     ordinary CSS placing the spot inside its section
  */
 export default function FlipSpot({
@@ -113,14 +118,16 @@ export default function FlipSpot({
   tint = null,
   emote = null,
   progress,
+  heat,
+  chompAt,
   style,
   className = '',
 }) {
   const host = useRef(null)
   const hook = useRef(null)
   const parts = useRef({})
-  const live = useRef({ tint, progress, emote })
-  live.current = { tint, progress, emote }
+  const live = useRef({ tint, progress, emote, heat, chompAt })
+  live.current = { tint, progress, emote, heat, chompAt }
 
   useEffect(() => {
     const node = host.current
@@ -184,6 +191,12 @@ export default function FlipSpot({
     )
     io.observe(node)
 
+    const heatOf = () => {
+      const h = live.current.heat
+      if (h == null) return null
+      return clamp(typeof h === 'function' ? h() : h, 0, 1)
+    }
+
     /** Where this spot has been scrolled to: 0 entering, 1 leaving. */
     function ownProgress(top) {
       const vh = window.innerHeight
@@ -228,6 +241,9 @@ export default function FlipSpot({
       }
       const top = box.docTop - window.scrollY
       const p = live.current.progress ? clamp(live.current.progress(), 0, 1) : ownProgress(top)
+      // Heat replaces the mode's own rush rather than competing with it, so
+      // remember where rush started this frame.
+      const rushBefore = rush
 
       if (mode === 'wave') {
         // His feet land on the real curve, and his lean is its real slope --
@@ -282,6 +298,14 @@ export default function FlipSpot({
         rot += (Math.sin(clock * 0.9) * 2.5 - 2 - rot) * approach(dt, 3)
       }
 
+      // Heat, when a parent supplies it, outranks the mode's own mood: rush
+      // opens the mouth past 0.5, and a tremble grows with it.
+      const heatNow = heatOf()
+      if (heatNow != null) {
+        rush = rushBefore + (heatNow * 0.95 - rushBefore) * approach(dt, 5)
+        rot += (Math.sin(clock * 21) * 5 * heatNow * heatNow - 3 - rot) * approach(dt, 9)
+      }
+
       // --- face ---------------------------------------------------------------
       nextBlink -= dt
       if (nextBlink < 0) {
@@ -316,7 +340,7 @@ export default function FlipSpot({
       let heroWave = 0
       let heroSquash = 0
       let blinkR = blink
-      if (mode === 'hero') {
+      if (mode === 'hero' && heatNow == null) {
         const heroEmote = live.current.emote
         if (heroEmote === 'cheeky') {
           heroWave = 0.85 + 0.15 * Math.sin(clock * 2)
@@ -334,6 +358,11 @@ export default function FlipSpot({
         }
       }
 
+      // A chomp: jaw shut for most of it, with a squash on each bite.
+      const since = live.current.chompAt ? (Date.now() - live.current.chompAt) / 1000 : 9
+      const chomping = since >= 0 && since < 0.7
+      if (chomping) heroSquash += 0.1 * Math.abs(Math.sin(since * 22))
+
       poseFlip(art, {
         phase,
         time: clock,
@@ -343,8 +372,8 @@ export default function FlipSpot({
         walk,
         roll: 0,
         darts: 0,
-        wave: heroWave,
-        chomp: 0,
+        wave: chomping ? 0 : heroWave,
+        chomp: chomping ? 1 : 0,
         squash: heroSquash,
         blink,
         blinkR,

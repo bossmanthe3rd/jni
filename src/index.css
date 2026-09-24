@@ -1,4 +1,5 @@
 @import './styles/cta-shape.css';
+@import './styles/pdp.css';
 
 @tailwind base;
 @tailwind components;
@@ -522,7 +523,24 @@
   /* This section owns the top of the page now, so it clears the fixed header
      itself -- the cream wrapper used to do it for the old hero. */
   padding-top: calc(var(--site-header-offset) + 1.5rem);
+  overflow: clip;
   color: var(--color-text-light);
+}
+
+/* The flavour's name, set as large as the width allows, behind the spread.
+   Low contrast on purpose: it is texture that happens to be legible. */
+.jni-dossier-word {
+  position: absolute;
+  z-index: 0;
+  left: -0.04em;
+  bottom: 0.04em;
+  font-family: var(--font-brand);
+  font-size: clamp(7rem, 23vw, 21rem);
+  line-height: 0.8;
+  white-space: nowrap;
+  opacity: 0.22;
+  pointer-events: none;
+  user-select: none;
 }
 
 .jni-dossier-grid {
@@ -530,6 +548,8 @@
   grid-template-columns: minmax(0, 46fr) minmax(0, 54fr);
   gap: clamp(20px, 3.4vw, 56px);
   align-items: center;
+  position: relative;
+  z-index: 1;
   max-width: 1180px;
   margin: 0 auto;
 }
@@ -538,7 +558,35 @@
 .jni-dossier-pack {
   justify-self: center;
   width: 100%;
-  max-width: min(42vw, 460px);
+  max-width: min(42vw, 500px);
+}
+
+.jni-dossier-crumbs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+  font-size: 13px;
+  opacity: 0.8;
+}
+.jni-dossier-crumbs a:hover {
+  text-decoration: underline;
+}
+
+/* The pouch and the doodles that scatter out from behind it on load. */
+.jni-dossier-stage {
+  position: relative;
+}
+.jni-dossier-doodle {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+}
+.jni-dossier-stage .jni-dossier-frame {
+  z-index: 1;
+}
+/* In front of the pouch, feet on its bottom edge, leaning on the corner. */
+.jni-dossier-flip {
+  z-index: 2;
 }
 
 /* The torn-edge idiom the CTA shape and the pack badges use, scaled with the
@@ -671,13 +719,14 @@
    needs its left column for the pack and its notes. */
 .jni-dossier-thumbs {
   display: flex;
-  gap: 10px;
-  margin-top: 18px;
+  gap: 12px;
+  margin-top: 30px;
   justify-content: center;
   flex-wrap: wrap;
 }
 .jni-dossier-thumbs button {
-  width: 58px;
+  rotate: var(--tilt, 0deg);
+  width: 64px;
   aspect-ratio: 1;
   padding: 0;
   overflow: hidden;
@@ -767,30 +816,6 @@
   text-wrap: pretty;
 }
 
-/* Ingredients drawn with the pack's own artwork rather than set as a list. */
-.jni-dossier-ings {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 9px;
-  margin-bottom: 20px;
-}
-.jni-dossier-ings li {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 5px 12px 6px 8px;
-  border: 2.5px solid var(--color-border);
-  border-radius: 999px;
-  background: var(--color-bg-cream);
-  box-shadow: 2px 3px 0 var(--color-border);
-  color: var(--color-text-dark);
-  font-size: 12.5px;
-}
-.jni-dossier-ings img {
-  width: 17px;
-  flex: 0 0 auto;
-}
-
 /* ---- price and quantity -------------------------------------------------- */
 .jni-dossier-price {
   display: flex;
@@ -876,6 +901,17 @@
   background: rgba(251, 246, 208, 0.22);
   overflow: hidden;
 }
+/* The bar's own box, so the free-shipping chillies can burst from its end. */
+.jni-dossier-ship-bar {
+  position: relative;
+}
+.jni-dossier-burst {
+  position: absolute;
+  right: -6px;
+  top: -10px;
+  width: 30px;
+  pointer-events: none;
+}
 .jni-dossier-ship-fill {
   height: 100%;
   transition: width 420ms cubic-bezier(0.3, 0.8, 0.3, 1);
@@ -894,21 +930,26 @@
 
 .jni-dossier-actions {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 12px;
 }
 /* Wears the brand's traced CTA shape via .jni-btn; only the scale is set here,
    because this is the one primary action on the page. */
 .jni-dossier-buy {
-  min-height: 3.5rem;
+  flex: 1 1 auto;
+  min-height: 4.1rem;
   padding: 0.85rem 2.4rem;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
+}
+/* A squash, not a shrink: the button gives like something soft. */
+.jni-dossier-buy:active {
+  transform: scale(1.03, 0.9);
 }
 .jni-dossier-ghost {
+  flex: 0 0 auto;
   padding: 0.7rem 1.3rem;
   border: 2.5px dashed rgba(245, 240, 220, 0.55);
-  border-radius: 999px;
+  border-radius: 18px;
   font-size: 14px;
   transition: border-color 0.16s ease, background-color 0.16s ease;
 }
@@ -925,32 +966,149 @@
   opacity: 0.6;
 }
 
-/* ---- the two sub-blocks the page already carried ------------------------- */
-.jni-dossier-more {
-  margin-top: 22px;
-  padding-top: 18px;
-  border-top: 1px solid rgba(245, 240, 220, 0.2);
-}
-.jni-dossier-more p.k {
+/* ---- flavour switcher ---------------------------------------------------- */
+.jni-dossier-k {
+  margin-bottom: 8px;
   font-size: 11px;
   font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.15em;
-  opacity: 0.55;
+  letter-spacing: 0.14em;
+  opacity: 0.7;
 }
-.jni-dossier-more h2 {
-  margin-top: 4px;
+.jni-dossier-switch {
+  margin-bottom: 20px;
+}
+.jni-dossier-switch-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.jni-dossier-flav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 3px solid var(--color-border);
+  border-radius: 15px 10px 17px 9px / 10px 16px 9px 15px;
+  background: var(--color-bg-cream);
+  box-shadow: 3px 4px 0 var(--color-border);
+  color: var(--color-text-dark);
+  transition: transform 0.16s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.jni-dossier-flav:hover {
+  transform: translateY(-3px);
+}
+.jni-dossier-flav[aria-current='page'] {
+  transform: translateY(-3px) rotate(-1deg);
+  box-shadow: 4px 6px 0 var(--color-border);
+}
+.jni-dossier-flav img {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
+  object-fit: cover;
+}
+.jni-dossier-flav > span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+.jni-dossier-flav b {
   font-family: var(--font-brand);
   font-weight: 400;
-  font-size: 1.6rem;
-  color: var(--jni-dossier-accent, var(--color-accent-yellow));
+  font-size: 15px;
+  line-height: 1;
+  white-space: nowrap;
 }
-.jni-dossier-more p.b {
-  margin-top: 6px;
-  font-size: 14px;
-  line-height: 1.55;
-  opacity: 0.78;
-  text-wrap: pretty;
+/* HeatMeter's label sits at 11-12px beside a card price; in a chip under a
+   15px name it needs to step down, and the chillies tighten up with it. */
+.jni-dossier-flav-heat {
+  gap: 4px;
+}
+.jni-dossier-flav-heat > span {
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+}
+
+/* ---- phone gallery ------------------------------------------------------- */
+.jni-dossier-strip,
+.jni-dossier-dots {
+  display: none;
+}
+.jni-dossier-strip {
+  gap: 14px;
+  margin: 0 -1.25rem;
+  padding: 6px 1.25rem 18px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.jni-dossier-strip::-webkit-scrollbar {
+  display: none;
+}
+.jni-dossier-strip-card {
+  flex: 0 0 min(78vw, 340px);
+  aspect-ratio: 1;
+  overflow: hidden;
+  scroll-snap-align: start;
+  rotate: var(--tilt, 0deg);
+  border: 3px solid var(--color-border);
+  border-radius: 15px 10px 17px 9px / 10px 16px 9px 15px;
+  background: #f7f1c8;
+  box-shadow: 8px 10px 0 rgba(7, 26, 22, 0.5);
+}
+.jni-dossier-strip-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.jni-dossier-dots {
+  justify-content: center;
+  gap: 6px;
+}
+.jni-dossier-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 99px;
+  background: rgba(251, 246, 208, 0.35);
+  transition: width 0.2s ease;
+}
+.jni-dossier-dots span[data-on] {
+  width: 22px;
+  background: var(--color-bg-cream);
+}
+
+/* The pouch thrown into the header cart by Add to cart. */
+.jni-dossier-flight {
+  position: fixed;
+  z-index: 80;
+  width: 56px;
+  height: 56px;
+  border: 2px solid var(--color-border);
+  border-radius: 12px;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+/* Switching flavour: the new page grows out of the chip that was tapped. The
+   only view transition on the site, so it can own the root pair. */
+::view-transition-old(root) {
+  animation: none;
+}
+::view-transition-new(root) {
+  animation: jni-flood 560ms cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+@keyframes jni-flood {
+  from {
+    clip-path: circle(0 at var(--jni-flood-x, 50%) var(--jni-flood-y, 50%));
+  }
+  to {
+    clip-path: circle(150vmax at var(--jni-flood-x, 50%) var(--jni-flood-y, 50%));
+  }
 }
 
 /* ---- narrow screens ------------------------------------------------------ */
@@ -961,12 +1119,30 @@
   .jni-dossier-annotations {
     display: none;
   }
+  /* minmax(0, ...) rather than 1fr: the flavour chips scroll sideways on a
+     phone, and a bare 1fr column grows to their full width instead. */
   .jni-dossier-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 24px;
   }
+  /* Phones and tablets swap the framed pouch and its thumbnails for a swipe
+     strip, so the pack shot fills the width and the rest of the gallery is a
+     thumb-flick away rather than a row of 50px squares. */
   .jni-dossier-pack {
-    max-width: min(62vw, 360px);
+    max-width: 100%;
+  }
+  .jni-dossier-stage,
+  .jni-dossier-thumbs {
+    display: none;
+  }
+  .jni-dossier-strip,
+  .jni-dossier-dots {
+    display: flex;
+  }
+  .jni-dossier-word {
+    top: 22rem;
+    bottom: auto;
+    font-size: clamp(6rem, 34vw, 12rem);
   }
 }
 @media (max-width: 639px) {
@@ -979,11 +1155,26 @@
   .jni-dossier-qty {
     flex-wrap: wrap;
   }
+  .jni-dossier-actions {
+    flex-direction: column;
+  }
   .jni-dossier-buy {
     width: 100%;
   }
-  .jni-dossier-thumbs button {
-    width: 50px;
+  .jni-dossier-ghost {
+    padding: 0.8rem 1.3rem;
+  }
+  /* Three chips will not fit a phone side by side; they scroll instead of
+     squeezing the names. */
+  .jni-dossier-switch-row {
+    display: flex;
+    margin: 0 -1.25rem;
+    padding: 4px 1.25rem 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .jni-dossier-flav {
+    flex: 0 0 auto;
   }
 }
 
@@ -1002,6 +1193,9 @@
   .jni-dossier-marks.lit path {
     stroke-dashoffset: 0;
     transition: none;
+  }
+  ::view-transition-new(root) {
+    animation: none;
   }
 }
 

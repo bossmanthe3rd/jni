@@ -53,16 +53,19 @@ export const products = [
       },
       {
         src: `${P}/sweet-chilli-rush-life-desk.webp`,
+        caption: 'The late-night desk',
         thumb: `${P}/sweet-chilli-rush-life-desk-thumb.webp`,
         alt: 'Sweet Chilli Rush on a late-night desk with laptop, notes and headphones',
       },
       {
         src: `${P}/sweet-chilli-rush-life-creator.webp`,
+        caption: 'The creator flat-lay',
         thumb: `${P}/sweet-chilli-rush-life-creator-thumb.webp`,
         alt: 'Sweet Chilli Rush on a content creator flat-lay with camera, mic and swatches',
       },
       {
         src: `${P}/sweet-chilli-rush-life-studio.webp`,
+        caption: 'The design studio',
         thumb: `${P}/sweet-chilli-rush-life-studio-thumb.webp`,
         alt: 'Sweet Chilli Rush on a design studio desk with sketches and type specimens',
       },
@@ -75,6 +78,14 @@ export const products = [
     flavourHeading: 'Sweet. Full of Character.',
     flavourDescription:
       'A glossy sweet-chilli crunch balanced with real heat, delivering craveable sweetness first, fire right after.',
+    // What each bite tastes like, in order -- drawn as the PDP's heat climb.
+    heatBites: [
+      'Glossy sweetness first.',
+      'The sweet chilli rounds out.',
+      'A slow, playful heat arrives.',
+      'Sweet Heat. Fire right after.',
+      'Your hand goes back in anyway.',
+    ],
   },
   {
     id: 2,
@@ -111,21 +122,25 @@ export const products = [
       },
       {
         src: `${P}/jalapeno-kick-life-designer.webp`,
+        caption: "The designer's desk",
         thumb: `${P}/jalapeno-kick-life-designer-thumb.webp`,
         alt: 'Jalapeño Kick on a designer desk with type specimens and colour swatches',
       },
       {
         src: `${P}/jalapeno-kick-life-creator.webp`,
+        caption: 'The creator setup',
         thumb: `${P}/jalapeno-kick-life-creator-thumb.webp`,
         alt: 'Jalapeño Kick on a content creator setup with camera, mic and neon sign',
       },
       {
         src: `${P}/jalapeno-kick-life-founder.webp`,
+        caption: "The founder's desk",
         thumb: `${P}/jalapeno-kick-life-founder-thumb.webp`,
         alt: 'Jalapeño Kick on a founder desk with laptop, notebook and roadmap',
       },
       {
         src: `${P}/jalapeno-kick-life-trader.webp`,
+        caption: "The trader's desk",
         thumb: `${P}/jalapeno-kick-life-trader-thumb.webp`,
         alt: 'Jalapeño Kick on a trading desk with market charts on screen',
       },
@@ -138,6 +153,14 @@ export const products = [
     flavourHeading: 'Fresh. Full of Character.',
     flavourDescription:
       'A crisp jalapeño-led bite with fresh pepper character, delivering clean heat that keeps the hand going back.',
+    // What each bite tastes like, in order -- drawn as the PDP's heat climb.
+    heatBites: [
+      'Fresh pepper, clean and green.',
+      'The jalapeño character comes up.',
+      'A bright, clean heat builds.',
+      'Fresh Heat, still clean on the finish.',
+      'Your hand goes back in anyway.',
+    ],
   },
   {
     id: 3,
@@ -174,16 +197,19 @@ export const products = [
       },
       {
         src: `${P}/peri-peri-punch-life-flatlay.webp`,
+        caption: 'The work flat-lay',
         thumb: `${P}/peri-peri-punch-life-flatlay-thumb.webp`,
         alt: 'Peri Peri Punch flat-lay on a work desk with laptop, notes and headphones',
       },
       {
         src: `${P}/peri-peri-punch-life-office.webp`,
+        caption: 'The office desk',
         thumb: `${P}/peri-peri-punch-life-office-thumb.webp`,
         alt: 'Peri Peri Punch on an office desk beside a laptop, coffee and sticky notes',
       },
       {
         src: `${P}/peri-peri-punch-life-creator.webp`,
+        caption: 'The creator setup',
         thumb: `${P}/peri-peri-punch-life-creator-thumb.webp`,
         alt: 'Peri Peri Punch on a content creator desk with camera, mic and neon sign',
       },
@@ -196,6 +222,14 @@ export const products = [
     flavourHeading: 'Spicy. Full of Character.',
     flavourDescription:
       'A lively kick balanced with savoury depth, delivering flavour first, heat second.',
+    // What each bite tastes like, in order -- drawn as the PDP's heat climb.
+    heatBites: [
+      'Savoury depth lands first.',
+      'The peri-peri tang comes through.',
+      'Then the warmth starts to build.',
+      'Big Heat. Properly warm now.',
+      'Your hand goes back in anyway.',
+    ],
   },
 ]
 
@@ -352,7 +386,7 @@ function relativeLuminance(hex) {
   return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
 }
 
-function contrastRatio(a, b) {
+export function contrastRatio(a, b) {
   const la = relativeLuminance(a)
   const lb = relativeLuminance(b)
   return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05)

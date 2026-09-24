@@ -14,3 +14,7 @@ __pycache__/
 # web-ready assets live in public/assets/ and are committed; these originals
 # stay in Drive so clones do not carry them.
 reference/drive/
+
+# Illustrator design source (49 MB). Same policy as reference/drive above --
+# the web-ready assets derived from it are committed, the original is not.
+reference/*.ai

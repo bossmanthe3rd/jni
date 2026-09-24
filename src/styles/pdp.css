@@ -1,0 +1,882 @@
+/* ===========================================================================
+   Product page sections below the dossier
+
+   Every section here speaks the brand's sticker idiom -- 3px ink keyline,
+   hard offset shadow, the lopsided radius the CTA shape and the pack notes
+   use -- and takes its colour or its words from the flavour on the page.
+   =========================================================================== */
+
+/* ---- seams, grain and type bands ---------------------------------------- */
+
+/* Laid over the neighbouring section's edge: a rising seam overlaps the
+   bottom of the section above it, a hanging one the top of the section
+   below. Neither takes up any height of its own. */
+.jni-seam {
+  position: relative;
+  z-index: 3;
+  height: clamp(22px, 3.4vw, 48px);
+  margin-top: calc(-1 * clamp(22px, 3.4vw, 48px) + 1px);
+  pointer-events: none;
+}
+.jni-seam[data-hang] {
+  margin-top: -1px;
+  margin-bottom: calc(-1 * clamp(22px, 3.4vw, 48px));
+}
+.jni-seam svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Print grain over the flat grounds, so they read as a printed pouch rather
+   than a CSS fill. It sits between the ground and the content: the section
+   is its own stacking context, and the grain is layered just under zero. */
+.jni-grain {
+  position: relative;
+  isolation: isolate;
+}
+.jni-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  /* Grey noise centred on mid-grey under soft-light: it lightens as much as
+     it darkens, so the ground keeps its colour and only gains tooth. */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  mix-blend-mode: soft-light;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.jni-bands {
+  position: relative;
+  z-index: 3;
+  height: clamp(130px, 13vw, 190px);
+  margin-block: -1px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(4px, 1vw, 12px);
+}
+.jni-band {
+  width: 112%;
+  margin-left: -6%;
+  overflow: hidden;
+  border-block: 3px solid var(--color-border);
+  box-shadow: 0 5px 0 rgba(7, 26, 22, 0.35);
+}
+.jni-band-track {
+  display: flex;
+  width: max-content;
+  align-items: center;
+  gap: clamp(16px, 2vw, 28px);
+  padding: clamp(8px, 1vw, 12px) 0;
+  font-family: var(--font-brand);
+  font-size: clamp(22px, 2.6vw, 38px);
+  line-height: 1;
+  white-space: nowrap;
+  will-change: transform;
+}
+.jni-band-track img {
+  width: clamp(22px, 2.4vw, 34px);
+  flex: 0 0 auto;
+}
+
+.jni-facts-inner,
+.jni-reviews,
+.jni-flight,
+.jni-faq {
+  padding-inline: max(1.25rem, calc((100vw - 1200px) / 2));
+}
+
+/* A fact, a score or a question on its own piece of card. `--turn` gives
+   each one a slightly different tilt so the board looks stuck up by hand. */
+.jni-sticker {
+  border: 3px solid var(--color-border);
+  border-radius: 15px 10px 17px 9px / 10px 16px 9px 15px;
+  box-shadow: 4px 5px 0 var(--color-border);
+  color: var(--color-text-dark);
+  rotate: var(--turn, 0deg);
+}
+
+/* ---- heat climb ---------------------------------------------------------- */
+.jni-climb {
+  position: relative;
+  color: var(--color-text-dark);
+}
+.jni-climb-k {
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  opacity: 0.7;
+}
+.jni-climb h2 {
+  margin-top: 6px;
+  font-family: var(--font-brand);
+  font-weight: 400;
+  font-size: clamp(2.3rem, 4.4vw, 4rem);
+  line-height: 0.95;
+}
+.jni-climb-sub {
+  margin-top: 10px;
+  max-width: 34ch;
+  font-size: 15px;
+  line-height: 1.5;
+  opacity: 0.8;
+  text-wrap: pretty;
+}
+.jni-climb-n {
+  font-family: var(--font-brand);
+  line-height: 0.9;
+}
+.jni-climb-t {
+  font-weight: 700;
+  line-height: 1.35;
+  text-wrap: pretty;
+}
+.jni-climb [data-dark] {
+  color: var(--color-bg-cream);
+}
+
+/* Wide screens: the track is taller than the screen, the pin sticks for the
+   length of it, and scroll position picks how many bites have landed. */
+.jni-climb-track {
+  position: relative;
+  height: 280vh;
+}
+.jni-climb-pin {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+.jni-climb-cols {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  height: 100%;
+}
+.jni-climb-cols li {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 14px;
+  padding: 0 clamp(16px, 2vw, 28px) 56px;
+  border-right: 2px solid rgba(7, 26, 22, 0.18);
+  transition: background-color 480ms ease, color 480ms ease;
+}
+.jni-climb-cols li:last-child {
+  border-right: 0;
+}
+.jni-climb-cols li:not([data-on]) .jni-climb-t {
+  opacity: 0.35;
+}
+.jni-climb-cols .jni-climb-n {
+  font-size: clamp(2.6rem, 4.4vw, 4rem);
+}
+.jni-climb-cols .jni-climb-t {
+  max-width: 18ch;
+  font-size: clamp(15px, 1.2vw, 18px);
+}
+.jni-climb-cols .jni-climb-stack {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  align-items: flex-end;
+  gap: 4px;
+  min-height: 132px;
+}
+.jni-climb-cols .jni-climb-stack img {
+  width: clamp(40px, 3.8vw, 56px);
+}
+.jni-climb-track .jni-climb-head {
+  position: absolute;
+  top: calc(var(--site-header-offset) + 28px);
+  left: clamp(16px, 2vw, 28px);
+  pointer-events: none;
+}
+
+/* The crisp sits over the ramp, in the band between the heading and the
+   chilli stacks, and turns with the scroll. */
+.jni-climb-crisp {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  top: 47%;
+  width: min(25vw, 42vh, 340px);
+  translate: -50% -50%;
+  pointer-events: none;
+}
+.jni-crisp {
+  position: relative;
+  filter: drop-shadow(8px 10px 0 rgba(13, 40, 24, 0.22));
+}
+.jni-crisp svg {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+.jni-crisp-word {
+  position: absolute;
+  translate: -50% -50%;
+  padding: 4px 12px 6px;
+  border: 3px solid var(--color-border);
+  border-radius: 15px 10px 17px 9px / 10px 16px 9px 15px;
+  background: var(--color-accent-yellow);
+  box-shadow: 3px 4px 0 var(--color-border);
+  color: var(--color-text-dark);
+  font-family: var(--font-brand);
+  font-size: clamp(18px, 1.6vw, 24px);
+  white-space: nowrap;
+}
+
+/* Phones, and anyone who asked for less motion: a finished list. */
+.jni-climb-list .jni-climb-head {
+  padding: 32px 1.25rem 22px;
+}
+.jni-climb-list ol li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 84px;
+  padding: 10px 1.25rem;
+}
+.jni-climb-list .jni-climb-n {
+  flex: 0 0 5.2rem;
+  font-size: 30px;
+}
+.jni-climb-list .jni-climb-t {
+  flex: 1 1 auto;
+  font-size: 14px;
+}
+.jni-climb-list .jni-climb-stack {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 2px;
+}
+.jni-climb-list .jni-climb-stack img {
+  width: 22px;
+}
+
+/* ---- pouch facts --------------------------------------------------------- */
+.jni-facts {
+  background-color: var(--color-bg-cream);
+  background-image: radial-gradient(rgba(7, 26, 22, 0.14) 1.4px, transparent 1.6px);
+  background-size: 22px 22px;
+}
+.jni-facts-inner {
+  padding-block: clamp(48px, 7vw, 88px);
+}
+.jni-facts h2 {
+  font-family: var(--font-brand);
+  font-size: clamp(2.3rem, 4.4vw, 4rem);
+  line-height: 0.95;
+  color: var(--color-text-dark);
+}
+.jni-facts-lede {
+  margin: 12px 0 36px;
+  max-width: 52ch;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-text-dark);
+  opacity: 0.8;
+}
+.jni-facts-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 26px;
+}
+.jni-facts-grid .jni-sticker {
+  padding: 20px 22px;
+}
+.jni-facts-grid .jni-sticker > b {
+  display: block;
+  font-family: var(--font-brand);
+  font-weight: 400;
+  font-size: clamp(2rem, 3.6vw, 3.4rem);
+  line-height: 1;
+}
+.jni-facts-grid .jni-sticker p {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.jni-facts-grid .jni-sticker > b.jni-facts-h {
+  font-size: 26px;
+}
+.jni-facts-wide {
+  grid-column: span 2;
+}
+.jni-facts-dark {
+  background: var(--color-text-dark);
+  color: var(--color-bg-cream);
+}
+.jni-facts-dark .jni-facts-h {
+  color: var(--color-accent-yellow);
+}
+.jni-facts-dark p {
+  font-size: 16px !important;
+}
+.jni-facts-ings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+.jni-facts-ings li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 14px 6px 8px;
+  border: 2.5px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-bg-cream);
+  box-shadow: 2px 3px 0 var(--color-border);
+  font-size: 14px;
+}
+.jni-facts-ings img {
+  width: 18px;
+  flex: 0 0 auto;
+}
+.jni-facts-note {
+  opacity: 0.7;
+  font-size: 13px !important;
+}
+
+/* ---- desk moments -------------------------------------------------------- */
+.jni-desks {
+  position: relative;
+  overflow: hidden;
+  padding-block: clamp(56px, 7vw, 88px);
+  background: var(--color-bg-dark);
+  color: var(--color-bg-cream);
+}
+.jni-desks-doodle {
+  position: absolute;
+  top: 56px;
+  right: 8%;
+  width: 60px;
+  rotate: 30deg;
+  opacity: 0.5;
+  pointer-events: none;
+}
+.jni-desks-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding-inline: max(1.25rem, calc((100vw - 1200px) / 2));
+}
+.jni-desks-k {
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-accent-yellow);
+}
+.jni-desks h2 {
+  margin-top: 6px;
+  max-width: 18ch;
+  font-family: var(--font-brand);
+  font-size: clamp(2.1rem, 4.4vw, 4rem);
+  line-height: 0.95;
+  color: var(--color-accent-teal);
+}
+.jni-desks-nav {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 10px;
+}
+.jni-desks-nav button {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 3px solid #000;
+  border-radius: 15px 10px 17px 9px / 10px 16px 9px 15px;
+  background: var(--color-bg-cream);
+  box-shadow: 3px 3px 0 #000;
+  color: var(--color-bg-dark);
+  transition: transform 0.16s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.jni-desks-nav button:last-child {
+  background: var(--color-accent-yellow);
+}
+.jni-desks-nav button:hover {
+  transform: translateY(-2px);
+}
+.jni-desks-rail {
+  margin-top: 44px;
+  padding: 24px max(1.25rem, calc((100vw - 1200px) / 2)) 40px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: max(1.25rem, calc((100vw - 1200px) / 2));
+  scrollbar-width: none;
+}
+.jni-desks-rail::-webkit-scrollbar {
+  display: none;
+}
+.jni-desks-row {
+  display: flex;
+  width: max-content;
+  gap: 34px;
+}
+.jni-desks-rail figure {
+  position: relative;
+  flex: 0 0 min(78vw, 380px);
+  padding: 14px 14px 18px;
+  scroll-snap-align: start;
+  border: 3px solid #000;
+  border-radius: 6px;
+  background: var(--color-bg-cream);
+  box-shadow: 8px 9px 0 rgba(0, 0, 0, 0.5);
+  color: var(--color-text-dark);
+  rotate: var(--turn, 0deg);
+  translate: 0 var(--drop, 0);
+  transition: rotate 0.28s cubic-bezier(0.34, 1.4, 0.64, 1), translate 0.28s ease;
+}
+.jni-desks-rail figure:hover {
+  rotate: 0deg;
+  translate: 0 calc(var(--drop, 0px) - 8px);
+}
+/* A strip of masking tape holding each print up. */
+.jni-desks-rail figure::before {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  top: -14px;
+  left: 50%;
+  width: 104px;
+  height: 28px;
+  translate: -50% 0;
+  rotate: var(--tape, -4deg);
+  background: rgba(243, 198, 59, 0.78);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  clip-path: polygon(3% 0, 97% 4%, 100% 50%, 96% 100%, 2% 96%, 0 50%);
+}
+.jni-desks-rail img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 5 / 4;
+  border-radius: 3px;
+  object-fit: cover;
+}
+.jni-desks-rail figcaption {
+  margin-top: 12px;
+  font-family: var(--font-brand);
+  font-size: 24px;
+}
+
+/* ---- reviews ------------------------------------------------------------- */
+.jni-reviews {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 64px;
+  padding-block: clamp(56px, 7vw, 88px);
+  background: var(--color-accent-yellow);
+  color: var(--color-text-dark);
+}
+.jni-reviews-k {
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  opacity: 0.7;
+}
+.jni-reviews-lead blockquote {
+  margin: 20px 0;
+  font-family: var(--font-brand);
+  font-size: clamp(2rem, 4vw, 3.6rem);
+  line-height: 1.02;
+  text-wrap: balance;
+}
+.jni-reviews-who {
+  font-size: 16px;
+  font-weight: 700;
+}
+.jni-reviews-side {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+}
+.jni-reviews-score {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 20px 24px;
+  background: var(--color-bg-cream);
+}
+.jni-reviews-score b {
+  font-family: var(--font-brand);
+  font-weight: 400;
+  font-size: 72px;
+  line-height: 1;
+}
+.jni-reviews-score > span {
+  font-size: 15px;
+  line-height: 1.4;
+}
+.jni-reviews-stars {
+  display: block;
+  color: #e85d4c;
+  font-size: 20px;
+}
+.jni-reviews-stars > span {
+  display: inline-block;
+}
+
+/* The other reviews, dealt as a stack: every card in the same grid cell, so
+   the stack is as tall as its tallest card and nothing jumps on a shuffle. */
+.jni-reviews-stack {
+  display: grid;
+  margin-bottom: 18px;
+}
+.jni-reviews-stack > * {
+  grid-area: 1 / 1;
+}
+.jni-reviews-next {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 2.5px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-bg-cream);
+  box-shadow: 2px 3px 0 var(--color-border);
+  color: var(--color-text-dark);
+  font-family: var(--font-brand);
+  font-size: 16px;
+  transition: transform 0.16s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.jni-reviews-next:hover {
+  transform: translateY(-2px);
+}
+.jni-reviews-next:active {
+  transform: scale(1.04, 0.9);
+}
+.jni-reviews-card {
+  margin: 0;
+  padding: 18px 22px;
+  background: #ffffff;
+}
+.jni-reviews-card blockquote {
+  margin: 0 0 8px;
+  font-size: 16px;
+  line-height: 1.45;
+}
+.jni-reviews-card figcaption {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ---- make it a flight ---------------------------------------------------- */
+.jni-flight {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 64px;
+  align-items: center;
+  padding-block: clamp(56px, 7vw, 88px);
+  overflow: hidden;
+  color: var(--color-bg-cream);
+}
+.jni-flight-fan {
+  position: relative;
+  height: 440px;
+}
+.jni-flight-pouch {
+  position: absolute;
+  top: 90px;
+  left: calc(var(--i) * 160px);
+  width: 230px;
+  height: 290px;
+  overflow: hidden;
+  border: 3px solid var(--color-border);
+  border-radius: 15px 10px 17px 9px / 10px 16px 9px 15px;
+  background: #f7f1c8;
+  box-shadow: 6px 8px 0 rgba(7, 26, 22, 0.55);
+  transition: translate 0.2s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.jni-flight-pouch:nth-child(1) {
+  rotate: -9deg;
+}
+.jni-flight-pouch:nth-child(3) {
+  rotate: 8deg;
+}
+.jni-flight-pouch[data-here] {
+  z-index: 2;
+  top: 40px;
+  rotate: -1deg;
+}
+.jni-flight-pouch:not([data-here]):hover {
+  translate: 0 -8px;
+}
+.jni-flight-pouch img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.jni-flight-here {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: 190px;
+  padding: 5px 14px 7px;
+  border: 3px solid var(--color-border);
+  border-radius: 15px 10px 17px 9px / 10px 16px 9px 15px;
+  background: var(--color-accent-yellow);
+  box-shadow: 3px 4px 0 var(--color-border);
+  color: var(--color-text-dark);
+  font-family: var(--font-brand);
+  font-size: 18px;
+  rotate: -6deg;
+}
+.jni-flight-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.jni-flight-k {
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-accent-yellow);
+}
+.jni-flight h2 {
+  font-family: var(--font-brand);
+  font-size: clamp(2.4rem, 4.6vw, 4rem);
+  line-height: 0.95;
+  -webkit-text-stroke: 0.06em var(--color-bg-dark);
+  paint-order: stroke fill;
+}
+.jni-flight-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  background: var(--color-bg-cream);
+}
+.jni-flight-link {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.jni-flight-link img {
+  width: 80px;
+  height: 80px;
+  flex: 0 0 auto;
+  border: 2px solid var(--color-border);
+  border-radius: 10px;
+  object-fit: cover;
+}
+.jni-flight-link b {
+  display: block;
+  font-family: var(--font-brand);
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 1.05;
+}
+.jni-flight-link small {
+  font-size: 13px;
+  opacity: 0.75;
+}
+.jni-flight-link:hover b {
+  text-decoration: underline;
+}
+.jni-flight-price {
+  flex: 0 0 auto;
+  text-align: right;
+}
+.jni-flight-price b {
+  display: block;
+  font-family: var(--font-brand);
+  font-weight: 400;
+  font-size: 28px;
+  line-height: 1;
+}
+.jni-flight-price s {
+  font-size: 13px;
+  opacity: 0.55;
+}
+.jni-flight-add {
+  flex: 0 0 auto;
+  min-width: 64px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 2.5px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-accent-yellow);
+  box-shadow: 2px 3px 0 var(--color-border);
+  font-family: var(--font-brand);
+  font-size: 16px;
+  transition: transform 0.16s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.jni-flight-add:hover {
+  transform: translateY(-2px);
+}
+.jni-flight-add:active {
+  transform: scale(1.04, 0.9);
+}
+
+/* ---- faq ----------------------------------------------------------------- */
+.jni-faq {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+  gap: 64px;
+  padding-block: clamp(56px, 7vw, 88px);
+  background: var(--color-bg-cream);
+  color: var(--color-text-dark);
+}
+.jni-faq h2 {
+  font-family: var(--font-brand);
+  font-size: clamp(2.3rem, 4.4vw, 4rem);
+  line-height: 0.95;
+}
+.jni-faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.jni-faq-item {
+  overflow: hidden;
+  background: #ffffff;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.jni-faq-item[data-open] {
+  background: var(--color-text-dark);
+  color: var(--color-bg-cream);
+}
+.jni-faq-item button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 22px;
+  font-family: var(--font-brand);
+  font-size: clamp(18px, 1.7vw, 22px);
+  text-align: left;
+}
+.jni-faq-item button span {
+  font-size: 26px;
+  line-height: 1;
+}
+.jni-faq-item p {
+  padding: 0 22px 20px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* ---- floating mobile buy bar -------------------------------------------- */
+.jni-atc-float {
+  position: fixed;
+  z-index: 40;
+  left: 10px;
+  right: 10px;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 3px solid var(--color-bg-dark);
+  border-radius: 22px;
+  background: var(--color-text-dark);
+  box-shadow: 0 6px 0 rgba(7, 26, 22, 0.35);
+}
+.jni-atc-float img {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  border-radius: 12px;
+  object-fit: cover;
+}
+.jni-atc-float p {
+  min-width: 0;
+  flex: 1 1 auto;
+  color: var(--color-bg-cream);
+  font-size: 13px;
+  line-height: 1.25;
+}
+.jni-atc-float b {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.jni-atc-float p > span {
+  opacity: 0.75;
+}
+.jni-atc-float s {
+  margin-left: 6px;
+  opacity: 0.6;
+}
+.jni-atc-float .jni-btn {
+  min-height: 50px;
+  flex: 0 0 auto;
+  padding: 0 20px;
+  font-size: 17px;
+}
+
+/* ---- narrow screens ------------------------------------------------------ */
+@media (max-width: 1023px) {
+  .jni-facts-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .jni-reviews,
+  .jni-flight,
+  .jni-faq {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 36px;
+  }
+}
+@media (max-width: 639px) {
+  .jni-facts-grid {
+    gap: 14px;
+  }
+  .jni-facts-grid .jni-sticker {
+    padding: 14px 16px;
+  }
+  .jni-desks-nav {
+    display: none;
+  }
+  .jni-reviews-score b {
+    font-size: 56px;
+  }
+  .jni-flight-fan {
+    height: 300px;
+  }
+  .jni-flight-pouch {
+    top: 70px;
+    left: calc(var(--i) * 28vw);
+    width: min(42vw, 170px);
+    height: min(53vw, 215px);
+  }
+  .jni-flight-pouch[data-here] {
+    top: 30px;
+  }
+  .jni-flight-here {
+    left: 30vw;
+    font-size: 15px;
+  }
+  .jni-flight-row {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .jni-flight-link img {
+    width: 60px;
+    height: 60px;
+  }
+  .jni-flight-link b {
+    font-size: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jni-climb-cols li,
+  .jni-faq-item,
+  .jni-flight-pouch {
+    transition: none;
+  }
+}
