@@ -1,18 +1,12 @@
 /*
- * The wall behind the Why Flipo's monitor -- two candidates, picked with the
- * `wall` prop while we decide:
+ * The wall behind the Why Flipo's monitor: the campaign banner's own wall,
+ * pale chillies and bitten chips drifting round the monitor, a few
+ * full-colour triangles. It is the hero's wall seen close up -- the hero's
+ * camera move ends here -- so it has to be the same paper.
  *
- *   scatter  the campaign banner's own wall: pale chillies and bitten chips
- *            drifting round the monitor, a few full-colour triangles.
- *   office   a two-tone painted office wall with a dado rail, the monitor's
- *            cable running down into a socket, and a framed pack where there
- *            is wall enough to hang one.
- *
- * Both are laid out in the 1180 x 600 artboard's own units and hang off the
- * rig, so they zoom with the monitor. Laptops only.
+ * Laid out in the 1180 x 600 artboard's own units and hung off the rig, so it
+ * zooms with the monitor. Laptops only.
  */
-
-const INK = '#0d2818'
 
 // [src, x, y, width, rotate, pale]
 const SCATTER = [
@@ -34,51 +28,19 @@ const SCATTER = [
   ['/assets/hero/confetti/dot-b.webp', 1200, 150, 18, 0, false],
 ]
 
-export default function WhyWall({ wall }) {
-  if (wall === 'scatter') return <ScatterWall />
-  if (wall === 'office') return <OfficeWall />
-  return null
-}
-
-function ScatterWall() {
+export default function WhyWall() {
   return (
-    <div className="wf-wall wf-wall--scatter" aria-hidden="true">
-      {SCATTER.map(([src, x, y, w, rot, pale], i) => (
+    <div className="wf-wall" aria-hidden="true">
+      {SCATTER.map(([src, x, y, width, rot, pale], i) => (
         <img
           key={i}
           src={src}
           alt=""
           loading="lazy"
           className={pale ? 'is-pale' : ''}
-          style={{ left: x, top: y, width: w, transform: `rotate(${rot}deg)` }}
+          style={{ left: x, top: y, width, transform: `rotate(${rot}deg)` }}
         />
       ))}
-    </div>
-  )
-}
-
-function OfficeWall() {
-  return (
-    <div className="wf-wall wf-wall--office" aria-hidden="true">
-      <div className="wf-dado" />
-
-      {/* The monitor's cable, from behind the stand down into the socket. */}
-      <svg className="wf-cable" viewBox="0 0 260 90" width="260" height="90">
-        <path d="M232 8 C 214 70, 120 84, 58 50" fill="none" stroke={INK} strokeWidth="7" strokeLinecap="round" />
-        <rect x="8" y="22" width="56" height="56" rx="10" fill="#fffbea" stroke={INK} strokeWidth="5" />
-        <rect x="24" y="40" width="6" height="16" rx="2" fill={INK} />
-        <rect x="42" y="40" width="6" height="16" rx="2" fill={INK} />
-      </svg>
-
-      {/* Hung only where there is wall to spare beside the notes. */}
-      <figure className="wf-frame-pic">
-        <div className="wf-frame-pic-mat">
-          <img src="/assets/hero/pouch-peri-peri-punch.webp" alt="" loading="lazy" />
-        </div>
-        <figcaption>Employee of the month</figcaption>
-      </figure>
-
-      <span className="wf-switch" />
     </div>
   )
 }

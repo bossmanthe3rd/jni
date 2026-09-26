@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   AnimatePresence,
@@ -6,6 +6,7 @@ import {
   useAnimationControls,
   useAnimationFrame,
   useMotionValue,
+  useMotionValueEvent,
   useScroll,
   useSpring,
   useTransform,
@@ -18,6 +19,8 @@ import { DeskSurface, DeskLip, DESK_SLOTS, WallClock } from './HeroDesk'
 import HeroDeskProps from './HeroDeskProps'
 import HeroSpice from './HeroSpice'
 import { DeskChip, LampBeam, LampPool, PendantShade, SHADE_RIM, deskLight, useDeskClock } from './HeroDeskLife'
+import { MAX_FIT, Monitor } from './WhyFlipos'
+import { HeroZoomContext } from './heroZoomContext'
 
 const INK = '#0D2818'
 
@@ -103,6 +106,14 @@ function ArrowDoodle({ className = '' }) {
  *   stationery on the desk holds still. On scroll the desk's back edge rises,
  *   as if standing up from it.
  *   None of this runs under reduced motion or on touch.
+ *
+ * On laptops the copy is on a monitor standing on the left of the desk, the
+ * packs beside it under the lamp -- the banner's own arrangement -- and the
+ * price and rating are a sticky note on its bezel. Scrolling walks the camera
+ * up to that monitor until it becomes Why Flipo's (HeroWhyZoom): the packs,
+ * lamp and note fade out of the camera's way, the copy clears off the screen
+ * and the screensaver takes over, and the flavours stop turning. Below
+ * laptop width the copy stands on the wall above the packs, as before.
  */
 export default function HeroCarousel() {
   const [index, setIndex] = useState(0)
@@ -119,6 +130,14 @@ export default function HeroCarousel() {
   const depthOn = finePointer && !reduceMotion
   const navigate = useNavigate()
   const sectionRef = useRef(null)
+
+  // The camera move into Why Flipo's, when there is one.
+  const zoom = useContext(HeroZoomContext)
+  const still = useMotionValue(1)
+  const fore = zoom.fore ?? still
+  const [zoomHold, setZoomHold] = useState(false)
+  useMotionValueEvent(fore, 'change', (v) => setZoomHold(v < 1))
+  const foreStyle = zoom.staged ? { opacity: fore } : undefined
 
   const now = useDeskClock()
   const light = deskLight(now)
@@ -169,13 +188,13 @@ export default function HeroCarousel() {
   const palette = packPalettes[slide.product.slug]
 
   useEffect(() => {
-    if (paused || reduceMotion) return
+    if (paused || reduceMotion || zoomHold) return
     const id = window.setInterval(
       () => setIndex((i) => (i + 1) % heroSlides.length),
       HERO_INTERVAL
     )
     return () => window.clearInterval(id)
-  }, [paused, reduceMotion])
+  }, [paused, reduceMotion, zoomHold])
 
   useEffect(
     () => () => {
@@ -330,6 +349,8 @@ export default function HeroCarousel() {
       style={{
         backgroundColor: HERO_GROUND,
         '--foot': 'calc(var(--lip) + (var(--desk) - var(--lip)) * 0.4)',
+        '--hero-h': zoom.staged ? '100vh' : 'max(640px, min(100svh, 900px))',
+        ...(zoom.staged ? { height: '100vh', minHeight: 0 } : {}),
       }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => {
@@ -415,6 +436,7 @@ export default function HeroCarousel() {
       {/* The surface grows from its front edge on scroll, so its back edge
           climbs the wall: the view from standing rather than sitting. */}
       <motion.div
+        data-hero-desk
         className="pointer-events-none absolute inset-x-0 bottom-0 z-[3] h-[var(--desk)]"
         style={depthOn ? { scaleY: deskRise, originY: 1 } : undefined}
       >
@@ -430,7 +452,7 @@ export default function HeroCarousel() {
           cord, shade and beam (over the wall and desk, under the packs). The
           packs sit above all of it, so the room takes the flavour's colour
           and the packaging keeps its own. Positions live in index.css. */}
-      <motion.div className="hero-lamp-rig hidden md:block z-[4]" style={{ rotate: swing }} aria-hidden="true">
+      <motion.div className="hero-lamp-rig hidden md:block z-[4]" style={{ rotate: swing, ...foreStyle }} aria-hidden="true">
         <LampPool tint={palette.fill} strength={beamStrength} className="hero-lamp-pool block" />
       </motion.div>
 
@@ -443,6 +465,7 @@ export default function HeroCarousel() {
         style={{
           bottom: 'calc(var(--foot) - (var(--desk) - var(--lip)) * 0.12)',
           ...(depthOn ? { x: packX } : {}),
+          ...foreStyle,
         }}
       >
         <motion.div className="h-full w-full" style={{ x: shadowSwing }}>
@@ -462,9 +485,6 @@ export default function HeroCarousel() {
 
       {/* The stationery stays put under the pointer: sliding against the
           cursor it read as the desk coming loose rather than as depth. */}
-      <div className="pointer-events-none absolute inset-0 z-[5]">
-        <HeroDeskProps />
-      </div>
 
       {/* The light in the room. By day, a cool or warm wash on the wall --
           the wall only, so it never bleaches the props. After five, the room
@@ -485,7 +505,28 @@ export default function HeroCarousel() {
         />
       )}
 
-      <motion.div className="hero-lamp-rig hidden md:block z-[7]" style={{ rotate: swing }} aria-hidden="true">
+      {/* The monitor, with the copy on its screen (laptops). Above the room's
+          light, since a lit screen is not dimmed by the evening. */}
+      <div className="pointer-events-none absolute inset-0 z-[7] hidden lg:block">
+        <HeroMonitor
+          screen={<HeroCopy slide={slide} stage={stage} palette={palette} reduceMotion={reduceMotion} onScreen />}
+          note={<PriceNote product={slide.product} />}
+          fore={fore}
+          staged={zoom.staged}
+        />
+      </div>
+
+      {/* The stationery, in front of the monitor -- it is nearer the chair.
+          Above the room's light with it, so it takes the evening's dimming
+          here instead. */}
+      <motion.div
+        className="pointer-events-none absolute inset-0 z-[7]"
+        style={{ ...foreStyle, filter: light.dim > 0 ? `brightness(${1 - light.dim})` : undefined }}
+      >
+        <HeroDeskProps />
+      </motion.div>
+
+      <motion.div className="hero-lamp-rig hidden md:block z-[7]" style={{ rotate: swing, ...foreStyle }} aria-hidden="true">
         <span className="hero-lamp-cord" />
         <LampBeam
           tint={palette.fill}
@@ -500,73 +541,12 @@ export default function HeroCarousel() {
 
       {/* CONTENT --------------------------------------------------------- */}
 
-      <div className="relative z-[8] flex flex-1 flex-col px-5 pt-8 sm:px-8 sm:pt-12 md:justify-center md:px-[6vw] md:pb-[calc(var(--desk)+2rem)] md:pt-6">
+      <motion.div style={foreStyle} className="relative z-[8] flex flex-1 flex-col lg:pointer-events-none px-5 pt-8 sm:px-8 sm:pt-12 md:justify-center md:px-[6vw] md:pb-[calc(var(--desk)+2rem)] md:pt-6">
         {/* Only the copy crossfades per flavour -- the packs below stay mounted
-            and change places on the desk. */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={slide.product.slug}
-            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: -40 }}
-            transition={{ duration: reduceMotion ? 0.15 : 0.45, ease: [0.22, 1, 0.36, 1] }}
-            className="mx-auto max-w-[30rem] text-center md:mx-0 md:max-w-[min(42vw,40rem)] md:text-left"
-          >
-            <p
-              className="mb-3 text-[11px] font-black uppercase tracking-[0.32em] sm:text-xs"
-              style={{ color: palette.line }}
-            >
-              {slide.kicker} &middot; {stage.heat}
-            </p>
-
-            <BrandHeading
-              as="h1"
-              className="text-[clamp(2.1rem,9vw,3rem)] leading-[0.92] sm:text-6xl md:text-[clamp(3rem,5.4vw,5.1rem)]"
-            >
-              {slide.headline}
-            </BrandHeading>
-
-            <p
-              className="mx-auto mt-4 max-w-[28rem] text-[0.95rem] font-bold leading-6 sm:text-base sm:leading-7 md:mx-0"
-              style={{ color: INK }}
-            >
-              {slide.product.subtitle}
-            </p>
-
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 md:justify-start">
-              <span className="relative inline-block">
-                <ArrowDoodle className="pointer-events-none absolute -left-20 -top-16 hidden h-20 w-24 lg:block" />
-                <Link to={`/flavours/${slide.product.slug}`} className="jni-btn">
-                  Shop {slide.product.shortName}
-                </Link>
-              </span>
-              <p className="text-sm font-black" style={{ color: INK }}>
-                &#8377;{slide.product.price}
-                <span
-                  className="ml-2 text-[11px] font-bold uppercase tracking-[0.14em]"
-                  style={{ color: palette.line }}
-                >
-                  {slide.product.weight}
-                </span>
-              </p>
-              <p className="flex items-center gap-2 text-sm font-black" style={{ color: INK }}>
-                <Stars value={slide.product.rating.value} color={palette.line} size={13} />
-                <span className="sr-only">
-                  Rated {slide.product.rating.value} out of 5 from {slide.product.rating.count} reviews
-                </span>
-                <span aria-hidden="true">
-                  {slide.product.rating.value}
-                  <span
-                    className="ml-1.5 text-[11px] font-bold uppercase tracking-[0.14em]"
-                    style={{ color: palette.line }}
-                  >
-                    ({slide.product.rating.count})
-                  </span>
-                </span>
-              </p>
-            </div>
-          </motion.div>
-        </AnimatePresence>
+            and change places on the desk. On laptops it is on the monitor. */}
+        <div className="lg:hidden">
+          <HeroCopy slide={slide} stage={stage} palette={palette} reduceMotion={reduceMotion} />
+        </div>
 
         {/* The packs, standing on the desk. In flow on a phone -- under the
             copy, bottom margin at the foot line -- and laid over the desk's
@@ -627,12 +607,13 @@ export default function HeroCarousel() {
               </motion.div>
             ))}
         </motion.div>
-      </div>
+      </motion.div>
 
       {/* The flavour switcher, written on the desk's front edge. Labelled,
           because three bare pips of different lengths never said what they
           switched between. */}
-      <nav
+      <motion.nav
+        style={foreStyle}
         aria-label="Choose a flavour"
         className="absolute inset-x-0 bottom-0 z-[9] flex h-[calc(var(--lip)*0.72)] items-center justify-center"
       >
@@ -663,7 +644,219 @@ export default function HeroCarousel() {
             )
           })}
         </ol>
-      </nav>
+      </motion.nav>
     </section>
+  )
+}
+
+// The monitor's own layout size (WhyFlipos, laptops): 680 wide, frame 432 +
+// stand. The hero lays it out at that size and shrinks it to fit.
+const MONITOR_W = 680
+const MONITOR_H = 528
+// Where the monitor's foot stands, up from the section's bottom: 62% of the
+// way back across the desktop, a little behind the packs' own foot line (40%).
+const MONITOR_FOOT = 'calc(var(--lip) + (var(--desk) - var(--lip)) * 0.62)'
+// How wide it stands: most of the left half, or as tall as the room under the
+// header allows -- and never more than 88% of Why Flipo's own monitor (680 x
+// that section's artboard fit, from WhyFlipos), so the camera always has
+// somewhere to close in to rather than backing away.
+const MONITOR_WIDTH = `min(46vw, calc((var(--hero-h) - ${MONITOR_FOOT} - var(--site-header-offset) - 44px) * ${MONITOR_W / MONITOR_H}), ${
+  0.88 * 680 * MAX_FIT
+}px, calc((100vw - 40px) * ${(0.88 * 680) / 1180}), calc((100vh - 150px) * ${(0.88 * 680) / 600}))`
+const SCREEN_INK = '#071a16'
+const SUNSHINE = '#f3c63b'
+
+/**
+ * The flavour's copy: kicker, headline, line, button -- and, off the screen,
+ * price and rating. `onScreen` sets it for the monitor's dark screen, in the
+ * screensaver's own type, with price and rating moved out onto the note.
+ * Crossfades per flavour either way.
+ */
+function HeroCopy({ slide, stage, palette, reduceMotion, onScreen = false }) {
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={slide.product.slug}
+        initial={reduceMotion ? { opacity: 0 } : { opacity: 0, x: 40 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: -40 }}
+        transition={{ duration: reduceMotion ? 0.15 : 0.45, ease: [0.22, 1, 0.36, 1] }}
+        className={
+          onScreen
+            ? 'hero-screen-copy'
+            : 'mx-auto max-w-[30rem] text-center md:mx-0 md:max-w-[min(42vw,40rem)] md:text-left'
+        }
+      >
+        <p
+          className={onScreen ? 'hero-screen-kicker' : 'mb-3 text-[11px] font-black uppercase tracking-[0.32em] sm:text-xs'}
+          style={onScreen ? undefined : { color: palette.line }}
+        >
+          {slide.kicker} &middot; {stage.heat}
+        </p>
+
+        <BrandHeading
+          as="h1"
+          fill={onScreen ? SUNSHINE : undefined}
+          stroke={onScreen ? SCREEN_INK : undefined}
+          className={
+            onScreen
+              ? 'hero-screen-title'
+              : 'text-[clamp(2.1rem,9vw,3rem)] leading-[0.92] sm:text-6xl md:text-[clamp(3rem,5.4vw,5.1rem)]'
+          }
+        >
+          {slide.headline}
+        </BrandHeading>
+
+        <p
+          className={
+            onScreen
+              ? 'hero-screen-line'
+              : 'mx-auto mt-4 max-w-[28rem] text-[0.95rem] font-bold leading-6 sm:text-base sm:leading-7 md:mx-0'
+          }
+          style={onScreen ? undefined : { color: INK }}
+        >
+          {slide.product.subtitle}
+        </p>
+
+        {onScreen ? (
+          <Link to={`/flavours/${slide.product.slug}`} className="jni-btn hero-screen-cta">
+            Shop {slide.product.shortName}
+          </Link>
+        ) : (
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 md:justify-start">
+            <span className="relative inline-block">
+              <ArrowDoodle className="pointer-events-none absolute -left-20 -top-16 hidden h-20 w-24 lg:block" />
+              <Link to={`/flavours/${slide.product.slug}`} className="jni-btn">
+                Shop {slide.product.shortName}
+              </Link>
+            </span>
+            <p className="text-sm font-black" style={{ color: INK }}>
+              &#8377;{slide.product.price}
+              <span className="ml-2 text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: palette.line }}>
+                {slide.product.weight}
+              </span>
+            </p>
+            <p className="flex items-center gap-2 text-sm font-black" style={{ color: INK }}>
+              <Stars value={slide.product.rating.value} color={palette.line} size={13} />
+              <span className="sr-only">
+                Rated {slide.product.rating.value} out of 5 from {slide.product.rating.count} reviews
+              </span>
+              <span aria-hidden="true">
+                {slide.product.rating.value}
+                <span className="ml-1.5 text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: palette.line }}>
+                  ({slide.product.rating.count})
+                </span>
+              </span>
+            </p>
+          </div>
+        )}
+      </motion.div>
+    </AnimatePresence>
+  )
+}
+
+/** Price and rating on a sticky note, stuck to the monitor's bezel. */
+function PriceNote({ product }) {
+  return (
+    <div className="hero-price-note">
+      <p className="hero-price-note-price font-brand">
+        &#8377;{product.price}
+        <span>{product.weight}</span>
+      </p>
+      <p className="hero-price-note-rating">
+        <Stars value={product.rating.value} color={INK} size={15} />
+        <span className="sr-only">
+          Rated {product.rating.value} out of 5 from {product.rating.count} reviews
+        </span>
+        <span aria-hidden="true">
+          {product.rating.value} <span>({product.rating.count})</span>
+        </span>
+      </p>
+    </div>
+  )
+}
+
+/**
+ * The monitor on the left of the desk, carrying the copy. It stands on the
+ * desktop a little behind the packs -- not on the back edge, where it looked
+ * about to fall off -- and is as big as the wall above allows. It is Why Flipo's
+ * own monitor, laid out at that section's size and shrunk to fit the wall
+ * here, so the camera move can hand one to the other and both screens show
+ * the same bouncing pack.
+ *
+ * At rest the screen shows the copy and the screensaver is off. As the move
+ * starts (`fore` falling) the copy and the price note fade and the
+ * screensaver comes up, so by the time the camera arrives the screen is
+ * already Why Flipo's. Where it is shrunk a long way -- short laptop
+ * screens -- its outlines are thickened to the hero's ink weight, easing back
+ * as the camera closes in.
+ */
+function HeroMonitor({ screen, note, fore, staged }) {
+  const zoom = useContext(HeroZoomContext)
+  const flat = useMotionValue(1)
+  const camera = zoom.camera ?? flat
+  const boxRef = useRef(null)
+  const monitorRef = useRef(null)
+  const scale = useRef(1)
+  // One after the other, never both: the copy clears in the first half of
+  // the fade, the screensaver comes up in the second.
+  const copyOpacity = useTransform(fore, (v) => Math.min(1, Math.max(0, (v - 0.5) * 2)))
+  const saverOpacity = useTransform(fore, (v) => (staged ? Math.min(1, Math.max(0, (0.5 - v) * 2)) : 0))
+
+  const thicken = () => {
+    const el = monitorRef.current
+    if (!el) return
+    const net = scale.current * camera.get()
+    el.style.setProperty('--wf-stroke', String(Math.max(1, 4.2 / (6 * net))))
+  }
+
+  useLayoutEffect(() => {
+    const box = boxRef.current
+    const el = monitorRef.current
+    if (!box || !el) return undefined
+    const fit = () => {
+      if (!box.clientWidth) return
+      scale.current = box.clientWidth / MONITOR_W
+      el.style.transform = `scale(${scale.current})`
+      box.style.height = `${el.offsetHeight * scale.current}px`
+      thicken()
+    }
+    fit()
+    const ro = new ResizeObserver(fit)
+    ro.observe(box)
+    return () => ro.disconnect()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useMotionValueEvent(camera, 'change', thicken)
+
+  const setRef = (el) => {
+    monitorRef.current = el
+    if (zoom.monitorRef) zoom.monitorRef.current = el
+  }
+
+  return (
+    <div
+      ref={boxRef}
+      className="hero-monitor"
+      style={{
+        left: '6vw',
+        bottom: MONITOR_FOOT,
+        width: MONITOR_WIDTH,
+      }}
+    >
+      <Monitor
+        ref={setRef}
+        decorative
+        saverOpacity={saverOpacity}
+        screen={
+          <motion.div className="hero-screen" style={{ opacity: copyOpacity }}>
+            {screen}
+          </motion.div>
+        }
+      >
+        <motion.div style={{ opacity: fore }}>{note}</motion.div>
+      </Monitor>
+    </div>
   )
 }

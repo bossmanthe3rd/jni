@@ -17,6 +17,16 @@ export function deliveredTotal(subtotal) {
   return subtotal + (subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FLAT)
 }
 
+/** Ink for a receipt's rubber stamp and marker ring: each flavour's own hue,
+ *  taken dark enough to read on paper (jalapeño's lime would vanish). Shared by
+ *  the vending machine's receipt and the checkout bill. */
+export const STAMP_INK = {
+  'sweet-chilli-rush': '#d4361c',
+  'jalapeno-kick': '#1f7a33',
+  'peri-peri-punch': '#9d1636',
+}
+export const STAMP_INK_BUNDLE = '#1d6f67'
+
 export const products = [
   {
     id: 1,

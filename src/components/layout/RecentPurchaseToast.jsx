@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ShoppingBag, X } from 'lucide-react'
+import { useLocation } from 'react-router-dom'
 import { recentPurchases } from '../../data/site'
 
 const SHOW_AFTER = 4000
@@ -32,12 +33,16 @@ export default function RecentPurchaseToast() {
     }
   }, [dismissed])
 
+  // Not at checkout: someone deciding whether to pay needs the bill, not a
+  // popup over it -- on a phone it landed right on the delivery nudge.
+  const atCheckout = useLocation().pathname.startsWith('/checkout')
+
   const purchase = recentPurchases[index]
   const minutesAgo = 3 + (index % 5)
 
   return (
     <AnimatePresence>
-      {visible && !dismissed && (
+      {visible && !dismissed && !atCheckout && (
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}

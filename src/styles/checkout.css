@@ -1,0 +1,508 @@
+/* ---------------------------------------------------------------------------
+   Checkout: the crate on the left, the bill on the right.
+
+   The bill is the vending machine's receipt grown up -- the machine prints a
+   preview of one pack, checkout prints the real order. Same paper, same torn
+   edge, same thermal type, same hand-circled total. Everything around it stays
+   quiet: plain cream, ink outlines, the one yellow button.
+   --------------------------------------------------------------------------- */
+
+.ck-page,
+.ck-drawer {
+  --ck-ink: var(--color-text-dark);
+  --ck-paper: #fffbea;
+  --ck-rule: rgb(13 40 24 / 0.3);
+  --ck-muted: rgb(13 40 24 / 0.6);
+  --ck-stamp: #1d6f67;
+}
+
+/* ---- the scene ----------------------------------------------------------- */
+
+/* The desk's own front edge runs into the footer, so the footer's painted
+   cream lip stands down (as it does under the product page's cut edge). */
+body:has(.ck-page) .jni-footer-lip {
+  display: none;
+}
+
+.ck-wall {
+  background: var(--color-bg-cream);
+  overflow: clip;
+}
+.ck-confetti {
+  position: absolute;
+  z-index: -1;
+  height: auto;
+  pointer-events: none;
+  display: none;
+}
+.ck-clock {
+  position: absolute;
+  right: max(2rem, calc((100% - 72rem) / 2));
+  bottom: 2.25rem;
+  width: 84px;
+  height: 84px;
+  display: none;
+}
+@media (min-width: 1024px) {
+  .ck-confetti,
+  .ck-clock {
+    display: block;
+  }
+}
+
+/* The desktop: yellow from the drawn back edge down. The SVG draws the edge
+   and the first grain strokes over the top 300px; the flat yellow picks up
+   below it, so a tall page doesn't stretch the drawing. */
+/* On a page shorter than the window the desk takes up the slack, so the front
+   edge always meets the footer rather than leaving a strip under it. */
+.ck-page {
+  display: flex;
+  flex-direction: column;
+}
+.ck-desk {
+  --lip: clamp(44px, 5vw, 72px);
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  /* The drawn edge is a fixed 300px; on a short desk it would hang past the
+     front edge into the footer. The props' feet stop at the lip for the same
+     reason. */
+  overflow: clip;
+  margin-top: -12px;
+  background: linear-gradient(transparent 20px, var(--color-accent-yellow) 20px);
+}
+.ck-desk-edge {
+  position: absolute;
+  inset: 0 0 auto;
+  width: 100%;
+  height: 300px;
+  z-index: -1;
+}
+.ck-desk-body {
+  position: relative;
+  flex: 1 0 auto;
+}
+/* The drawn grain strokes are placed for a wide desk; on a phone they land
+   as stray bars between the cards. */
+@media (max-width: 1023px) {
+  .ck-desk-edge path:nth-child(n + 3) {
+    display: none;
+  }
+}
+/* A few long grain strokes further down, so the surface keeps reading as
+   wood however tall the crate gets. */
+.ck-desk::before {
+  content: '';
+  position: absolute;
+  inset: 300px 0 0;
+  z-index: -1;
+  background:
+    linear-gradient(#e3b12c, #e3b12c) 6% 22% / 30% 5px no-repeat,
+    linear-gradient(#e3b12c, #e3b12c) 100% 58% / 12% 5px no-repeat;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+/* Flat stationery in the wide margins, lying on the surface. */
+.ck-flat {
+  position: absolute;
+  height: auto;
+  pointer-events: none;
+  display: none;
+}
+@media (min-width: 1360px) {
+  .ck-flat {
+    display: block;
+  }
+}
+
+/* The stationery stands on the front edge; the lip paints over its feet, the
+   way the banners crop them. */
+.ck-props {
+  position: relative;
+  height: clamp(110px, 13vw, 190px);
+  margin-top: 2.5rem;
+  pointer-events: none;
+}
+.ck-prop {
+  position: absolute;
+  bottom: calc(var(--lip) * -0.55);
+  height: auto;
+}
+.ck-prop--mug {
+  left: 3%;
+  width: clamp(92px, 10vw, 150px);
+}
+.ck-prop--pens {
+  left: calc(3% + clamp(100px, 11vw, 166px));
+  width: clamp(40px, 4.2vw, 64px);
+  display: none;
+}
+.ck-prop--calc {
+  right: 0;
+  width: clamp(80px, 9vw, 136px);
+}
+@media (min-width: 640px) {
+  .ck-prop--pens {
+    display: block;
+  }
+}
+/* Below the laptop layout the Pay bar floats over the foot of the page, so
+   the props keep clear of it by sitting a little further in. */
+@media (max-width: 1023px) {
+  .ck-props {
+    margin-bottom: 4.5rem;
+  }
+}
+.ck-lip {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: var(--lip);
+  margin-top: calc(var(--lip) * -0.6);
+  margin-bottom: -1px;
+  fill: #050d0b;
+}
+
+/* ---- the till ------------------------------------------------------------ */
+
+/* The slot the bill feeds out of. It clips the paper at its mouth, so the bill
+   appears to print downwards; the padding keeps the paper's hard shadow from
+   being clipped along with it. */
+.ck-till {
+  position: relative;
+  height: 16px;
+  margin: 0 -6px;
+  border: 3px solid var(--ck-ink);
+  border-radius: 8px;
+  background: var(--color-bg-dark);
+  box-shadow: 0 3px 0 var(--ck-ink);
+  z-index: 2;
+}
+.ck-paper-well {
+  position: relative;
+  margin-top: -8px;
+  padding: 0 10px 12px 4px;
+  overflow: hidden;
+}
+.ck-paper-feed {
+  filter: drop-shadow(0 2.5px 0 var(--ck-ink)) drop-shadow(2.5px 0 0 var(--ck-ink))
+    drop-shadow(-2.5px 0 0 var(--ck-ink)) drop-shadow(5px 6px 0 rgb(13 40 24 / 0.85));
+  transform-origin: 50% 0;
+}
+
+/* ---- the bill ------------------------------------------------------------ */
+
+.ck-bill {
+  --zig: 8px;
+  position: relative;
+  padding: 22px 20px calc(18px + var(--zig));
+  background: var(--ck-paper);
+  color: var(--ck-ink);
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% /
+    calc(2 * var(--zig)) 100%;
+  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% /
+    calc(2 * var(--zig)) 100%;
+}
+
+.ck-bill-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+  border-bottom: 2px dashed var(--ck-rule);
+}
+.ck-bill-logo {
+  display: block;
+  width: 72px;
+  height: auto;
+}
+
+/* Thermal-printer labels: small, heavy, tracked out. */
+.ck-label {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ck-muted);
+}
+.ck-bill-head .ck-label {
+  margin-top: 6px;
+}
+
+.ck-lines li {
+  display: grid;
+  grid-template-columns: 30px 1fr auto;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.ck-lines li:first-child {
+  margin-top: 0;
+}
+.ck-lines i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border: 2px solid var(--ck-ink);
+  border-radius: 50%;
+  vertical-align: -1px;
+}
+.ck-lines small {
+  display: block;
+  margin-left: 16px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--ck-muted);
+}
+
+.ck-rule {
+  margin: 12px 0;
+  border: 0;
+  border-top: 2px dashed var(--ck-rule);
+}
+
+.ck-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 800;
+}
+.ck-row:first-child {
+  margin-top: 0;
+}
+.ck-row s {
+  margin-right: 6px;
+  font-weight: 700;
+  color: var(--ck-muted);
+}
+.ck-row--save {
+  color: #1f7a33;
+}
+
+.ck-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+}
+.ck-total-price {
+  position: relative;
+  margin-right: 8px;
+  font-family: var(--font-brand);
+  font-size: 34px;
+  line-height: 1;
+}
+.ck-ring {
+  position: absolute;
+  inset: -12px -14px -10px -12px;
+  width: calc(100% + 26px);
+  height: calc(100% + 22px);
+  overflow: visible;
+  pointer-events: none;
+}
+.ck-ring path {
+  fill: none;
+  stroke: var(--ck-stamp);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0.9;
+  vector-effect: non-scaling-stroke;
+  animation: ck-ring 0.55s 1.1s ease-out forwards;
+}
+@keyframes ck-ring {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Inked on once free delivery is earned. */
+.ck-stamp {
+  position: absolute;
+  right: 14px;
+  top: 58px;
+  padding: 3px 8px 2px;
+  border: 3px solid var(--ck-stamp);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1.5px var(--ck-paper), inset 0 0 0 3px var(--ck-stamp);
+  color: var(--ck-stamp);
+  font-family: var(--font-brand);
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0.85;
+  mix-blend-mode: multiply;
+  transform: rotate(-9deg);
+  pointer-events: none;
+}
+
+.ck-bill-foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 2px dashed var(--ck-rule);
+}
+.ck-barcode {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ck-barcode svg {
+  display: block;
+  width: 118px;
+  height: 26px;
+  fill: var(--ck-ink);
+}
+.ck-barcode span {
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+}
+
+/* ---- the empty slot ------------------------------------------------------- */
+
+.ck-slot {
+  position: relative;
+  width: min(260px, 70vw);
+  aspect-ratio: 1 / 0.82;
+  margin-inline: auto;
+  border: 3px solid var(--ck-ink);
+  border-radius: 18px;
+  background: var(--color-bg-dark);
+  box-shadow: 6px 6px 0 var(--ck-ink);
+  overflow: hidden;
+}
+/* The glass: one soft diagonal glint, like the machine's. */
+.ck-slot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 38%, rgb(255 255 255 / 0.07) 38% 52%, transparent 52%);
+  pointer-events: none;
+}
+.ck-slot-coil {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 26%;
+  height: 34%;
+}
+.ck-slot-shelf {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 22%;
+  border-top: 3px solid var(--ck-ink);
+  background: var(--color-accent-yellow);
+}
+.ck-slot-tag {
+  position: absolute;
+  left: 50%;
+  bottom: 5%;
+  transform: translateX(-50%);
+  padding: 2px 10px;
+  border: 2px solid var(--ck-ink);
+  border-radius: 6px;
+  background: var(--ck-paper);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ck-slot--sm {
+  width: 150px;
+  border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--ck-ink);
+}
+
+/* ---- mobile pay bar ------------------------------------------------------ */
+
+.ck-paybar {
+  position: fixed;
+  z-index: 40;
+  left: 10px;
+  right: 10px;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 8px 8px 16px;
+  border: 3px solid var(--color-bg-dark);
+  border-radius: 22px;
+  background: var(--color-text-dark);
+  color: var(--color-bg-cream);
+  box-shadow: 0 6px 0 rgb(7 26 22 / 0.35);
+}
+.ck-paybar .jni-btn {
+  min-height: 50px;
+  flex: 1 1 auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ck-ring path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ---- the cart drawer ----------------------------------------------------- */
+
+/* The drawer is the same desk, turned sideways: a strip of wall with the
+   heading, the desktop with the crate on it, and the end of the till roll
+   along the bottom carrying the totals. */
+.ck-drawer-desk {
+  background: var(--color-accent-yellow);
+}
+.ck-drawer-edge {
+  position: absolute;
+  inset: -10px 0 auto;
+  width: 100%;
+  height: 22px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* The torn-off end of the bill. The outline is drawn by drop shadows so it
+   follows the torn edge instead of boxing it. */
+.ck-stub-wrap {
+  position: relative;
+  z-index: 2;
+  margin-top: -14px;
+  filter: drop-shadow(0 -2.5px 0 var(--ck-ink));
+}
+.ck-stub {
+  --zig: 8px;
+  padding: calc(14px + var(--zig)) 20px max(18px, env(safe-area-inset-bottom));
+  background: var(--ck-paper);
+  color: var(--ck-ink);
+  -webkit-mask: conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) 50% /
+    calc(2 * var(--zig)) 100%;
+  mask: conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) 50% /
+    calc(2 * var(--zig)) 100%;
+}
+.ck-stub .ck-total {
+  margin-top: 10px;
+}
+.ck-stub .ck-total-price {
+  font-size: 28px;
+}

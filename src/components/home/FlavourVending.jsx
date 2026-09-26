@@ -9,12 +9,20 @@ import {
   useReducedMotion,
 } from 'framer-motion'
 import { ChevronUp, Minus, Plus } from 'lucide-react'
-import { bundles, perPacketPrice, products, toCartProduct } from '../../data/products'
+import {
+  STAMP_INK as STAMP,
+  STAMP_INK_BUNDLE as STAMP_BUNDLE,
+  bundles,
+  perPacketPrice,
+  products,
+  toCartProduct,
+} from '../../data/products'
 import { useCart } from '../../store/cartStore'
 import { doodleComponents, packPalettes } from '../icons/PackDoodles'
 import { Wordmark } from '../icons/Wordmark'
 import { heatLevel } from '../product/HeatMeter'
 import { useMediaQuery } from '../ui/Primitives'
+import { Barcode, MarkerRing } from '../ui/ReceiptMarks'
 import BreakRoom from './BreakRoom'
 import '../../styles/flavour-vending.css'
 
@@ -54,14 +62,6 @@ const SLOTS = [
 const BY_CODE = Object.fromEntries(SLOTS.map((s) => [s.code, s]))
 const KEYS = ['A', 'B', '1', '2', '3', 'C']
 
-// Ink for the rubber stamp and the marker ring: each flavour's own hue, taken
-// dark enough to read on paper (jalapeño's lime would vanish).
-const STAMP = {
-  'sweet-chilli-rush': '#d4361c',
-  'jalapeno-kick': '#1f7a33',
-  'peri-peri-punch': '#9d1636',
-}
-const STAMP_BUNDLE = '#1d6f67'
 
 // The laptop artboard: machine plus printer, at design size. `ROOM` is what
 // the site header and the section's own padding take out of the screen height.
@@ -708,39 +708,6 @@ function BigHeat({ product }) {
         </span>
       ))}
       <b>{product.flavor}</b>
-    </span>
-  )
-}
-
-/** The total, circled by hand. Drawn on after the receipt finishes printing. */
-function MarkerRing() {
-  return (
-    <svg className="vm-ring" viewBox="0 0 130 60" preserveAspectRatio="none" aria-hidden="true">
-      <path
-        d="M16 34 C10 12 70 4 112 14 C132 20 126 46 92 53 C58 60 14 54 8 36 C4 24 26 12 52 9"
-        pathLength="1"
-      />
-    </svg>
-  )
-}
-
-/** A barcode built from the slot code, so each receipt's is its own. */
-function Barcode({ code }) {
-  const seed = `${code}FLIPOS-JNI`
-  const bars = []
-  let x = 0
-  for (let i = 0; i < seed.length * 2; i += 1) {
-    const c = seed.charCodeAt(i % seed.length) + i * 7
-    const w = (c % 3) + 1
-    if (i % 2 === 0) bars.push(<rect key={i} x={x} y="0" width={w} height="26" />)
-    x += w + 1
-  }
-  return (
-    <span className="vm-barcode" aria-hidden="true">
-      <svg viewBox={`0 0 ${x} 26`} preserveAspectRatio="none">
-        {bars}
-      </svg>
-      <span>*{code}-JNI*</span>
     </span>
   )
 }

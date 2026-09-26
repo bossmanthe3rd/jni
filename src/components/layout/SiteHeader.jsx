@@ -131,7 +131,10 @@ function useBadgeDown(pathname) {
       // Measured live rather than once: the first section on most pages
       // grows as its images load.
       const header = document.querySelector('[data-intro-bar]')?.getBoundingClientRect().bottom ?? 0
-      const first = document.querySelector('main section')
+      // A page can say where its opening ends when that is not simply its
+      // first section -- the homepage's hero is pinned while the camera
+      // walks into Why Flipo's, so it never scrolls out from under anything.
+      const first = document.querySelector('[data-intro-end]') ?? document.querySelector('main section')
       const past = first
         ? first.getBoundingClientRect().bottom <= header
         : y > window.innerHeight * 0.8

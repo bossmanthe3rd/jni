@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { forwardRef, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useInView, useReducedMotion } from 'framer-motion'
 import { whyFeatures } from '../../data/site'
 import { WaveDivider } from '../ui/Primitives'
@@ -22,6 +22,11 @@ import '../../styles/why-flipos.css'
  * Laptops get a fixed-size artboard zoomed to fit the screen, like the
  * vending machine below. Phones stack the monitor over the notes, which lie
  * on the desk.
+ *
+ * On laptops the section is also the far end of the hero's camera move (see
+ * HeroWhyZoom): `staged` fills the pinned screen, `revealed` says the camera
+ * has arrived and the notes can go up, and `monitorRef` is where the move
+ * has to land.
  */
 
 const PACKS = ['sweet-chilli-rush', 'jalapeno-kick', 'peri-peri-punch']
@@ -37,10 +42,13 @@ const NOTE = {
 
 const ARTBOARD = { w: 1180, h: 600 }
 const ROOM = 150
+// How far the artboard may grow on a big screen. HeroCarousel caps its own
+// monitor off this, so keep the two in step.
+export const MAX_FIT = 1.3
 const SPEED = 78 // px per second, in screen units
 const CORNER = 14 // how close to square a corner counts as a corner hit
 
-export default function WhyFlipos({ wall }) {
+export default function WhyFlipos({ staged = false, revealed = true, monitorRef }) {
   const rigRef = useRef(null)
 
   // Fit the artboard to the screen, as the vending machine does.
@@ -54,7 +62,7 @@ export default function WhyFlipos({ wall }) {
       }
       const z = Math.max(
         0.62,
-        Math.min(1.1, (window.innerWidth - 40) / ARTBOARD.w, (window.innerHeight - ROOM) / ARTBOARD.h),
+        Math.min(MAX_FIT, (window.innerWidth - 40) / ARTBOARD.w, (window.innerHeight - ROOM) / ARTBOARD.h),
       )
       rig.style.zoom = String(z)
       // The desk props only come in where there's wall enough to show them whole.
@@ -67,18 +75,21 @@ export default function WhyFlipos({ wall }) {
   }, [])
 
   return (
-    <section id="why-flipos" className="wf-section relative isolate">
+    <section
+      id={staged ? undefined : 'why-flipos'}
+      className={`wf-section relative isolate ${staged ? 'wf-section--staged' : ''}`}
+    >
       <div className="wf-stage">
         <div ref={rigRef} className="wf-rig">
-          <WhyWall wall={wall} />
+          <WhyWall />
           <div className="wf-props" aria-hidden="true">
             <img src="/assets/hero/desk/peri-peri-punch--envelope.webp" alt="" loading="lazy" className="wf-prop wf-prop--envelope" />
             <img src="/assets/hero/desk/peri-peri-punch--mug.webp" alt="" loading="lazy" className="wf-prop wf-prop--mug" />
           </div>
-          <Monitor />
+          <Monitor ref={monitorRef} />
           <ul className="wf-notes">
             {whyFeatures.map((feature, i) => (
-              <StickyNote key={feature.id} feature={feature} index={i} />
+              <StickyNote key={feature.id} feature={feature} index={i} staged={staged} revealed={revealed} />
             ))}
           </ul>
         </div>
@@ -91,12 +102,24 @@ export default function WhyFlipos({ wall }) {
   )
 }
 
-/** The monitor: bezel, screen, chin, stand. The screen carries the heading. */
-function Monitor() {
+/**
+ * The monitor: bezel, screen, chin, stand. The screen carries the heading.
+ *
+ * The hero stands a second one on its desk. That one is `decorative` -- its
+ * "Why Flipo's?" is only read once, here -- and puts its own copy on the
+ * screen (`screen`), over the screensaver, which it fades up as the camera
+ * move starts (`saverOpacity`). `children` hang off the bezel.
+ */
+export const Monitor = forwardRef(function Monitor(
+  { decorative = false, className = '', screen = null, saverOpacity, children },
+  ref,
+) {
   return (
-    <div className="wf-monitor">
+    <div ref={ref} className={`wf-monitor ${className}`}>
       <div className="wf-frame">
-        <Screensaver />
+        <Screensaver decorative={decorative} saverOpacity={saverOpacity}>
+          {screen}
+        </Screensaver>
         <div className="wf-chin" aria-hidden="true">
           <span className="wf-led" />
         </div>
@@ -105,90 +128,134 @@ function Monitor() {
         <path d="M95 0 L145 0 L153 72 L87 72 Z" fill="#3a9d93" stroke="#0d2818" strokeWidth="6" strokeLinejoin="round" />
         <path d="M28 74 Q120 62 212 74 L216 92 Q120 101 24 92 Z" fill="#4db8ae" stroke="#0d2818" strokeWidth="6" strokeLinejoin="round" />
       </svg>
+      {children}
     </div>
   )
+})
+
+/*
+ * The bounce, shared. The hero's monitor and this section's are the same
+ * screen seen from two distances, and the camera hands one over to the other
+ * mid-scroll -- so there is one pack, one position and one flavour, and every
+ * mounted screen draws it. One rAF loop runs while any screen is on screen;
+ * each frame writes the pack's transform directly, with no React render.
+ * Both screens are laid out at the same native size, so one set of
+ * coordinates fits both.
+ */
+const bounce = { x: 60, y: 40, vx: SPEED, vy: SPEED * 0.72, flavour: 0, last: 0, frame: 0, screens: new Set() }
+
+function runBounce() {
+  if (bounce.frame) return
+  bounce.last = 0
+  bounce.frame = requestAnimationFrame(tickBounce)
 }
 
-/**
- * The heading, with a pack bouncing round behind it. The pack moves by writing
- * its transform directly each frame -- no React render per frame -- and only
- * while the screen is on screen.
- */
-function Screensaver() {
+function tickBounce(t) {
+  // Why Flipo's own screen leads when it is up; the hero's copy otherwise.
+  const lead = [...bounce.screens]
+    .filter((s) => s.active && s.screen.current && s.pack.current)
+    .sort((x, y) => Number(y.lead) - Number(x.lead))[0]
+  if (!lead) {
+    bounce.frame = 0
+    return
+  }
+  const b = bounce
+  const dt = b.last ? Math.min(0.05, (t - b.last) / 1000) : 0
+  b.last = t
+  const pack = lead.pack.current
+  const maxX = lead.screen.current.clientWidth - pack.offsetWidth
+  const maxY = lead.screen.current.clientHeight - pack.offsetHeight
+
+  b.x += b.vx * dt
+  b.y += b.vy * dt
+  let hitX = false
+  let hitY = false
+  if (b.x <= 0 || b.x >= maxX) {
+    b.x = Math.max(0, Math.min(maxX, b.x))
+    b.vx *= -1
+    hitX = true
+  }
+  if (b.y <= 0 || b.y >= maxY) {
+    b.y = Math.max(0, Math.min(maxY, b.y))
+    b.vy *= -1
+    hitY = true
+  }
+  if (hitX || hitY) {
+    b.flavour = (b.flavour + 1) % PACKS.length
+    // A corner: one wall hit with the other wall within reach.
+    const nearX = b.x <= CORNER || b.x >= maxX - CORNER
+    const nearY = b.y <= CORNER || b.y >= maxY - CORNER
+    const corner = (hitX && nearY) || (hitY && nearX)
+    const at = { id: t, x: b.x + pack.offsetWidth / 2, y: b.y + pack.offsetHeight / 2 }
+    b.screens.forEach((s) => {
+      s.setFlavour(b.flavour)
+      if (corner) s.burst(at)
+    })
+  }
+  const transform = `translate(${b.x}px, ${b.y}px)`
+  b.screens.forEach((s) => {
+    if (s.pack.current) s.pack.current.style.transform = transform
+  })
+  b.frame = requestAnimationFrame(tickBounce)
+}
+
+/** The heading, with the shared pack bouncing round behind it. */
+function Screensaver({ decorative, saverOpacity, children }) {
   const reduceMotion = useReducedMotion()
   const screenRef = useRef(null)
   const packRef = useRef(null)
   const inView = useInView(screenRef, { amount: 0.2 })
-  const [flavour, setFlavour] = useState(0)
+  const [flavour, setFlavour] = useState(bounce.flavour)
   const [bursts, setBursts] = useState([])
-  const state = useRef({ x: 60, y: 40, vx: SPEED, vy: SPEED * 0.72, last: 0 })
+  const entry = useRef(null)
 
   useEffect(() => {
-    if (reduceMotion || !inView) return undefined
-    let frame = 0
-    const s = state.current
-    s.last = 0
-
-    const tick = (t) => {
-      const screen = screenRef.current
-      const pack = packRef.current
-      if (!screen || !pack) return
-      const dt = s.last ? Math.min(0.05, (t - s.last) / 1000) : 0
-      s.last = t
-      const maxX = screen.clientWidth - pack.offsetWidth
-      const maxY = screen.clientHeight - pack.offsetHeight
-
-      s.x += s.vx * dt
-      s.y += s.vy * dt
-      let hitX = false
-      let hitY = false
-      if (s.x <= 0 || s.x >= maxX) {
-        s.x = Math.max(0, Math.min(maxX, s.x))
-        s.vx *= -1
-        hitX = true
-      }
-      if (s.y <= 0 || s.y >= maxY) {
-        s.y = Math.max(0, Math.min(maxY, s.y))
-        s.vy *= -1
-        hitY = true
-      }
-      if (hitX || hitY) {
-        setFlavour((f) => (f + 1) % PACKS.length)
-        // A corner: one wall hit with the other wall within reach.
-        const nearX = s.x <= CORNER || s.x >= maxX - CORNER
-        const nearY = s.y <= CORNER || s.y >= maxY - CORNER
-        if ((hitX && nearY) || (hitY && nearX)) {
-          const id = t
-          setBursts((b) => [
-            ...b,
-            { id, x: s.x + pack.offsetWidth / 2, y: s.y + pack.offsetHeight / 2 },
-          ])
-          setTimeout(() => setBursts((b) => b.filter((x) => x.id !== id)), 1400)
-        }
-      }
-      pack.style.transform = `translate(${s.x}px, ${s.y}px)`
-      frame = requestAnimationFrame(tick)
+    const e = {
+      screen: screenRef,
+      pack: packRef,
+      lead: !decorative,
+      active: false,
+      setFlavour,
+      burst: (at) => {
+        setBursts((list) => [...list, at])
+        setTimeout(() => setBursts((list) => list.filter((x) => x.id !== at.id)), 1400)
+      },
     }
-    frame = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(frame)
-  }, [reduceMotion, inView])
+    entry.current = e
+    bounce.screens.add(e)
+    if (packRef.current) packRef.current.style.transform = `translate(${bounce.x}px, ${bounce.y}px)`
+    return () => {
+      bounce.screens.delete(e)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
+  useEffect(() => {
+    if (!entry.current) return
+    entry.current.active = inView && !reduceMotion
+    if (entry.current.active) runBounce()
+  }, [inView, reduceMotion])
+
+  const Title = decorative ? 'p' : 'h2'
   return (
     <div ref={screenRef} className="wf-screen">
-      <img
-        ref={packRef}
-        src={`/assets/hero/pouch-${PACKS[flavour]}.webp`}
-        alt=""
-        aria-hidden="true"
-        className="wf-bouncer"
-        draggable="false"
-      />
-      <AnimatePresence>
-        {bursts.map((b) => (
-          <Confetti key={b.id} x={b.x} y={b.y} />
-        ))}
-      </AnimatePresence>
-      <h2 className="wf-title font-brand">Why Flipo&apos;s?</h2>
+      <motion.div className="wf-saver" style={saverOpacity ? { opacity: saverOpacity } : undefined} aria-hidden={decorative || undefined}>
+        <img
+          ref={packRef}
+          src={`/assets/hero/pouch-${PACKS[flavour]}.webp`}
+          alt=""
+          aria-hidden="true"
+          className="wf-bouncer"
+          draggable="false"
+        />
+        <AnimatePresence>
+          {bursts.map((b) => (
+            <Confetti key={b.id} x={b.x} y={b.y} />
+          ))}
+        </AnimatePresence>
+        <Title className="wf-title font-brand">Why Flipo&apos;s?</Title>
+      </motion.div>
+      {children}
     </div>
   )
 }
@@ -224,10 +291,13 @@ function Confetti({ x, y }) {
 }
 
 /** One reason, on a sticky note stuck to the monitor. */
-function StickyNote({ feature, index }) {
+function StickyNote({ feature, index, staged, revealed }) {
   const reduceMotion = useReducedMotion()
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, amount: 0.4 })
+  // At the end of the hero's camera move the notes go up when the camera
+  // arrives, and come back down if it backs away.
+  const up = staged ? revealed : inView
   const [hot, setHot] = useState(false)
   const note = NOTE[feature.id] || { bg: '#fbf6d0', tilt: 0 }
 
@@ -238,7 +308,7 @@ function StickyNote({ feature, index }) {
       style={{ '--note': note.bg }}
       initial={reduceMotion ? { rotate: note.tilt } : { opacity: 0, scale: 1.25, rotate: note.tilt * 2.2 }}
       animate={
-        inView || reduceMotion
+        up || reduceMotion
           ? {
               opacity: 1,
               scale: 1,
@@ -246,10 +316,12 @@ function StickyNote({ feature, index }) {
               rotate: note.tilt,
               transition: { type: 'spring', stiffness: 380, damping: 18, delay: reduceMotion ? 0 : 0.15 + index * 0.12 },
             }
-          : undefined
+          : staged
+            ? { opacity: 0, scale: 1.25, rotate: note.tilt * 2.2, transition: { duration: 0.2 } }
+            : undefined
       }
       whileHover={
-        reduceMotion
+        reduceMotion || !up
           ? undefined
           : { rotate: note.tilt * 0.3, y: -8, scale: 1.04, transition: { type: 'spring', stiffness: 420, damping: 20 } }
       }

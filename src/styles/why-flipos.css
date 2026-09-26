@@ -6,21 +6,21 @@
  * monitor stacks over a 2 x 2 grid of notes lying on the desk.
  */
 
-.wf-section {
+/* The hero stands a copy of the monitor on its desk (.hero-monitor), so the
+   monitor's colours are shared with it. */
+.wf-section,
+.hero-monitor {
   --wf-ink: #0d2818;
   --wf-wall: #fbf6d0;
   --wf-desk: #f3c63b;
   --wf-desk-grain: #e0b330;
   --wf-teal: #4db8ae;
   --wf-screen: #0c2a1f;
-  /* The office wall's lower half and rail: the bezel teal knocked back into
-     the wall cream, so the monitor still stands off it. */
-  --wf-wall-low: color-mix(in oklab, #4db8ae 30%, #fbf6d0);
-  --wf-wall-rail: #fffbea;
+}
+.wf-section {
   overflow: clip;
   background: var(--wf-wall);
 }
-
 
 .wf-stage {
   position: relative;
@@ -53,7 +53,7 @@
   position: relative;
   height: 100%;
   overflow: hidden;
-  border: 5px solid var(--wf-ink);
+  border: calc(5px * var(--wf-stroke, 1)) solid var(--wf-ink);
   border-radius: 12px;
   background:
     radial-gradient(90% 70% at 50% 40%, rgb(77 184 174 / 0.16), transparent 70%),
@@ -68,6 +68,12 @@
   background:
     repeating-linear-gradient(0deg, rgb(0 0 0 / 0.18) 0 1px, transparent 1px 3px),
     linear-gradient(112deg, transparent 58%, rgb(255 255 255 / 0.06) 58.5%, rgb(255 255 255 / 0.06) 66%, transparent 66.5%);
+}
+
+/* The screensaver's layer: the bouncing pack, its confetti and the heading. */
+.wf-saver {
+  position: absolute;
+  inset: 0;
 }
 
 .wf-bouncer {
@@ -223,11 +229,12 @@
     width: 1180px;
     height: 600px;
   }
-  /* The desk, hung off the rig so it zooms with it. */
+  /* The desk, hung off the rig so it zooms with it. At the end of the hero's
+     camera move its line is set to meet the hero's desk (--wf-desk-top). */
   .wf-rig::before {
     content: '';
     position: absolute;
-    top: 522px;
+    top: var(--wf-desk-top, 522px);
     left: -100vw;
     right: -100vw;
     z-index: -1;
@@ -249,85 +256,10 @@
     position: absolute;
     height: auto;
   }
-  .wf-wall--scatter img.is-pale {
+  .wf-wall img.is-pale {
     opacity: 0.3;
   }
 
-  .wf-dado {
-    position: absolute;
-    top: 350px;
-    left: -100vw;
-    right: -100vw;
-    height: 200px;
-    border-top: 5px solid var(--wf-ink);
-    background:
-      linear-gradient(var(--wf-wall-rail) 0 14px, var(--wf-ink) 14px 19px, transparent 19px),
-      var(--wf-wall-low);
-  }
-  .wf-cable {
-    position: absolute;
-    top: 440px;
-    left: 380px;
-  }
-  .wf-switch {
-    position: absolute;
-    top: 250px;
-    left: -120px;
-    width: 38px;
-    height: 58px;
-    border: 5px solid var(--wf-ink);
-    border-radius: 8px;
-    background: #fffbea;
-    box-shadow: inset 0 -14px 0 -8px rgb(13 40 24 / 0.12);
-  }
-  .wf-switch::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 12px;
-    width: 10px;
-    height: 20px;
-    margin-left: -5px;
-    border: 3px solid var(--wf-ink);
-    border-radius: 3px;
-    background: var(--wf-teal);
-  }
-  .wf-frame-pic {
-    display: none;
-    position: absolute;
-    top: 40px;
-    left: calc(100% + 40px);
-    width: 150px;
-    margin: 0;
-    transform: rotate(2deg);
-  }
-  .wf-rig[data-room='on'] .wf-frame-pic {
-    display: block;
-  }
-  .wf-frame-pic-mat {
-    display: grid;
-    place-items: center;
-    height: 170px;
-    border: 8px solid var(--wf-ink);
-    background: #fffbea;
-    box-shadow: 6px 8px 0 rgb(13 40 24 / 0.25);
-  }
-  .wf-frame-pic-mat img {
-    position: static;
-    height: 120px;
-    width: auto;
-  }
-  .wf-frame-pic figcaption {
-    margin: 10px auto 0;
-    width: max-content;
-    padding: 3px 10px;
-    border: 3px solid var(--wf-ink);
-    border-radius: 4px;
-    background: var(--wf-desk);
-    font-family: var(--font-brand);
-    font-size: 13px;
-    color: var(--wf-ink);
-  }
 
   .wf-rig[data-room='on'] .wf-props {
     display: block;
@@ -338,13 +270,13 @@
     filter: drop-shadow(0 8px 6px rgb(13 40 24 / 0.2));
   }
   .wf-prop--envelope {
-    top: 418px;
+    top: calc(var(--wf-desk-top, 522px) - 104px);
     right: calc(100% + 30px);
     height: 138px;
     transform: rotate(-5deg);
   }
   .wf-prop--mug {
-    top: 408px;
+    top: calc(var(--wf-desk-top, 522px) - 114px);
     left: calc(100% + 34px);
     height: 144px;
   }
@@ -359,9 +291,12 @@
     height: 432px;
     aspect-ratio: auto;
     padding: 22px 22px 48px;
-    border-width: 6px;
+    border-width: calc(6px * var(--wf-stroke, 1));
     border-radius: 26px;
-    box-shadow: 10px 12px 0 rgb(13 40 24 / 0.92);
+    box-shadow: calc(10px * var(--wf-stroke, 1)) calc(12px * var(--wf-stroke, 1)) 0 rgb(13 40 24 / 0.92);
+  }
+  .wf-stand path {
+    stroke-width: calc(6px * var(--wf-stroke, 1));
   }
   .wf-bouncer {
     height: 108px;
@@ -424,4 +359,145 @@
     margin-top: 6px;
     font-size: 13.5px;
   }
+}
+
+/* ---------- laptops: the end of the hero's camera move ---------- */
+
+/* Staged (see HeroWhyZoom), the section is the pinned screen the camera
+   arrives at: exactly one screen tall, the artboard centred in it. */
+@media (min-width: 1024px) {
+  .wf-section--staged {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100vh;
+  }
+  .wf-section--staged .wf-stage {
+    padding: 40px 0 72px;
+  }
+}
+
+/* ---------- the hero's copy of the monitor ---------- */
+
+/* Laid out at the section's native size -- so the camera move can hand one
+   over to the other, and both screens share one bouncing pack -- and shrunk
+   to its place on the hero desk by HeroMonitor. It carries the hero's copy
+   on its screen, set in native pixels too. */
+.hero-monitor {
+  position: absolute;
+  pointer-events: none;
+}
+.hero-monitor .wf-monitor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 680px;
+  transform-origin: 0 0;
+}
+
+.hero-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: auto;
+}
+.hero-screen-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  height: 100%;
+  padding: 26px 40px 30px;
+}
+.hero-screen-kicker {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgb(251 246 208 / 0.72);
+}
+.hero-screen-title {
+  margin: 0;
+  font-size: 68px;
+  line-height: 0.95;
+  text-wrap: balance;
+  filter: drop-shadow(0 0 14px rgb(243 198 59 / 0.35));
+}
+.hero-screen-line {
+  margin: 14px 0 0;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: rgb(251 246 208 / 0.86);
+}
+.hero-screen-cta {
+  margin-top: 20px;
+}
+
+/* Price and rating: a sticky note on the bezel's lower-right corner, over
+   the chin -- clear of the header's badge, the packs and the keyboard. */
+.hero-price-note {
+  position: absolute;
+  top: 346px;
+  right: 30px;
+  z-index: 5;
+  width: max-content;
+  padding: 14px 14px 12px;
+  border: 3px solid var(--wf-ink);
+  border-radius: 3px;
+  background:
+    linear-gradient(rgb(13 40 24 / 0.07), rgb(13 40 24 / 0) 20px),
+    #fbf6d0;
+  box-shadow: 4px 6px 0 rgb(13 40 24 / 0.28);
+  color: var(--wf-ink);
+  white-space: nowrap;
+  transform: rotate(-6deg);
+}
+.hero-price-note-price {
+  margin: 0;
+  font-size: 34px;
+  line-height: 1;
+}
+.hero-price-note-price span {
+  margin-left: 8px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.hero-price-note-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
+  font-size: 14px;
+  font-weight: 900;
+}
+.hero-price-note-rating span span {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ---------- the hero's backdrop during the camera move ---------- */
+
+/* Wall above, the desk's edge, desktop and dark front lip below, off every
+   side of the hero, lined up with the hero's own desk -- so however far the
+   camera slides, it only ever finds more room. --desk and --lip repeat the
+   hero section's laptop values. */
+.hero-zoom-layer {
+  --desk: clamp(220px, 31vh, 300px);
+  --lip: clamp(52px, 7vh, 70px);
+}
+.hero-zoom-bleed {
+  position: absolute;
+  inset: -60vh -100vw;
+  z-index: -1;
+  background: linear-gradient(
+    #fbf6d0 0 calc(160vh - var(--desk) + 5px),
+    #0d2818 calc(160vh - var(--desk) + 5px) calc(160vh - var(--desk) + 9px),
+    #f3c63b calc(160vh - var(--desk) + 9px) calc(160vh - var(--lip)),
+    #0d2818 calc(160vh - var(--lip))
+  );
 }
