@@ -1,5 +1,6 @@
 @import './styles/cta-shape.css';
 @import './styles/pdp.css';
+@import './styles/bundle.css';
 
 @tailwind base;
 @tailwind components;
@@ -521,10 +522,16 @@
   position: relative;
   isolation: isolate;
   /* This section owns the top of the page now, so it clears the fixed header
-     itself -- the cream wrapper used to do it for the old hero. */
-  padding-top: calc(var(--site-header-offset) + 1.5rem);
+     itself -- the cream wrapper used to do it for the old hero. The header
+     hangs no badge on product pages, so only its row needs clearing; on wide
+     screens the breadcrumb moves up into it (see "one screen" below). */
+  padding-top: calc(var(--site-header-offset) + 0.5rem);
   overflow: clip;
   color: var(--color-text-light);
+  /* At least a full screen plus the wave cut into its foot (SectionEdge's
+     --edge-h), so the wave sits just under the fold and nothing of the next
+     section shows until the reader scrolls. */
+  min-height: calc(100svh + var(--edge-h, 0px));
 }
 
 /* The flavour's name, set as large as the width allows, behind the spread.
@@ -546,11 +553,17 @@
 .jni-dossier-grid {
   display: grid;
   grid-template-columns: minmax(0, 46fr) minmax(0, 54fr);
-  gap: clamp(20px, 3.4vw, 56px);
+  /* Wide enough that the pouch's right-hand note has clear air before the
+     panel starts, instead of running into the flavour switcher. */
+  gap: clamp(32px, 7vw, 128px);
   align-items: center;
   position: relative;
   z-index: 1;
-  max-width: 1180px;
+  max-width: 1320px;
+  /* The "Reseal it" note hangs off the pouch's left edge; this keeps room
+     for it so it never runs off the screen. Dropped with the notes below
+     1024px, where the layout is one column. */
+  padding-left: clamp(0px, 6.5vw, 100px);
   margin: 0 auto;
 }
 
@@ -584,11 +597,6 @@
 .jni-dossier-stage .jni-dossier-frame {
   z-index: 1;
 }
-/* In front of the pouch, feet on its bottom edge, leaning on the corner. */
-.jni-dossier-flip {
-  z-index: 2;
-}
-
 /* The torn-edge idiom the CTA shape and the pack badges use, scaled with the
    viewport so a small tile is not wearing a 30px round. `.jni-card-media` is
    the same shape on the homepage cards. */
@@ -750,6 +758,7 @@
 
 /* ---- the panel ----------------------------------------------------------- */
 .jni-dossier-panel {
+  justify-self: end;
   align-self: center;
   max-width: min(36rem, 100%);
   min-width: 0;
@@ -1034,6 +1043,15 @@
   letter-spacing: 0.06em;
 }
 
+/* Between tablet and wide desktop the chips are too narrow for the label
+   beside the chillies; the chillies alone still read as the heat scale, and
+   the meter keeps its own aria-label. */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .jni-dossier-flav-heat > span {
+    display: none;
+  }
+}
+
 /* ---- phone gallery ------------------------------------------------------- */
 .jni-dossier-strip,
 .jni-dossier-dots {
@@ -1111,6 +1129,118 @@
   }
 }
 
+/* ---- one screen ---------------------------------------------------------- */
+/* On a laptop the whole spread -- pouch, thumbnails and every line of the buy
+   block down to the trust line -- has to be on screen at once, or the price
+   and the button sit under the fold on the page whose job is to sell.
+
+   With no badge in the header, the only things in its row are the two side
+   clusters, so the breadcrumb moves up into that row, on the clusters' centre
+   line between them. The spread itself fills the screen under it: the section
+   is a full screen tall (plus the wave, which falls just below the fold), the
+   pouch is sized off the height that is there, and whatever height is left
+   over is split above and below, so a tall monitor gets a centred spread
+   rather than one crowded to the top. At laptop heights the buy block's
+   spacing tightens so it fits in the same box. */
+@media (min-width: 1024px) {
+  /* Doubled class to outrank the section's Tailwind paddings. The top clears
+     the header row and the breadcrumb in it; the bottom clears the wave. */
+  .jni-dossier.jni-grain {
+    --dossier-max: 1320px;
+    --dossier-top: calc(var(--site-ticker-height, 28px) + 34px + 20px + clamp(10px, 2vh, 18px));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-top: var(--dossier-top);
+    padding-bottom: calc(var(--edge-h, 0px) + 24px);
+  }
+  /* A page with more in its hero than the spread (the Party Six carries its
+     launch banner) wraps the spread in one screen of its own, so the extra
+     starts below the fold instead of peeking up into the first view. */
+  .jni-dossier .jni-dossier-screen {
+    display: flex;
+    min-height: calc(100svh - var(--dossier-top) - 24px);
+    flex-direction: column;
+    justify-content: center;
+  }
+  /* The grid gives up its own stacking layer so the breadcrumb can be placed
+     against the section; the name behind the spread drops a layer to stay
+     behind it. */
+  .jni-dossier .jni-dossier-grid {
+    position: static;
+    width: 100%;
+    max-width: var(--dossier-max);
+  }
+  .jni-dossier .jni-dossier-word {
+    z-index: -1;
+    bottom: calc(var(--edge-h, 0px) + 0.04em);
+  }
+  /* On the header row, at the start of the pouch column: the section's side
+     padding, the centring margin of the capped grid, then the grid's gutter. */
+  .jni-dossier .jni-dossier-crumbs {
+    position: absolute;
+    z-index: 2;
+    top: calc(var(--site-ticker-height, 28px) + 34px);
+    left: calc(48px + max(0px, (100% - 96px - var(--dossier-max)) / 2) + clamp(0px, 6.5vw, 100px));
+    margin: 0;
+  }
+  /* 230px: the header row, the breadcrumb, the thumbnails and the foot. */
+  .jni-dossier .jni-dossier-pack {
+    max-width: min(42vw, 600px, calc(100svh - 230px));
+  }
+  .jni-dossier .jni-dossier-thumbs {
+    margin-top: clamp(16px, 2.8vh, 30px);
+  }
+  .jni-dossier .jni-dossier-thumbs button {
+    width: clamp(52px, 7vh, 64px);
+  }
+  .jni-dossier .jni-dossier-title {
+    font-size: clamp(2.4rem, min(5vw, 7.4vh), 4.6rem);
+  }
+}
+/* Big monitors: the spread is allowed wider, so the pouch can grow into the
+   height instead of leaving it empty. */
+@media (min-width: 1600px) {
+  .jni-dossier.jni-grain {
+    --dossier-max: 1560px;
+  }
+}
+@media (min-width: 1024px) and (max-height: 860px) {
+  .jni-dossier .jni-dossier-eyebrow {
+    margin-bottom: 10px;
+  }
+  .jni-dossier .jni-dossier-sub {
+    margin-bottom: 12px;
+  }
+  .jni-dossier .jni-dossier-switch {
+    margin-bottom: 14px;
+  }
+  .jni-dossier .jni-dossier-price {
+    margin-bottom: 12px;
+  }
+  .jni-dossier .jni-dossier-price b {
+    padding: 2px 14px 4px;
+    font-size: clamp(1.7rem, 3.8vh, 2.6rem);
+  }
+  .jni-dossier .jni-dossier-qty {
+    margin-bottom: 12px;
+  }
+  .jni-dossier .jni-dossier-chip {
+    padding: 7px 12px 8px;
+  }
+  .jni-dossier .jni-dossier-ship {
+    margin-bottom: 14px;
+  }
+  .jni-dossier .jni-dossier-buy {
+    min-height: 3.5rem;
+    padding: 0.7rem 2.2rem;
+    font-size: 1.35rem;
+  }
+  .jni-dossier .jni-dossier-trust {
+    margin-top: 12px;
+  }
+}
+
 /* ---- narrow screens ------------------------------------------------------ */
 @media (max-width: 1023px) {
   /* The whole annotation layer, not just the notes: there is no room either
@@ -1122,6 +1252,7 @@
   /* minmax(0, ...) rather than 1fr: the flavour chips scroll sideways on a
      phone, and a bare 1fr column grows to their full width instead. */
   .jni-dossier-grid {
+    padding-left: 0;
     grid-template-columns: minmax(0, 1fr);
     gap: 24px;
   }
@@ -1130,6 +1261,10 @@
      thumb-flick away rather than a row of 50px squares. */
   .jni-dossier-pack {
     max-width: 100%;
+  }
+  /* One column here: the panel sits under the pouch, left-aligned. */
+  .jni-dossier-panel {
+    justify-self: start;
   }
   .jni-dossier-stage,
   .jni-dossier-thumbs {
@@ -1233,17 +1368,8 @@
   }
 }
 
-/* The doodle edge in DoodleBorder: every doodle runs the same 0 -> 100% of
-   its shared motion path, spaced by a negative delay rather than by a start
-   offset, so the loop closes on itself with no seam. */
-@keyframes jni-border-drift {
-  from {
-    offset-distance: 0%;
-  }
-  to {
-    offset-distance: 100%;
-  }
-}
+/* The doodle edge's ride keyframes are generated per panel in DoodleBorder,
+   from the same geometry the panel is clipped to. */
 
 /* Motion path is what the doodle edge is built on. Where it is missing the
    doodles cannot be placed at all, so the panel takes its keyline back. */
@@ -1254,4 +1380,114 @@
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Hero pendant lamp. See HeroCarousel (THE LAMP) and HeroDeskLife.
 
+   md+: .hero-lamp-rig spans from the ceiling (the ticker's bottom edge) down
+   to just under the packs' foot line, centred on the front pack, and rotates
+   about its top-centre -- the point the cord hangs from. The shade sits as
+   high as it can below the header, but never lower than just above the
+   packs, and the beam runs from its rim down to the desk. Everything inside
+   is measured against the rig's own height, which is why --lamp-top is
+   written relative to it.
+
+   Phones: .hero-pendant hangs on a short cord from the top of the pack
+   cluster's box, and .hero-pendant-light swings about that same point.
+   --------------------------------------------------------------------------- */
+.hero-lamp-rig {
+  /* keep in step with the cluster's width in HeroCarousel */
+  --packs-w: clamp(320px, min(40vw, 62vh), 620px);
+  --packs-h: calc(var(--packs-w) * 0.86);
+  /* the front pack's own height: 46% of the box wide, at the pouch's 1:1.63 */
+  --front-h: calc(var(--packs-w) * 0.75);
+  /* clear air between the shade's rays and the front pack's top, enough for
+     the pack's 18px hover lift and the shade's swing */
+  --lamp-gap: 36px;
+  --shade-w: clamp(200px, min(20vw, 29vh), 320px);
+  --shade-h: calc(var(--shade-w) * 0.5);
+  --ceil: var(--site-ticker-height, 1.75rem);
+  /* the shade's top, from the ceiling: as low as it can hang while still
+     clearing the front pack by --lamp-gap, but never up under the header.
+     The rig's bottom sits 16px under the packs' foot, so the front pack's top
+     is at 100% - 16px - --front-h. The packs' box is capped by viewport
+     height (see --packs-w), which is what keeps the second term below the
+     first on short screens rather than letting the packs cover the shade. */
+  --lamp-top: max(
+    calc(var(--site-header-offset, 6.5rem) + 6px - var(--ceil)),
+    calc(100% - 16px - var(--front-h) - var(--lamp-gap) - var(--shade-h))
+  );
+  position: absolute;
+  top: var(--ceil);
+  bottom: calc(var(--foot) - 16px);
+  left: calc(100% - 10vw - var(--packs-w) / 2);
+  width: calc(var(--shade-w) * 2.4);
+  margin-left: calc(var(--shade-w) * -1.2);
+  transform-origin: 50% 0;
+  pointer-events: none;
+}
+.hero-lamp-rig .hero-lamp-cord {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 4px;
+  height: calc(var(--lamp-top) + 6px);
+  margin-left: -2px;
+  background: #0d2818;
+}
+.hero-lamp-shade {
+  position: absolute;
+  top: var(--lamp-top);
+  left: 50%;
+  width: var(--shade-w);
+  height: var(--shade-h);
+  margin-left: calc(var(--shade-w) / -2);
+}
+.hero-lamp-beam {
+  position: absolute;
+  left: 0;
+  top: calc(var(--lamp-top) + var(--shade-h) * 0.787);
+  width: 100%;
+  height: calc(100% - var(--lamp-top) - var(--shade-h) * 0.787);
+}
+.hero-lamp-pool {
+  position: absolute;
+  left: -4%;
+  bottom: -16px;
+  width: 108%;
+  height: 64px;
+}
+
+.hero-pendant,
+.hero-pendant-light {
+  --shade-w: 170px;
+  --shade-h: 85px;
+  --cord: 40px;
+  pointer-events: none;
+}
+.hero-pendant {
+  left: 50%;
+  bottom: calc(100% - 6px);
+  width: var(--shade-w);
+  height: calc(var(--cord) + var(--shade-h));
+  margin-left: calc(var(--shade-w) / -2);
+  transform-origin: 50% 0;
+}
+.hero-pendant .hero-lamp-cord {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 4px;
+  height: calc(var(--cord) + 6px);
+  margin-left: -2px;
+  background: linear-gradient(transparent, #0d2818 70%);
+}
+.hero-pendant-shade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: var(--shade-h);
+}
+.hero-pendant-light {
+  transform-origin: 50% calc((var(--cord) + var(--shade-h) - 6px) * -1);
+}

@@ -18,9 +18,11 @@ import { testimonials } from '../../data/site'
 /** "Peri Peri Punch" -> "peri": the word people actually use for it. */
 const keyword = (p) => (p.shortName || p.name).split(' ')[0].toLowerCase()
 
-export function quotesFor(product) {
-  const mine = keyword(product)
-  const others = products.filter((p) => p.slug !== product.slug).map(keyword)
+/* A combo page passes its own word ("trio") and the words it should not pick
+   up as neutral (the other box, and every flavour). */
+export function quotesFor(product, { word, exclude } = {}) {
+  const mine = word || keyword(product)
+  const others = exclude || products.filter((p) => p.slug !== product.slug).map(keyword)
   const text = (t) => t.text.toLowerCase()
   const about = testimonials.filter((t) => text(t).includes(mine))
   const neutral = testimonials.filter(
@@ -75,9 +77,9 @@ function Score({ value, count }) {
   )
 }
 
-export default function FlavourReviews({ product }) {
+export default function FlavourReviews({ product, word, exclude, label }) {
   const reduce = useReducedMotion()
-  const [lead, ...rest] = quotesFor(product)
+  const [lead, ...rest] = quotesFor(product, { word, exclude })
   const [order, setOrder] = useState(() => rest.map((_, i) => i))
 
   useEffect(() => {
@@ -95,7 +97,7 @@ export default function FlavourReviews({ product }) {
     <section className="jni-reviews jni-grain" aria-labelledby="jni-reviews-title">
       <div className="jni-reviews-lead">
         <p id="jni-reviews-title" className="jni-reviews-k">
-          What people say about {product.shortName || product.name}
+          What people say about {label || product.shortName || product.name}
         </p>
         <blockquote>“{lead.text}”</blockquote>
         <p className="jni-reviews-who">

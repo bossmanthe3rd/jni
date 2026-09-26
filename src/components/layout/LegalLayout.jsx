@@ -16,7 +16,10 @@ export default function LegalLayout({ title, lastUpdated, children }) {
         <Blob className="absolute -left-4 top-40 h-16 w-16 opacity-20" />
         <Sparkle className="absolute right-6 top-64 h-10 w-10 opacity-25" />
 
-        <div className="relative mx-auto max-w-4xl px-5 pb-16 pt-8 sm:px-8">
+        {/* The extra top room on wide screens is for the header badge: there
+            the title shares a line with Back home and runs in under the
+            badge's lobes. */}
+        <div className="relative mx-auto max-w-4xl px-5 pb-16 pt-8 sm:px-8 lg:pt-12">
           <Link
             to="/"
             className="group mb-8 inline-flex h-12 items-center gap-2 rounded-pill border-[3px] border-ink bg-sunshine px-5 text-sm font-black text-ink shadow-doodle transition hover:-translate-y-0.5 hover:shadow-doodle-lg"

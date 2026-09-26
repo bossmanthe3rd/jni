@@ -71,7 +71,7 @@ export const heroSlides = [
   },
 ]
 
-export const HERO_INTERVAL = 4200
+export const HERO_INTERVAL = 7000
 
 export const whyFeatures = [
   {

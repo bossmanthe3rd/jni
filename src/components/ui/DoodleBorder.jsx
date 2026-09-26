@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useId, useMemo } from 'react'
 import { useReducedMotion } from 'framer-motion'
 import { ASPECT, doodleComponents, packPalettes } from '../icons/PackDoodles'
+import { rideAt } from './jaggedEdge'
 
 /*
  * A panel's edge, drawn as a procession of doodles rather than a rule.
@@ -12,15 +13,16 @@ import { ASPECT, doodleComponents, packPalettes } from '../icons/PackDoodles'
  * show.
  *
  * The travel is CSS motion path, not JavaScript: every doodle shares one
- * `offset-path` and animates `offset-distance` from 0 to 100%, each started at
- * a negative delay of its own share of the duration. That spaces them evenly
- * around the path for free and loops without a seam -- the doodle leaving the
- * end IS the doodle arriving at the start. Nothing recalculates per frame, and
- * there is no queue of transforms to keep in step.
+ * `offset-path` and one keyframed ride round it, each started at a negative
+ * delay of its own share of the duration. That spaces them round the loop for
+ * free and loops without a seam -- the doodle leaving the end IS the doodle
+ * arriving at the start. Nothing recalculates per frame.
  *
- * The path is closed and traces the real edge, the wavy bottom lip included:
- * pass the lip's own curve as `wave` and it is reversed and scaled into the
- * loop, so the doodles ride the wave rather than cutting flat beneath it.
+ * The shape is not this component's to decide. The caller passes the
+ * `geometry` from jaggedEdge() -- the same one its panel is clipped to -- so
+ * the doodles ride the real crimp and tear. It also times the ride: the
+ * doodles slow climbing a tooth and quicken coming down it, and lie along the
+ * edge the whole way round, swinging over each peak rather than snapping.
  *
  * Nothing is masked. An earlier cut faded the doodles out around the mascot so
  * none would cross his face, and faded both ends into the lip -- but a border
@@ -84,82 +86,36 @@ function mulberry32(seed) {
   }
 }
 
-/**
- * The lip's curve, reversed and scaled into panel coordinates.
- *
- * The loop runs clockwise and reaches the bottom on the right, but the lip is
- * drawn left to right -- so its points are walked backwards, which for cubics
- * means swapping each segment's two control points as well as reversing the
- * order of the segments.
+/*
+ * The pods are drawn standing up, stem at the top. Turned a quarter back from
+ * the heading, each one lies along the edge tip-first, the way it's travelling.
  */
-function waveCommands(wave, w, h) {
-  const sx = w / wave.vw
-  const sy = wave.height / wave.vh
-  const top = h - wave.height
-  const X = (x) => (x * sx).toFixed(1)
-  const Y = (y) => (top + y * sy).toFixed(1)
+const ALONG = -90
 
-  const out = []
-  for (let i = wave.cubics.length - 1; i >= 0; i -= 1) {
-    const [c1x, c1y, c2x, c2y] = wave.cubics[i]
-    const prev = i === 0 ? wave.start : wave.cubics[i - 1].slice(4)
-    out.push(`C ${X(c2x)} ${Y(c2y)}, ${X(c1x)} ${Y(c1y)}, ${X(prev[0])} ${Y(prev[1])}`)
-  }
-  return out
-}
-
-/** A closed loop: rounded across the top, along the lip at the bottom. */
-function edgePath(w, h, r, wave) {
-  const radius = Math.min(r, w / 2, h / 2)
-  const endY = (y) => h - wave.height + (y * wave.height) / wave.vh
-  const rightEnd = wave ? endY(wave.cubics[wave.cubics.length - 1][5]) : h
-  const leftEnd = wave ? endY(wave.start[1]) : h
-
-  const d = [
-    `M ${radius} 0`,
-    `L ${w - radius} 0`,
-    `A ${radius} ${radius} 0 0 1 ${w} ${radius}`,
-    `L ${w} ${rightEnd.toFixed(1)}`,
-  ]
-  if (wave) d.push(...waveCommands(wave, w, h))
-  else d.push(`L 0 ${h}`)
-  d.push(`L 0 ${radius}`)
-  d.push(`A ${radius} ${radius} 0 0 1 ${radius} 0`)
-  d.push('Z')
-  return d.join(' ')
+/** The ride as two keyframe sets: along the path, and the heading that goes with it. */
+function rideKeyframes(name, geometry) {
+  const at = (t) => `${(t * 100).toFixed(3)}%`
+  const ride = geometry.ride.map((s) => `${at(s.t)}{offset-distance:${(s.p * 100).toFixed(3)}%}`)
+  const turn = geometry.turn.map((s) => `${at(s.t)}{rotate:${(s.angle + ALONG).toFixed(2)}deg}`)
+  return `@keyframes ${name}-ride{${ride.join('')}}@keyframes ${name}-turn{${turn.join('')}}`
 }
 
 export default function DoodleBorder({
-  radius = 48,
+  geometry,
   spacing = 120,
   duration = 26,
   seed = 7,
-  wave = null,
   className = '',
 }) {
-  const ref = useRef(null)
   const reduce = useReducedMotion()
-  const [box, setBox] = useState(null)
-
-  useEffect(() => {
-    const el = ref.current
-    if (!el || typeof ResizeObserver === 'undefined') return
-    const ro = new ResizeObserver(([entry]) => {
-      const { width, height } = entry.contentRect
-      // Whole pixels: a path rebuilt on every sub-pixel reflow would restart
-      // every animation mid-travel.
-      setBox({ w: Math.round(width), h: Math.round(height) })
-    })
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [])
+  const name = `jni-ride-${useId().replace(/[^a-zA-Z0-9]/g, '')}`
 
   // How many doodles is a question about the perimeter, not about the panel.
   // A fixed count strung round a phone-width box is a necklace; round a
   // desktop one it is a dotted line. Spacing them at a set distance and
   // letting the count follow keeps one density at every width.
-  const count = box
-    ? Math.max(12, Math.min(44, Math.round((2 * box.w + 2 * box.h) / spacing)))
+  const count = geometry
+    ? Math.max(12, Math.min(44, Math.round((2 * geometry.w + 2 * geometry.h) / spacing)))
     : 0
 
   const items = useMemo(() => {
@@ -179,53 +135,67 @@ export default function DoodleBorder({
         flavour: FLAVOURS[i % FLAVOURS.length],
         // Confetti is punctuation between the pack shapes, so it runs smaller.
         size: confetti ? 16 + rnd() * 7 : 27 + rnd() * 14,
-        // Barely off true. The pods are drawn standing up and should read that
-        // way -- at thirty degrees they looked spilled rather than placed.
-        rotate: -7 + rnd() * 14,
+        // Barely off the edge's own line, so the procession reads as placed by
+        // hand rather than stamped along a rail.
+        rotate: -4 + rnd() * 8,
       })
     }
     return out
   }, [count, seed])
 
-  const path = box ? `path("${edgePath(box.w, box.h, radius, wave)}")` : null
+  if (!geometry) return null
+  const path = `path("${geometry.d}")`
 
   return (
-    <div
-      ref={ref}
-      aria-hidden="true"
-      className={`pointer-events-none absolute inset-0 ${className}`}
-    >
-      {path &&
-        items.map((it, i) => {
-          const Art = doodleComponents[it.name] || EXTRA_COMPONENTS[it.name]
-          if (!Art) return null
-          const aspect = ASPECT[it.name] || CONFETTI_ASPECT[it.name] || 1
-          const share = i / items.length
-          return (
+    <div aria-hidden="true" className={`pointer-events-none absolute inset-0 ${className}`}>
+      {!reduce && <style>{rideKeyframes(name, geometry)}</style>}
+      {items.map((it, i) => {
+        const Art = doodleComponents[it.name] || EXTRA_COMPONENTS[it.name]
+        if (!Art) return null
+        const aspect = ASPECT[it.name] || CONFETTI_ASPECT[it.name] || 1
+        const share = i / items.length
+        // Held still, each doodle is placed where the ride would have it at its
+        // own share of the loop, lying along the edge there.
+        const still = reduce ? rideAt(geometry, share) : null
+        const timing = { animationDuration: `${duration}s`, animationDelay: `${-share * duration}s` }
+        return (
+          <div
+            key={i}
+            className="absolute left-0 top-0"
+            style={{
+              width: `${it.size}px`,
+              height: `${it.size / aspect}px`,
+              offsetPath: path,
+              offsetRotate: '0deg',
+              ...(still
+                ? { offsetDistance: `${still.p * 100}%` }
+                : {
+                    willChange: 'offset-distance',
+                    animationName: `${name}-ride`,
+                    animationTimingFunction: 'linear',
+                    animationIterationCount: 'infinite',
+                    ...timing,
+                  }),
+            }}
+          >
             <div
-              key={i}
-              className="absolute left-0 top-0"
               style={{
-                width: `${it.size}px`,
-                height: `${it.size / aspect}px`,
-                offsetPath: path,
-                offsetRotate: '0deg',
-                offsetDistance: `${share * 100}%`,
-                willChange: 'offset-distance',
-                ...(reduce
-                  ? null
+                transform: `rotate(${it.rotate}deg)`,
+                ...(still
+                  ? { rotate: `${still.angle + ALONG}deg` }
                   : {
-                      animation: `jni-border-drift ${duration}s linear infinite`,
-                      animationDelay: `${-share * duration}s`,
+                      animationName: `${name}-turn`,
+                      animationTimingFunction: 'linear',
+                      animationIterationCount: 'infinite',
+                      ...timing,
                     }),
               }}
             >
-              <div style={{ transform: `rotate(${it.rotate}deg)` }}>
-                <Art palette={packPalettes[it.flavour]} className="jni-doodle-art" />
-              </div>
+              <Art palette={packPalettes[it.flavour]} className="jni-doodle-art" />
             </div>
-          )
-        })}
+          </div>
+        )
+      })}
     </div>
   )
 }

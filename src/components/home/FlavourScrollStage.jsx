@@ -427,13 +427,19 @@ export default function FlavourScrollStage() {
                   boxShadow: `9px 10px 0 ${palette.line}`,
                 }}
               >
-                <img
-                  src={stage.pack}
-                  alt={stage.packAlt}
-                  loading="lazy"
-                  decoding="async"
-                  className="block aspect-square w-full object-cover"
-                />
+                <Link
+                  to={`/flavours/${stage.slug}`}
+                  aria-label={`Shop ${product.name}`}
+                  className="block"
+                >
+                  <img
+                    src={stage.pack}
+                    alt={stage.packAlt}
+                    loading="lazy"
+                    decoding="async"
+                    className="block aspect-square w-full object-cover"
+                  />
+                </Link>
               </motion.div>
             </AnimatePresence>
           </motion.div>

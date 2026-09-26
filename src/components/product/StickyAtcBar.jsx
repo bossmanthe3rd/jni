@@ -26,6 +26,7 @@ export default function StickyAtcBar({
   watchRef,
   image,
   ctaLabel = 'Nibble Now',
+  unit = '1 pack',
 }) {
   const [visible, setVisible] = useState(false)
   const seen = useRef(false)
@@ -61,7 +62,7 @@ export default function StickyAtcBar({
             <p>
               <b>{name}</b>
               <span>
-                1 pack · ₹{price}
+                {unit} · ₹{price}
                 {originalPrice > price && <s>₹{originalPrice}</s>}
               </span>
             </p>

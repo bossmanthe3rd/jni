@@ -14,7 +14,6 @@ import {
 import { useCart } from '../../store/cartStore'
 import HeatMeter from './HeatMeter'
 import DoodleField from '../ui/DoodleField'
-import FlipSpot from '../mascot/FlipSpot'
 
 /**
  * The flavour dossier: a product page's hero, built as one spread.
@@ -63,14 +62,6 @@ const DOODLES = [
   { left: '46%', top: '-11%', w: 38, turn: 16 },
 ]
 
-/* Flip's mood per flavour -- the same mapping the homepage hero uses, so he
-   greets each pack the way he does there. */
-const FLIP_EMOTES = {
-  'sweet-chilli-rush': 'delighted',
-  'jalapeno-kick': 'cheeky',
-  'peri-peri-punch': 'shocked',
-}
-
 /* Three tiers reach the free-shipping line in one click without turning the
    panel into a price list. Any other quantity is still available in the cart
    drawer, and the bundles are the path to six. */
@@ -110,7 +101,6 @@ export default function FlavourDossier({ product, ctaRef }) {
   const [shot, setShot] = useState(0)
   const [added, setAdded] = useState(false)
   const [flight, setFlight] = useState(null)
-  const [chompAt, setChompAt] = useState(0)
   const [burst, setBurst] = useState(0)
   const priceControls = useAnimationControls()
   const lastQty = useRef(qty)
@@ -227,7 +217,6 @@ export default function FlavourDossier({ product, ctaRef }) {
   const handleAdd = (e) => {
     addItem(toCartProduct(product), qty)
     throwToCart(e.currentTarget)
-    setChompAt(Date.now())
     setAdded(true)
     window.setTimeout(() => setAdded(false), 1800)
   }
@@ -314,18 +303,6 @@ export default function FlavourDossier({ product, ctaRef }) {
                 transition={{ delay: 0.42 + i * 0.05, type: 'spring', stiffness: 220, damping: 16 }}
               />
             ))}
-
-            {/* Flip stands at the pouch's foot and bites when it goes in the
-                cart. He sits behind the frame, so the pouch overlaps him. */}
-            <FlipSpot
-              mode="hero"
-              tint={product.slug}
-              emote={FLIP_EMOTES[product.slug]}
-              chompAt={chompAt}
-              width="clamp(110px, 10vw, 150px)"
-              className="jni-dossier-flip"
-              style={{ left: '-3%', top: '100%' }}
-            />
 
             <motion.div
               key={product.slug}

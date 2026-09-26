@@ -1,0 +1,1252 @@
+/*
+ * Our flavours: the office vending machine. See FlavourVending.jsx.
+ *
+ * The machine is the site's doodle language at furniture scale -- sunshine
+ * body, fat ink keylines, a hard offset shadow -- standing in a tiled break
+ * room. Behind the glass it goes dark so the packs light up against it, and
+ * the receipt its printer hands out is the product card.
+ *
+ * Laptops (1024+) get a fixed-size artboard, 1190 x 720: every measurement in
+ * the desktop block below is at that size, and FlavourVending zooms the whole
+ * rig down to fit the screen. Below 1024 the machine stacks and the receipt
+ * becomes a bottom sheet.
+ */
+
+.vm-section {
+  --vm-ink: #0d2818;
+  --vm-body: #f3c63b;
+  --vm-body-dk: #e2ae27;
+  --vm-cream: #fbf6d0;
+  --vm-paper: #fffbea;
+  --vm-teal: #4db8ae;
+  --vm-teal-dk: #3a9d93;
+  --vm-glass: #071a16;
+  --vm-lcd: #c3d92e;
+  --vm-metal: #d6dcd4;
+  overflow: clip;
+  background-color: var(--vm-teal);
+  background-image:
+    linear-gradient(rgb(13 40 24 / 0.08) 2px, transparent 2px),
+    linear-gradient(90deg, rgb(13 40 24 / 0.08) 2px, transparent 2px);
+  background-size: 56px 56px;
+  background-position: center top;
+}
+
+.vm-stage {
+  position: relative;
+  padding: 72px 0 40px;
+}
+.vm-floor {
+  display: none;
+}
+
+.vm-rig {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+/* The floor the machine stands on, hung off the rig so it zooms with it. */
+.vm-rig::before {
+  content: '';
+  position: absolute;
+  top: calc(100% + 18px);
+  left: -100vw;
+  right: -100vw;
+  z-index: -1;
+  height: 600px;
+  border-top: 5px solid var(--vm-ink);
+  background: var(--vm-teal-dk);
+}
+
+/* ---------- the machine ---------- */
+
+.vm-machine {
+  position: relative;
+  z-index: 2;
+  width: min(640px, calc(100vw - 24px));
+  flex-shrink: 0;
+  padding: 8px;
+  border: 5px solid var(--vm-ink);
+  border-radius: 24px 24px 14px 14px;
+  background: var(--vm-body);
+  box-shadow: 8px 10px 0 rgb(13 40 24 / 0.92);
+}
+
+.vm-sign {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 6px 12px 8px;
+  border: 5px solid var(--vm-ink);
+  border-radius: 18px 18px 8px 8px;
+  background: var(--vm-glass);
+}
+.vm-sign-word {
+  font-size: clamp(26px, 6vw, 38px);
+  font-weight: 400;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--vm-body);
+  text-shadow:
+    0 0 14px rgb(243 198 59 / 0.75),
+    0 0 2px rgb(243 198 59 / 0.9);
+}
+.vm-bulbs {
+  display: flex;
+  gap: 7px;
+}
+.vm-bulbs i {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--vm-ink);
+  border-radius: 50%;
+  background: var(--vm-cream);
+  box-shadow: 0 0 8px 1px rgb(251 246 208 / 0.8);
+  animation: vm-bulb 1s steps(1) infinite;
+}
+@keyframes vm-bulb {
+  50% {
+    background: #7a6a2a;
+    box-shadow: none;
+  }
+}
+
+.vm-body {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-areas: 'glass' 'tray' 'panel';
+  gap: 10px;
+  padding-top: 8px;
+}
+
+/* ---------- behind the glass ---------- */
+
+.vm-glass {
+  grid-area: glass;
+  position: relative;
+  overflow: hidden;
+  padding: 14px 6px 0;
+  border: 5px solid var(--vm-ink);
+  border-radius: 14px;
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgb(251 246 208 / 0.14), transparent 60%),
+    linear-gradient(#0f3a30, var(--vm-glass));
+  box-shadow: inset 0 0 0 4px rgb(0 0 0 / 0.25);
+}
+
+.vm-lamp {
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 9px;
+  border-radius: 0 0 8px 8px;
+  background: var(--vm-cream);
+  box-shadow: 0 0 28px 8px rgb(251 246 208 / 0.35);
+}
+
+/* Rows leave room below the shelf lip for the tags that hang off it. */
+.vm-row {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  margin-bottom: 54px;
+}
+.vm-row--a {
+  grid-template-columns: repeat(3, 1fr);
+}
+.vm-row--b {
+  grid-template-columns: repeat(2, 1fr);
+}
+.vm-row::after {
+  content: '';
+  position: absolute;
+  left: -14px;
+  right: -14px;
+  bottom: -4px;
+  z-index: 3;
+  height: 18px;
+  border-block: 4px solid var(--vm-ink);
+  background: var(--vm-teal);
+}
+
+.vm-slot {
+  position: relative;
+  display: flex;
+  height: 150px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 14px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.vm-row--b .vm-slot {
+  height: 124px;
+}
+.vm-slot:focus-visible {
+  outline: 3px solid var(--vm-body);
+  outline-offset: -2px;
+}
+
+.vm-art {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  width: 100%;
+  height: calc(100% - 34px);
+  align-items: flex-end;
+  justify-content: center;
+  margin-bottom: -16px;
+}
+.vm-faller {
+  position: absolute;
+  z-index: 5;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.vm-pack {
+  display: block;
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 8px rgb(0 0 0 / 0.45));
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  user-select: none;
+}
+.vm-slot:hover .vm-pack,
+.vm-slot:hover .vm-combo {
+  transform: translateY(-6px);
+}
+
+.vm-combo {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: flex-end;
+  justify-content: center;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.vm-combo img {
+  display: block;
+  width: 30%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 6px rgb(0 0 0 / 0.45));
+  user-select: none;
+}
+.vm-combo-front,
+.vm-combo-back {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: flex-end;
+  justify-content: center;
+}
+.vm-combo-front img:nth-child(1) {
+  transform: rotate(-9deg) translateX(14%);
+}
+.vm-combo-front img:nth-child(2) {
+  position: relative;
+  z-index: 1;
+  width: 33%;
+}
+.vm-combo-front img:nth-child(3) {
+  transform: rotate(9deg) translateX(-14%);
+}
+.vm-combo--six .vm-combo-front {
+  position: relative;
+  z-index: 1;
+  height: 82%;
+}
+.vm-combo--six .vm-combo-front img {
+  width: 26%;
+}
+.vm-combo-back {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 80%;
+  filter: brightness(0.72);
+}
+.vm-combo-back img {
+  width: 24%;
+  margin: 0 3%;
+}
+
+.vm-coil {
+  position: relative;
+  z-index: 3;
+  width: 80%;
+  height: 22px;
+}
+.vm-slot.is-spinning .vm-coil-turn {
+  animation: vm-coil 0.16s linear infinite;
+}
+@keyframes vm-coil {
+  to {
+    transform: translateX(18px);
+  }
+}
+
+/* The shelf tag: enough to compare the slots without tapping any of them. */
+.vm-tag {
+  position: absolute;
+  top: calc(100% - 17px);
+  left: 50%;
+  z-index: 4;
+  display: flex;
+  width: min(calc(100% - 8px), 168px);
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px 4px;
+  border: 2.5px solid var(--vm-ink);
+  border-radius: 6px;
+  background: var(--vm-cream);
+  color: var(--vm-ink);
+  text-align: center;
+  transform: translateX(-50%);
+}
+.vm-slot.is-selected .vm-tag {
+  background: var(--vm-body);
+}
+.vm-tag-top {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+.vm-tag-name {
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+.vm-tag-heat {
+  display: flex;
+  gap: 3px;
+}
+.vm-tag-heat i {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid var(--vm-ink);
+  border-radius: 50%;
+  background: rgb(13 40 24 / 0.12);
+}
+.vm-tag-packs {
+  font-size: 9.5px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.vm-sheen {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  background: linear-gradient(
+    112deg,
+    transparent 18%,
+    rgb(255 255 255 / 0.09) 18.5%,
+    rgb(255 255 255 / 0.09) 25%,
+    transparent 25.5%,
+    transparent 31%,
+    rgb(255 255 255 / 0.05) 31.5%,
+    rgb(255 255 255 / 0.05) 33.5%,
+    transparent 34%
+  );
+}
+
+/* ---------- the tray ---------- */
+
+.vm-tray {
+  grid-area: tray;
+}
+.vm-tray-mouth {
+  position: relative;
+  height: 96px;
+  overflow: hidden;
+  border: 5px solid var(--vm-ink);
+  border-radius: 12px;
+  background: var(--vm-glass);
+  box-shadow: inset 0 10px 14px rgb(0 0 0 / 0.5);
+}
+.vm-tray-item {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  display: flex;
+  width: 68px;
+  height: 112px;
+  margin: -76px 0 0 -34px;
+  align-items: flex-end;
+  justify-content: center;
+}
+.vm-tray-item:has(.vm-combo) {
+  width: 200px;
+  height: 92px;
+  margin: -60px 0 0 -100px;
+}
+.vm-tray-item a {
+  display: flex;
+  width: 100%;
+  align-items: flex-end;
+  justify-content: center;
+}
+.vm-flap {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 2;
+  display: grid;
+  height: 36%;
+  place-items: center;
+  border-top: 4px solid var(--vm-ink);
+  background: rgb(214 220 212 / 0.3);
+  backdrop-filter: blur(1.5px);
+  pointer-events: none;
+}
+.vm-flap span {
+  color: var(--vm-cream);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+/* ---------- the control panel ---------- */
+
+.vm-panel {
+  grid-area: panel;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  border: 5px solid var(--vm-ink);
+  border-radius: 14px;
+  background: var(--vm-body-dk);
+}
+
+.vm-screen {
+  position: relative;
+  min-height: 112px;
+  padding: 12px 14px;
+  overflow: hidden;
+  border: 4px solid var(--vm-ink);
+  border-radius: 10px;
+  background: #0c2a1f;
+  color: var(--vm-lcd);
+  text-shadow: 0 0 7px rgb(195 217 46 / 0.55);
+}
+.vm-screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgb(0 0 0 / 0.2) 0 1px, transparent 1px 3px);
+}
+.vm-screen-big {
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.vm-screen-small {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.vm-screen-big + .vm-screen-small {
+  margin-top: 6px;
+}
+.vm-screen-name {
+  margin-top: 4px;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--vm-cream);
+  text-shadow: 0 0 8px rgb(251 246 208 / 0.45);
+}
+.vm-screen-line {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.vm-blink {
+  animation: vm-blink 0.9s steps(1) infinite;
+}
+@keyframes vm-blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.vm-keypad {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+.vm-key {
+  height: 40px;
+  border: 3px solid var(--vm-ink);
+  border-radius: 10px;
+  background: var(--vm-cream);
+  box-shadow: 0 4px 0 var(--vm-ink);
+  color: var(--vm-ink);
+  font-family: var(--font-brand);
+  font-size: 17px;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+.vm-key:hover {
+  background: #fffbe3;
+}
+.vm-key:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--vm-ink);
+}
+.vm-key--clear {
+  background: var(--vm-teal);
+  font-size: 13px;
+}
+
+.vm-feet {
+  position: absolute;
+  inset: auto 0 -22px;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 12%;
+}
+.vm-feet span {
+  display: block;
+  width: 56px;
+  height: 18px;
+  border: 5px solid var(--vm-ink);
+  border-top: 0;
+  border-radius: 0 0 10px 10px;
+  background: var(--vm-body-dk);
+}
+
+/* ---------- the printer (laptops) ---------- */
+
+.vm-printer {
+  position: relative;
+  z-index: 1;
+  width: 340px;
+  flex-shrink: 0;
+  margin-left: -6px;
+  padding-top: 34px;
+}
+/* Bolted to the machine's side: it tucks under the machine's edge. */
+.vm-printer-box {
+  position: relative;
+  display: flex;
+  height: 58px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 9px 16px 0 22px;
+  border: 5px solid var(--vm-ink);
+  border-left: 0;
+  border-radius: 0 14px 10px 0;
+  background: var(--vm-teal);
+  box-shadow: 6px 7px 0 rgb(13 40 24 / 0.92);
+}
+.vm-printer-box i {
+  display: block;
+  width: 11px;
+  height: 11px;
+  border: 2.5px solid var(--vm-ink);
+  border-radius: 50%;
+  background: var(--vm-metal);
+}
+.vm-printer-box span {
+  color: var(--vm-ink);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+.vm-printer-slot {
+  position: absolute;
+  left: 22px;
+  right: 16px;
+  bottom: 6px;
+  height: 12px;
+  border: 3px solid var(--vm-ink);
+  border-radius: 6px;
+  background: var(--vm-glass);
+}
+
+/* The paper feeds down out of the slot: the well clips it at the slot, and
+   pads out right and below so the paper's hard shadow isn't clipped too. */
+.vm-paper-well {
+  position: relative;
+  z-index: 2;
+  margin: -14px 6px 0 30px;
+  padding: 0 12px 14px 4px;
+  overflow: hidden;
+}
+.vm-paper-feed {
+  filter: drop-shadow(0 2.5px 0 var(--vm-ink)) drop-shadow(2.5px 0 0 var(--vm-ink))
+    drop-shadow(-2.5px 0 0 var(--vm-ink)) drop-shadow(5px 6px 0 rgb(13 40 24 / 0.85));
+  transform-origin: 50% 0;
+}
+
+/* ---------- the receipt ---------- */
+
+.vm-receipt {
+  --zig: 8px;
+  position: relative;
+  padding: 18px 16px calc(14px + var(--zig));
+  background: var(--vm-paper);
+  color: var(--vm-ink);
+}
+/* Torn edges are cut with a zigzag mask, not drawn. */
+.vm-receipt--torn-bottom {
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / calc(2 * var(--zig)) 100%;
+  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / calc(2 * var(--zig)) 100%;
+}
+.vm-receipt--torn-top {
+  padding: calc(14px + var(--zig)) 18px 20px;
+  -webkit-mask: conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) 50% / calc(2 * var(--zig)) 100%;
+  mask: conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) 50% / calc(2 * var(--zig)) 100%;
+}
+
+.vm-rc-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+  border-bottom: 2px dashed rgb(13 40 24 / 0.3);
+}
+.vm-rc-logo {
+  display: block;
+  width: 64px;
+  height: auto;
+}
+.vm-rc-meta,
+.vm-rc-label {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgb(13 40 24 / 0.55);
+}
+.vm-rc-meta {
+  margin-top: 4px;
+}
+.vm-rc-label {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* The pack printed in thermal dots, the name beside it, a stamp across both. */
+.vm-rc-hero {
+  position: relative;
+  padding-bottom: 22px;
+  display: grid;
+  grid-template-columns: 76px 1fr;
+  align-items: center;
+  gap: 12px;
+}
+.vm-rc-print {
+  display: flex;
+  height: 116px;
+  align-items: flex-end;
+  justify-content: center;
+  filter: grayscale(1) contrast(1.5) brightness(0.9);
+  mix-blend-mode: multiply;
+  -webkit-mask: radial-gradient(circle, #000 0.95px, #0000 1.35px) 0 0 / 3px 3px;
+  mask: radial-gradient(circle, #000 0.95px, #0000 1.35px) 0 0 / 3px 3px;
+}
+.vm-rc-print .vm-pack,
+.vm-rc-print .vm-combo img {
+  filter: none;
+}
+.vm-rc-hero:has(.vm-combo) {
+  grid-template-columns: 110px 1fr;
+}
+.vm-rc-name {
+  font-size: 26px;
+  line-height: 0.98;
+}
+.vm-rc-heading {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.vm-stamp {
+  position: absolute;
+  right: -2px;
+  bottom: -4px;
+  padding: 3px 8px 2px;
+  border: 3px solid var(--vm-stamp);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1.5px var(--vm-paper), inset 0 0 0 3px var(--vm-stamp);
+  color: var(--vm-stamp);
+  font-family: var(--font-brand);
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0.88;
+  mix-blend-mode: multiply;
+  filter: url(#vm-rough);
+  transform: rotate(-11deg);
+  pointer-events: none;
+}
+
+.vm-rc-desc {
+  margin-top: 8px;
+  font-size: 12.5px;
+  line-height: 1.42;
+  color: rgb(13 40 24 / 0.8);
+  text-wrap: pretty;
+}
+.vm-rc-rule {
+  margin: 10px 0;
+  border: 0;
+  border-top: 2px dashed rgb(13 40 24 / 0.3);
+}
+.vm-rc-lines li {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 12.5px;
+  line-height: 1.3;
+}
+.vm-rc-lines li:first-child {
+  margin-top: 0;
+}
+.vm-rc-lines li > span:first-child {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1.7;
+  text-transform: uppercase;
+  color: rgb(13 40 24 / 0.55);
+}
+.vm-rc-lines--box li {
+  grid-template-columns: 28px 1fr;
+  font-weight: 800;
+}
+.vm-rc-lines--box li > span:first-child {
+  font-size: 12.5px;
+  line-height: 1.3;
+  color: var(--vm-ink);
+}
+.vm-rc-lines--box i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border: 2px solid var(--vm-ink);
+  border-radius: 50%;
+  vertical-align: -1px;
+}
+.vm-rc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.vm-rc-small {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.vm-rc-heat {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+}
+.vm-rc-heat > span {
+  display: block;
+  width: 20px;
+}
+.vm-rc-heat svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.vm-rc-heat b {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.vm-rc-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+}
+.vm-rc-sum {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+  padding-right: 6px;
+}
+.vm-rc-sum s {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgb(13 40 24 / 0.5);
+}
+.vm-rc-price {
+  position: relative;
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1;
+}
+/* The marker ring round the total, drawn on once the paper has printed. */
+.vm-ring {
+  position: absolute;
+  inset: -12px -14px -10px -12px;
+  width: calc(100% + 26px);
+  height: calc(100% + 22px);
+  overflow: visible;
+  pointer-events: none;
+}
+.vm-ring path {
+  fill: none;
+  stroke: var(--vm-stamp);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0.9;
+  vector-effect: non-scaling-stroke;
+  animation: vm-ring 0.55s 1.2s ease-out forwards;
+}
+@keyframes vm-ring {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.vm-qty {
+  display: flex;
+  height: 42px;
+  flex-shrink: 0;
+  align-items: center;
+  border: 3px solid var(--vm-ink);
+  border-radius: 12px;
+  background: var(--vm-cream);
+  color: var(--vm-ink);
+  font-weight: 900;
+}
+.vm-qty button {
+  display: grid;
+  width: 30px;
+  height: 100%;
+  place-items: center;
+}
+.vm-qty span {
+  min-width: 16px;
+  text-align: center;
+}
+
+/* Nibble Now is a sticker slapped on the receipt, one corner lifting. */
+.vm-sticker {
+  position: relative;
+  margin-top: 12px;
+  transform: rotate(-1.5deg);
+}
+.vm-cta {
+  width: 100%;
+  height: 50px;
+  min-height: 0;
+  padding: 0 10px;
+  font-size: 1.05rem;
+  white-space: nowrap;
+  filter: drop-shadow(2px 3px 0 var(--vm-ink));
+}
+.vm-sticker::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  right: 12px;
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(225deg, var(--vm-paper) 48%, #e9c95a 52%);
+  box-shadow: -2px 2px 3px rgb(13 40 24 / 0.25);
+  pointer-events: none;
+}
+
+.vm-rc-foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+}
+.vm-barcode {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.vm-barcode svg {
+  display: block;
+  width: 118px;
+  height: 26px;
+  fill: var(--vm-ink);
+}
+.vm-barcode span {
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+}
+.vm-rc-link {
+  font-size: 12.5px;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
+/* ---------- the receipt on phones: a tab, then a sheet ---------- */
+
+.vm-sheet-tab {
+  position: fixed;
+  left: 10px;
+  right: 10px;
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 3px solid #0d2818;
+  border-radius: 14px;
+  background: #fffbea;
+  box-shadow: 4px 5px 0 #0d2818;
+  color: #0d2818;
+  text-align: left;
+}
+.vm-sheet-tab-label {
+  flex-shrink: 0;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #0d2818;
+  color: #fffbea;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.vm-sheet-tab-name {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  font-family: var(--font-brand);
+  font-size: 17px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vm-sheet-tab-price {
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.vm-sheet-root {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+}
+.vm-sheet-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgb(7 26 22 / 0.45);
+}
+.vm-sheet {
+  --vm-ink: #0d2818;
+  --vm-paper: #fffbea;
+  --vm-cream: #fbf6d0;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  max-height: 86vh;
+  flex-direction: column;
+  filter: drop-shadow(0 -3px 0 #0d2818);
+}
+.vm-sheet-handle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 10px 16px 18px;
+  touch-action: none;
+  cursor: grab;
+}
+.vm-sheet-handle > span {
+  width: 44px;
+  height: 5px;
+  border-radius: 999px;
+  background: #fffbea;
+}
+.vm-sheet-handle button {
+  position: absolute;
+  right: 12px;
+  top: 6px;
+  padding: 6px 12px;
+  border: 2.5px solid #0d2818;
+  border-radius: 999px;
+  background: #fffbea;
+  color: #0d2818;
+  font-size: 12px;
+  font-weight: 900;
+}
+.vm-sheet-scroll {
+  margin-top: -8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: linear-gradient(transparent 16px, #fffbea 16px);
+}
+
+/* ---------- laptops: the fixed-size artboard ---------- */
+
+@media (min-width: 1024px) {
+  .vm-rig {
+    width: 1190px;
+    margin: 0 auto;
+  }
+  .vm-rig::before {
+    top: 648px;
+  }
+  .vm-machine {
+    width: 850px;
+    padding: 12px;
+    border-radius: 30px 30px 16px 16px;
+    box-shadow: 12px 14px 0 rgb(13 40 24 / 0.92);
+  }
+  .vm-sign {
+    gap: 18px;
+    padding: 6px 14px 8px;
+    border-radius: 20px 20px 8px 8px;
+  }
+  .vm-sign-word {
+    font-size: 38px;
+  }
+  .vm-body {
+    grid-template-columns: 1fr 262px;
+    grid-template-areas:
+      'glass panel'
+      'tray panel';
+    gap: 12px;
+    padding-top: 12px;
+  }
+  .vm-glass {
+    padding: 16px 12px 0;
+  }
+  .vm-row {
+    gap: 6px;
+    margin-bottom: 46px;
+  }
+  .vm-row::after {
+    left: -12px;
+    right: -12px;
+  }
+  .vm-slot {
+    height: 158px;
+  }
+  .vm-row--b .vm-slot {
+    height: 136px;
+  }
+  .vm-tag {
+    padding: 3px 7px 5px;
+  }
+  .vm-tag-top {
+    font-size: 12px;
+  }
+  .vm-tag-name {
+    font-size: 11px;
+  }
+  .vm-panel {
+    gap: 12px;
+    padding: 12px;
+  }
+  .vm-screen {
+    flex: 1;
+    padding: 16px 18px;
+  }
+  .vm-screen-big {
+    font-size: 26px;
+  }
+  .vm-screen-small {
+    font-size: 12px;
+  }
+  .vm-screen-name {
+    margin-top: 8px;
+    font-size: 30px;
+  }
+  .vm-screen-line {
+    font-size: 14px;
+  }
+  .vm-keypad {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 9px;
+  }
+  .vm-key {
+    height: 52px;
+    font-size: 20px;
+  }
+  .vm-key--clear {
+    font-size: 15px;
+  }
+  .vm-feet {
+    padding: 0 9%;
+  }
+  .vm-feet span {
+    width: 72px;
+  }
+}
+
+/* ---------- the break room either side (laptops) ---------- */
+
+/* In rig units: the floor line is at y648, so things standing on it are
+   placed by their foot. */
+.vm-room {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.vm-rig:not([data-room='on']) .vm-room {
+  display: none;
+}
+.vm-room-clock {
+  position: absolute;
+  top: 36px;
+  right: calc(100% + 42px);
+  width: 138px;
+  height: 138px;
+  filter: drop-shadow(5px 6px 0 rgb(13 40 24 / 0.25));
+}
+.vm-room-sec {
+  transform-box: view-box;
+  transform-origin: 70px 70px;
+  animation: vm-sec 60s linear infinite;
+}
+@keyframes vm-sec {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.vm-room-plant {
+  position: absolute;
+  top: 402px;
+  right: calc(100% + 22px);
+  width: 160px;
+  height: 260px;
+}
+.vm-room-bin {
+  position: absolute;
+  top: 532px;
+  left: calc(100% + 34px);
+  width: 150px;
+  height: 130px;
+}
+
+.vm-room-board {
+  position: absolute;
+  top: 46px;
+  left: calc(100% + 26px);
+  width: 182px;
+  height: 250px;
+  border: 5px solid var(--vm-ink);
+  border-radius: 12px;
+  background:
+    radial-gradient(#9c6f1d 1px, transparent 1.6px) 0 0 / 9px 9px,
+    radial-gradient(#cfa452 1px, transparent 1.6px) 4px 5px / 11px 11px,
+    #b98524;
+  box-shadow:
+    inset 0 0 0 8px var(--vm-body-dk),
+    inset 0 0 0 11px var(--vm-ink),
+    6px 7px 0 rgb(13 40 24 / 0.25);
+}
+.vm-room-note {
+  position: absolute;
+  padding: 12px 10px 9px;
+  color: var(--vm-ink);
+  font-family: var(--font-brand);
+  font-size: 14px;
+  line-height: 1.12;
+  box-shadow: 2px 3px 0 rgb(13 40 24 / 0.35);
+}
+.vm-room-note::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  border: 2.5px solid var(--vm-ink);
+  border-radius: 50%;
+  background: #c8102e;
+}
+.vm-room-note--a {
+  top: 24px;
+  left: 16px;
+  width: 116px;
+  background: var(--vm-cream);
+  transform: rotate(-5deg);
+}
+.vm-room-note--b {
+  top: 98px;
+  left: 56px;
+  width: 104px;
+  background: var(--vm-body);
+  transform: rotate(4deg);
+}
+.vm-room-note--c {
+  top: 160px;
+  left: 14px;
+  width: 138px;
+  background: var(--vm-paper);
+  transform: rotate(-2deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vm-bulbs i,
+  .vm-blink,
+  .vm-room-sec,
+  .vm-slot.is-spinning .vm-coil-turn {
+    animation: none;
+  }
+  .vm-ring path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .vm-pack,
+  .vm-combo {
+    transition: none;
+  }
+}

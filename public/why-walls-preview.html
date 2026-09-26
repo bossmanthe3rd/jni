@@ -1,0 +1,20 @@
+<!doctype html>
+<!-- Temporary side-by-side preview of the Why Flipo's wall candidates. Delete once one is picked. -->
+<html><head><meta charset="utf-8"><title>Why Flipo's walls</title>
+<style>
+  body{margin:0;background:#0d2818;font-family:system-ui;color:#fbf6d0}
+  .row{display:flex;gap:16px;padding:16px;justify-content:center}
+  .col{flex:1;max-width:calc(50vw - 24px)}
+  h2{margin:0 0 8px;font-size:16px}
+  .box{position:relative;width:100%;aspect-ratio:1440/900;overflow:hidden;border-radius:8px}
+  iframe{position:absolute;top:0;left:0;width:1440px;height:900px;border:0;transform-origin:0 0}
+</style></head><body>
+<div class="row">
+  <div class="col"><h2>1 · Campaign scatter</h2><div class="box"><iframe src="/?wall=scatter#why-flipos"></iframe></div></div>
+  <div class="col"><h2>2 · Two-tone office wall</h2><div class="box"><iframe src="/?wall=office#why-flipos"></iframe></div></div>
+</div>
+<script>
+  const fit=()=>document.querySelectorAll('.box').forEach(b=>b.querySelector('iframe').style.transform=`scale(${b.clientWidth/1440})`)
+  addEventListener('resize',fit);fit()
+</script>
+</body></html>

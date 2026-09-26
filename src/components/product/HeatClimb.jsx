@@ -8,7 +8,6 @@ import {
 } from 'framer-motion'
 import { packPalettes } from '../icons/PackDoodles'
 import { heatLevel } from './HeatMeter'
-import FlipSpot from '../mascot/FlipSpot'
 import BittenCrisp from './BittenCrisp'
 
 /**
@@ -74,7 +73,8 @@ export default function HeatClimb({ product }) {
   const trackRef = useRef(null)
   const [reached, setReached] = useState(pinned ? 1 : BITES)
   const { scrollYProgress } = useScroll({ target: trackRef, offset: ['start start', 'end end'] })
-  const spin = useTransform(scrollYProgress, [0, 1], [-14, 22])
+  // Tipped back at an angle, then turning a little further as you scroll.
+  const spin = useTransform(scrollYProgress, [0, 1], [-24, 4])
 
   useEffect(() => {
     setReached(pinned ? 1 : BITES)
@@ -159,21 +159,11 @@ export default function HeatClimb({ product }) {
         </ol>
         {heading}
 
-        {/* The crisp being eaten: one bite per bite, turning as you scroll. */}
+        {/* The crisp being eaten, up in the empty top right of the last
+            columns: one bite per bite, turning as you scroll. */}
         <motion.div className="jni-climb-crisp" style={{ rotate: spin }}>
           <BittenCrisp flavour={product.slug} bites={reached} />
         </motion.div>
-
-        {/* Flip stands in the empty top of the last columns and feels it:
-            his heat is how far the climb has got, scaled by the flavour's own
-            level, so on Sweet Chilli he barely breaks a sweat. */}
-        <FlipSpot
-          mode="hero"
-          tint={product.slug}
-          heat={((reached - 1) / (BITES - 1)) * ((heatLevel(product) || 1) / 3)}
-          width="clamp(130px, 12vw, 190px)"
-          style={{ left: '78%', top: '52%' }}
-        />
       </div>
     </section>
   )

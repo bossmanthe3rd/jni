@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Wordmark } from '../icons/Wordmark'
+import { LOGO_SIZE, Wordmark } from '../icons/Wordmark'
 import { NIBBLE_WORDS } from '../ui/NibbleWords'
+import { fitInBlob } from '../ui/NibbleBlob'
 
 /**
  * What the header badge is showing right now: the logo, or one of the words
@@ -43,30 +44,31 @@ const arriving = {
 }
 
 /**
- * The words are set to a box wider and shorter than the lockup's, and fitted
- * into it with `meet`. That single rule is what keeps the rotation even: the
- * long words land on the box's width and the short ones on its height, so
- * every word comes out within a few per cent of the same cap height instead of
- * 3PM? arriving twice the size of CRAVING?.
+ * Every face -- the lockup and each word -- is fitted to the blob on its own
+ * terms: the largest box of that face's proportions the silhouette has room
+ * for, centred on the spot the pack puts its logo. So they all share one
+ * centre, and nothing shifts sideways or up and down on a swap.
  *
- * Percentages are of the lockup's own slot, which is 52.4% x 63.8% of the
- * blob -- so 137% of it across is 72% of the badge, which is as wide as a word
- * can go before it runs out of blob to sit on.
+ * Fitting alone would leave the short words oversized: 3PM? has the room to
+ * come out half again as tall as CRAVING?. WORD_LINE caps a line of a word at
+ * a share of the blob's height -- the pitch of the lockup's own lines -- which
+ * holds every word within about a tenth of the others and level with the logo
+ * it takes turns with.
+ *
+ * INSET is the clear space kept round each face, as a share of the blob's
+ * width -- about what the pack leaves between its logo and the lobes.
  */
-const WORD_WIDTH = 137
-const WORD_HEIGHT = { 1: 41, 2: 85 }
+const INSET = 0.04
+const WORD_LINE = 0.19
 
-function wordBox(lines) {
-  const height = WORD_HEIGHT[lines] ?? WORD_HEIGHT[1]
-  return {
-    position: 'absolute',
-    left: `${(100 - WORD_WIDTH) / 2}%`,
-    top: `${(100 - height) / 2}%`,
-    width: `${WORD_WIDTH}%`,
-    height: `${height}%`,
-    willChange: 'transform, opacity',
-  }
-}
+const LOCKUP_BOX = fitInBlob(LOGO_SIZE.width / LOGO_SIZE.height, { inset: INSET })
+
+const WORD_BOXES = Object.fromEntries(
+  NIBBLE_WORDS.map((w) => {
+    const [, , vw, vh] = w.viewBox.split(' ').map(Number)
+    return [w.id, fitInBlob(vw / vh, { inset: INSET, maxHeight: WORD_LINE * w.lines })]
+  }),
+)
 
 export function BadgeFace({ fill }) {
   const [step, setStep] = useState(0)
@@ -99,23 +101,21 @@ export function BadgeFace({ fill }) {
   return (
     <span className="relative block h-full w-full">
       <span
-        className="absolute inset-0 grid place-items-center"
-        style={{ ...(showWord ? leaving : arriving), willChange: 'transform, opacity' }}
+        className="absolute"
+        style={{ ...LOCKUP_BOX, ...(showWord ? leaving : arriving), willChange: 'transform, opacity' }}
       >
         {/* The traced wordmark rather than the PNG: sharper, a third of the
             weight, and it lets the intro's hand-off land on exact geometry.
             data-intro-logo marks it as that landing target, which is also why
             this layer is only ever faded -- never unmounted. */}
-        <Wordmark data-intro-logo="" fill={fill} className="h-full w-auto" />
+        <Wordmark data-intro-logo="" fill={fill} className="block h-full w-full" />
       </span>
 
-      <span style={{ ...wordBox(word.lines), ...(showWord ? arriving : leaving) }}>
-        <svg
-          viewBox={word.viewBox}
-          preserveAspectRatio="xMidYMid meet"
-          className="h-full w-full"
-          aria-hidden="true"
-        >
+      <span
+        className="absolute"
+        style={{ ...WORD_BOXES[word.id], ...(showWord ? arriving : leaving), willChange: 'transform, opacity' }}
+      >
+        <svg viewBox={word.viewBox} className="block h-full w-full" aria-hidden="true">
           <path d={word.d} fill={fill} />
         </svg>
       </span>

@@ -10,7 +10,7 @@ import DeskMoments from '../components/product/DeskMoments'
 import FlavourReviews from '../components/product/FlavourReviews'
 import FlavourFlight from '../components/product/FlavourFlight'
 import PdpFaq from '../components/product/PdpFaq'
-import SectionSeam from '../components/product/SectionSeam'
+import SectionEdge from '../components/product/SectionEdge'
 import TypeBands from '../components/product/TypeBands'
 import { packPalettes } from '../components/icons/PackDoodles'
 
@@ -33,8 +33,9 @@ const SUNSHINE = '#f3c63b'
  * flavour, so no two product pages read as the same template with a new
  * photo in it.
  *
- * No two sections meet on a straight line: each boundary is a wave, a torn
- * edge, or a pair of type bands crossing it.
+ * No two sections meet on a straight line: each boundary is a wave or a
+ * torn edge cut into the section above (SectionEdge), or a pair of type
+ * bands crossing it.
  */
 export default function ProductDetailPage() {
   const { slug } = useParams()
@@ -81,20 +82,31 @@ export default function ProductDetailPage() {
   }
 
   return (
-    <div className="min-w-0 flex-grow bg-cream pb-24 md:pb-0">
-      <FlavourDossier product={product} ctaRef={ctaRef} />
-      <SectionSeam fill={ground} hang />
-      <HeatClimb product={product} />
-      <SectionSeam fill={CREAM} variant="torn" />
+    /* No bottom padding for the mobile buy bar: the footer follows this page,
+       so padding here only ever pushed a cream strip in between the last
+       section's cut edge and the footer. */
+    <div className="min-w-0 flex-grow bg-cream">
+      <SectionEdge variant="wave" layer={6}>
+        <FlavourDossier product={product} ctaRef={ctaRef} />
+      </SectionEdge>
+      <SectionEdge variant="torn" layer={5}>
+        <HeatClimb product={product} />
+      </SectionEdge>
       <PouchFacts product={product} />
       <TypeBands product={product} from={CREAM} to={FOREST} />
-      <DeskMoments product={product} />
-      <SectionSeam fill={SUNSHINE} />
+      <SectionEdge variant="wave" layer={4}>
+        <DeskMoments product={product} />
+      </SectionEdge>
       <FlavourReviews product={product} />
       <TypeBands product={product} from={SUNSHINE} to={ground} />
-      <FlavourFlight product={product} />
-      <SectionSeam fill={CREAM} variant="torn" />
-      <PdpFaq product={product} />
+      <SectionEdge variant="torn" layer={3}>
+        <FlavourFlight product={product} />
+      </SectionEdge>
+      {/* The last section cuts its own edge into the site footer, which then
+          drops its painted lip (see .jni-edge-last in pdp.css). */}
+      <SectionEdge variant="wave" layer={2} className="jni-edge-last">
+        <PdpFaq product={product} />
+      </SectionEdge>
 
       <StickyAtcBar
         name={product.shortName || product.name}

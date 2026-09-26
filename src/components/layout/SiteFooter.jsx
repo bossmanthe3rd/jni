@@ -44,9 +44,10 @@ function BurstBadge({ className = '', children }) {
 function CtaDecor() {
   return (
     <>
-      {/* Cream wave lip along the top edge of the footer */}
+      {/* Cream wave lip along the top edge of the footer. A page whose last
+          section cuts its own edge into the footer hides this (pdp.css). */}
       <svg
-        className="absolute inset-x-0 top-0 h-10 w-full sm:h-12"
+        className="jni-footer-lip absolute inset-x-0 top-0 h-10 w-full sm:h-12"
         viewBox="0 0 1440 90"
         preserveAspectRatio="none"
         aria-hidden="true"

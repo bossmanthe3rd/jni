@@ -1,40 +1,67 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { TESTIMONIAL_INTERVAL, testimonials } from '../../data/site'
 import { BrandHeading, useMediaQuery } from '../ui/Primitives'
-import { Rosette, StarDoodle } from '../icons/WhyIcons'
-import { TriangleCluster } from './FlavourGrid'
+import { StarDoodle } from '../icons/WhyIcons'
+import { TriangleCluster } from '../ui/TriangleCluster'
 import FlipSpot from '../mascot/FlipSpot'
 import DoodleField from '../ui/DoodleField'
 import DoodleBorder from '../ui/DoodleBorder'
+import { jaggedEdge } from '../ui/jaggedEdge'
 
 /*
- * The wavy cream lip along the panel's bottom, as data.
- *
- * Both the <svg> below and the doodle edge need this curve: one fills it, the
- * other walks it. Kept in one place so they cannot drift apart and leave the
- * doodles riding a wave that is no longer there.
+ * The panel is cut like the pouch: a crimped seal along the top, a tear along
+ * the bottom. Pixels, not percentages -- a phone gets fewer teeth, not smaller
+ * ones. The seal's teeth are kept big enough that a doodle visibly climbs each
+ * one; a true pouch crimp at this scale would just make them jitter.
  */
-const BOTTOM_WAVE = {
-  vw: 1440,
-  vh: 80,
-  height: 56, // matches the svg's h-14
-  start: [0, 24],
-  cubics: [
-    [180, 72, 360, 4, 540, 36],
-    [720, 68, 900, 8, 1080, 40],
-    [1260, 72, 1380, 20, 1440, 36],
-  ],
-}
+const SEAL = { period: 88, depth: 18 }
+const TEAR = { step: [38, 84], depth: [12, 28] }
+const EDGE_SEED = 11
 
-const BOTTOM_WAVE_D = [
-  `M${BOTTOM_WAVE.start[0]} ${BOTTOM_WAVE.start[1]}`,
-  ...BOTTOM_WAVE.cubics.map((c) => `C ${c[0]} ${c[1]}, ${c[2]} ${c[3]}, ${c[4]} ${c[5]}`),
-  `L${BOTTOM_WAVE.vw} ${BOTTOM_WAVE.vh}`,
-  `L0 ${BOTTOM_WAVE.vh}`,
-  'Z',
-].join(' ')
+/** FlipSpot's own width rule, in px, for the shelf his hands rest on. */
+const flipWidth = () => Math.min(218, Math.max(102, window.innerWidth * 0.15))
+const FLIP_AT = 0.21
+
+/**
+ * The panel's edge, measured once and shared: the panel is clipped to it and
+ * the doodle border rides it, from the one object.
+ */
+function usePanelEdge(ref) {
+  const [geometry, setGeometry] = useState(null)
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    let last = ''
+    const measure = () => {
+      // Whole pixels: a path rebuilt on every sub-pixel reflow would restart
+      // every doodle mid-travel.
+      const w = Math.round(el.offsetWidth)
+      const h = Math.round(el.offsetHeight)
+      const fw = Math.round(flipWidth())
+      const key = `${w}x${h}x${fw}`
+      if (key === last || !w || !h) return
+      last = key
+      setGeometry(
+        jaggedEdge(w, h, {
+          seal: SEAL,
+          tear: TEAR,
+          // A flat run in the crimp where his hands grip it: on a peak he'd be
+          // hanging off a point.
+          shelf: { x: w * FLIP_AT, width: fw * 0.56 },
+          seed: EDGE_SEED,
+        }),
+      )
+    }
+    measure()
+    if (typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [ref])
+  return geometry
+}
 
 /** A small alternating tilt, so a row of reviews reads as a pinned-up wall
  * rather than a grid. Kept under 2deg: the cards still have to line up. */
@@ -74,6 +101,8 @@ export default function Testimonials() {
   const pages = Math.ceil(testimonials.length / perPage)
   const [page, setPage] = useState(0)
   const [paused, setPaused] = useState(false)
+  const frame = useRef(null)
+  const edge = usePanelEdge(frame)
 
   useEffect(() => {
     setPage((p) => Math.min(p, pages - 1))
@@ -98,42 +127,45 @@ export default function Testimonials() {
             past both edges of the viewport, and a confetti triangle is not
             worth a page that scrolls sideways. */}
         <TriangleCluster className="absolute left-1/2 top-1 hidden -translate-x-[12rem] xs:block sm:-translate-x-[16rem]" />
-        <Rosette className="absolute left-1/2 top-2 hidden h-8 w-8 -translate-x-[9rem] xs:block sm:-translate-x-[12rem]" />
 
         <BrandHeading as="h2" fill="#F3C63B" className="text-5xl sm:text-6xl">
           Testimonials
         </BrandHeading>
 
-        <Rosette className="absolute left-1/2 top-2 hidden h-8 w-8 translate-x-[8.5rem] xs:block sm:translate-x-[11.5rem]" />
         <TriangleCluster className="absolute left-1/2 top-1 hidden translate-x-[10rem] scale-x-[-1] xs:block sm:translate-x-[14rem]" />
       </div>
 
-      <div className="relative mx-auto max-w-6xl">
-        {/* Hands on the rim, the rest of him behind the panel. Tucked deeper
+      <div ref={frame} className="relative mx-auto max-w-6xl">
+        {/* Hands on the rim, the rest of him behind the panel -- on the flat
+            shelf the seal leaves for him, one crimp-depth down. Tucked deeper
             under 640px, where the heading sits close above the panel and a head
             poking up into it is exactly the thing to avoid. */}
         <FlipSpot
           mode="peek"
           width="clamp(102px, 15vw, 218px)"
           className="translate-y-[13px] sm:translate-y-0"
-          style={{ left: '21%', top: 0 }}
+          style={{ left: `${FLIP_AT * 100}%`, top: SEAL.depth }}
         />
 
-        {/* No keyline. The edge is the doodle procession below, laid over the
-            panel rather than inside it -- the panel clips its own field, and a
-            border that sits ON the edge has to be half outside it. */}
+        {/* No keyline. The edge is the cut itself -- crimp and tear -- with the
+            doodle procession below laid over it rather than inside it: the
+            panel clips its own field, and a border that sits ON the edge has
+            to be half outside it. */}
         <div
-          className="jni-doodle-edge relative isolate overflow-hidden rounded-t-[48px] bg-sunshine px-5 pb-20 pt-9 sm:px-10 sm:pt-10"
+          className="jni-doodle-edge relative isolate overflow-hidden bg-sunshine px-5 pb-20 pt-11 sm:px-10 sm:pt-12"
+          style={edge ? { clipPath: `path("${edge.d}")` } : undefined}
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
         >
           {/* Sunshine is a light ground, so the doodles tint toward it and stay
-              subtle -- the review cards are the content here. */}
+              subtle -- the review cards are the content here. Kept sparse: the
+              edge is the section's one loud thing, and a busy field inside it
+              drowns the procession out. */}
           <DoodleField
             flavour="sweet-chilli-rush"
             ground="#F3C63B"
             intensity="subtle"
-            count={18}
+            count={8}
             seed={23}
           />
           <div className="relative min-h-[210px] sm:min-h-[200px]">
@@ -181,19 +213,9 @@ export default function Testimonials() {
               <ChevronRight size={18} />
             </button>
           </div>
-
-          {/* Wavy cream lip along the bottom of the yellow panel */}
-          <svg
-            className="absolute inset-x-0 -bottom-px h-14 w-full"
-            viewBox="0 0 1440 80"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-          >
-            <path fill="#FBF6D0" d={BOTTOM_WAVE_D} />
-          </svg>
         </div>
 
-        <DoodleBorder radius={48} spacing={118} duration={26} wave={BOTTOM_WAVE} className="z-30" />
+        <DoodleBorder geometry={edge} spacing={118} duration={26} className="z-30" />
       </div>
     </section>
   )

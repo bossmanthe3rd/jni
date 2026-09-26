@@ -78,12 +78,92 @@ function Pebble({ shape, className = '', style, children }) {
   )
 }
 
+/**
+ * Pages the badge never hangs over. Each is a form or a transaction, and the
+ * page's job is the one thing in the middle of the screen.
+ */
+const BADGE_NEVER = ['/checkout', '/auth', '/account', '/my-crates']
+
+/**
+ * Product and combo pages. The badge does not hang on these at all: the hero
+ * there is a spread that has to fit one screen -- pouch, flavour switcher and
+ * buy block -- and the badge sat in the middle of it taking the top 150px.
+ * With it gone the pages lift their content up into the header band.
+ */
+const PRODUCT_PAGE = /^\/(flavours|snacks|combos)\/[^/]+\/?$/
+
+/** Whether the badge is left off this page entirely. */
+const badgeless = (pathname) => BADGE_NEVER.includes(pathname) || PRODUCT_PAGE.test(pathname)
+
+// Scroll distances under this are jitter -- a trackpad settling, a momentum
+// tail -- not the reader changing direction.
+const SCROLL_SLOP = 4
+
+/**
+ * Whether the badge should be down.
+ *
+ * It opens every page, which is where it does its job. Once the page's first
+ * section has scrolled out from under the header the badge only ever covers
+ * content, so it retracts; any scroll back up brings it out again, as does
+ * returning to the top. The two side clusters are not part of this -- they
+ * stay put everywhere.
+ */
+function useBadgeDown(pathname) {
+  const never = badgeless(pathname)
+  const [down, setDown] = useState(true)
+
+  useEffect(() => {
+    setDown(true)
+    if (never) return undefined
+
+    let lastY = window.scrollY
+    let frame = 0
+
+    const update = () => {
+      frame = 0
+      const y = window.scrollY
+      const dy = y - lastY
+      if (Math.abs(dy) < SCROLL_SLOP && y > 0) return
+      lastY = y
+
+      if (y <= 0) return setDown(true)
+
+      // Measured live rather than once: the first section on most pages
+      // grows as its images load.
+      const header = document.querySelector('[data-intro-bar]')?.getBoundingClientRect().bottom ?? 0
+      const first = document.querySelector('main section')
+      const past = first
+        ? first.getBoundingClientRect().bottom <= header
+        : y > window.innerHeight * 0.8
+
+      if (!past) setDown(true)
+      else setDown(dy < 0)
+    }
+
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      if (frame) cancelAnimationFrame(frame)
+    }
+  }, [pathname, never])
+
+  return !never && down
+}
+
 export default function SiteHeader() {
   const [navOpen, setNavOpen] = useState(false)
+  const [badgeFocused, setBadgeFocused] = useState(false)
   const navigate = useNavigate()
   const { pathname, hash } = useLocation()
   const { toggleCart, getTotalQty } = useCart()
   const qty = getTotalQty()
+  const badgeDown = useBadgeDown(pathname)
+  // A keyboard reader tabbing onto the home link gets it back on screen, so
+  // focus never lands on something hidden behind the ticker.
+  const badgeShown = badgeDown || (badgeFocused && !badgeless(pathname))
 
   // The live site measures the header and publishes its height as
   // --site-header-offset, which every page uses for its top padding.
@@ -140,7 +220,9 @@ export default function SiteHeader() {
           data-site-ticker=""
           to={ticker.link || '/combos'}
           aria-label={ticker.text}
-          className="pointer-events-auto block h-7 overflow-hidden text-[10px] font-black uppercase sm:text-xs"
+          // Above the row, so the badge retracts up behind it -- into the seal,
+          // the way it drops out of one on the pack.
+          className="pointer-events-auto relative z-10 block h-7 overflow-hidden text-[10px] font-black uppercase sm:text-xs"
           style={{ backgroundColor: ticker.backgroundColor, color: ticker.textColor }}
         >
           {/* Two identical runs, translated by exactly half the track. At -50%
@@ -184,22 +266,34 @@ export default function SiteHeader() {
         {/* The pack's badge, hung off the top edge exactly as the pouch hangs
             it off its seal -- flat where the seal cuts it, lobes swinging below
             the row. This is the piece that breaks the old strip. */}
-        <Link
-          aria-label="Just Nibble It home"
-          to="/"
-          className="pointer-events-auto absolute left-1/2 top-0 -translate-x-1/2"
-        >
-          {/* Fluid rather than stepped: the badge and the two clusters share
-              one line, and a stepped width collides with the cart on the phones
-              that sit just under a breakpoint. */}
-          <NibbleBlob
-            fill="var(--color-bg-dark, #071a16)"
-            stroke={PLATE_KEYLINE}
-            style={{ width: 'clamp(6.25rem, 26vw, 10.5rem)' }}
+        {!badgeless(pathname) && (
+          <Link
+            aria-label="Just Nibble It home"
+            to="/"
+            onFocus={() => setBadgeFocused(true)}
+            onBlur={() => setBadgeFocused(false)}
+            className={`absolute left-1/2 top-0 -translate-x-1/2 ${badgeShown ? 'pointer-events-auto' : ''}`}
           >
-            <BadgeFace fill="var(--color-text-light, #fbf6d0)" />
-          </NibbleBlob>
-        </Link>
+            {/* Fluid rather than stepped: the badge and the two clusters share
+                one line, and a stepped width collides with the cart on the
+                phones that sit just under a breakpoint. The ceiling keeps the
+                lobes clear of the page titles that sit under the header.
+
+                The slide is on this inner box, not the link, because the link
+                already spends its transform on centring. */}
+            <NibbleBlob
+              fill="var(--color-bg-dark, #071a16)"
+              stroke={PLATE_KEYLINE}
+              className="transition-transform duration-[420ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
+              style={{
+                width: 'clamp(6.25rem, 26vw, 8.75rem)',
+                transform: badgeShown ? 'none' : 'translateY(calc(-100% - 4px))',
+              }}
+            >
+              <BadgeFace fill="var(--color-text-light, #fbf6d0)" />
+            </NibbleBlob>
+          </Link>
+        )}
 
         <Pebble
           shape="wide1"

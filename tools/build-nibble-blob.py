@@ -6,16 +6,20 @@ and ends in a row of fat rounded lobes. The header used to be a full-bleed
 strip, which is the one shape the packaging never uses. This lifts the real
 silhouette so the header can wear it.
 
-Source is the owner's hero artwork, reference/drive/website/01-Jalapeno kick.png
+Source is the cut-out jalapeno pouch, public/assets/hero/pouch-jalapeno-kick.webp
 -- the jalapeno pack is the one whose blob reads cleanly, because its dark green
-sits on a mid-green ground rather than the near-black the other two use.
+sits on a mid-green ground rather than the near-black the other two use. The
+first trace ran off the owner's full hero artboard and came out a smooth bowl:
+the artboard's pouch is small and photographed, and at that scale the neck,
+the shoulders and the scallops all fell below the smoothing. The cut-out pouch
+is the pack face-on, so the silhouette survives.
 
 Isolation leans on hue, not darkness. The pack is full of dark greens: doodle
 strokes, the shaded right-hand curve of the pouch, the mascot outlines. What
-separates the blob is that it is a *teal*-leaning green -- B/G around 0.76 --
-where every other dark green on the pack sits near 0.55. Threshold on that
-ratio, erode to snap the hairline doodle strokes that bridge the blob to its
-neighbours, keep the largest island, then dilate back.
+separates the blob is that it is a *teal*-leaning green, where every other dark
+green on the pack runs yellower. Threshold on that, bridge the pale zip line
+that cuts the blob in two, then erode to snap the hairline doodle strokes that
+touch it, keep the island under the wordmark, and dilate back.
 
 The blob has no top edge to trace: the pouch's seal already cuts it off. So
 the trace is of the sides and the lobes -- the part the pack actually draws --
@@ -23,11 +27,21 @@ and the top is closed flat, which is what lets the header hang the badge off
 its own top edge the way the pouch hangs it off the seal.
 
 Where that flat cut lands is ours to pick, since the pack's own cut is just
-wherever the pouch ended. TOP_CUT sits low enough to skip the dead straight
-run behind the zip and leave the wordmark centred in what remains.
+wherever the pouch ended. TOP_CUT runs the neck all the way up to just under
+the seal, as the pack does. Cutting it lower was tried: the badge then starts
+at its shoulders, and what hangs from the header stops reading as the pack's
+blob and turns into a generic cloud.
 
-Also emitted: where the wordmark sits inside the blob, measured from the same
-artwork, so the header does not have to eyeball the logo's place in the badge.
+Also emitted, measured off the same artwork:
+
+  * the blob's own centre -- halfway down what shows below the header, midway
+    between the edges at that height -- the one point every face the badge
+    shows is centred on, so the logo and the words that replace it all land
+    on the same spot and nothing jumps on a swap. The pack sits its logo lower
+    than this, in the lobes; up here the blob is at its widest, which is what
+    lets the lockup read at seven tenths of the badge instead of half;
+  * the blob's width, row by row, so the page can fit each face to the
+    largest box of its own proportions that the silhouette has room for.
 
 Run `python tools/build-nibble-blob.py` from the repo root. Outputs:
   src/components/ui/NibbleBlob.jsx
@@ -40,34 +54,44 @@ from PIL import Image
 from scipy import ndimage as ndi
 from skimage import measure
 
-SOURCE = os.path.join("reference", "drive", "website", "01-Jalapeno kick.png")
+SOURCE = os.path.join("public", "assets", "hero", "pouch-jalapeno-kick.webp")
 
-# Window around the pack's top third. Generous -- the isolation does the work,
-# this only keeps the rest of the artboard out of the histogram.
-WINDOW = (5300, 850, 6900, 2200)
+# Window around the badge. Keeps the doodles either side and the Flipo's panel
+# below out of the isolation.
+WINDOW = (150, 0, 660, 470)
 
 # Blob green is the teal-leaning one. See the docstring.
-MAX_RED = 70
-GREEN_RANGE = (35, 170)
+MAX_RED = 40
+GREEN_RANGE = (50, 112)
 MIN_BLUE_OVER_GREEN = 0.66
 
-# Radius that snaps the doodle strokes bridging the blob to its neighbours,
-# without eating a lobe. The strokes are ~12px at this resolution; the lobes
-# are ~300px across.
-BRIDGE = 25
+# The zip is a pale horizontal line straight through the blob. A tall, thin
+# closing knits the two halves back together without fattening the sides.
+ZIP_BRIDGE = 31
 
-# Where to cut the flat top, in source rows. Above ~500 the silhouette is two
-# near-straight verticals behind the zip; starting here keeps the lobes and the
-# flare that carry the shape, and centres the wordmark in the badge.
-TOP_CUT = 470
+# Radius that snaps the doodle strokes touching the blob, without eating a
+# lobe. The strokes are ~6px at this resolution; the lobes are ~90px across.
+BRIDGE = 14
+
+# A point inside the blob, in window coordinates -- under the wordmark, where
+# nothing else on the pack is that green.
+SEED = (230, 250)
+
+# Where to cut the flat top, in source rows. The pouch's heat seal and rounded
+# top corners run to about row 25; this is the first row clear of both.
+TOP_CUT = 30
+
+# Rows in the emitted width profile. One per ~1% of the badge's height is finer
+# than any lobe and still reads in a diff.
+PROFILE_ROWS = 100
 
 # Outline samples. The silhouette carries about a dozen lobes; this resolves
 # every one of them and still emits a path short enough to read in a diff.
-SAMPLES = 60
+SAMPLES = 140
 
-# Arc-length smoothing window, in samples. The mask edge is pixel-jagged and
-# the pack is a photograph of a matte pouch, so the raw trace has grain on it.
-SMOOTH = 2
+# Arc-length smoothing window, in samples. Just enough to take the pixel steps
+# off the mask edge; any more and the valleys between lobes fill in.
+SMOOTH = 1
 
 # Emitted viewBox width. Height follows the traced aspect.
 VIEW_WIDTH = 1000
@@ -78,38 +102,25 @@ def disk(r):
     return x * x + y * y <= r * r
 
 
-def isolate(rgb):
+def isolate(rgb, alpha):
     """The blob, as a boolean mask in window coordinates."""
     r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
     lo, hi = GREEN_RANGE
-    mask = (r < MAX_RED) & (g > lo) & (g < hi)
+    mask = (r < MAX_RED) & (g > lo) & (g < hi) & (alpha > 200)
     mask &= b / np.maximum(g, 1) > MIN_BLUE_OVER_GREEN
-    mask = ndi.binary_closing(mask, disk(6))
+    mask = ndi.binary_closing(mask, disk(4))
+    mask = ndi.binary_closing(mask, np.ones((ZIP_BRIDGE, 1), bool))
+    # The wordmark punches holes in the blob; fill them before eroding or the
+    # letters' counters grow into it.
+    mask = ndi.binary_fill_holes(mask) | mask
 
     core = ndi.binary_erosion(mask, disk(BRIDGE))
-    labels, count = ndi.label(core)
-    if count == 0:
-        raise SystemExit("no blob survived erosion -- check WINDOW / thresholds")
-    sizes = ndi.sum(core, labels, range(1, count + 1))
-    core = labels == (1 + int(np.argmax(sizes)))
-
-    blob = ndi.binary_dilation(core, disk(BRIDGE)) & mask
-    blob = ndi.binary_fill_holes(blob)
-    return ndi.binary_closing(blob, disk(12))
-
-
-def wordmark_box(rgb, blob):
-    """Bounding box of the white logo sitting inside the blob."""
-    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
-    white = blob & (r > 175) & (g > 175) & (b > 165)
-    white = ndi.binary_opening(white, np.ones((5, 5)))
-    labels, count = ndi.label(white)
-    sizes = ndi.sum(white, labels, range(1, count + 1))
-    # Letters only. The pouch's specular highlights read white too, but they
-    # come in as slivers next to a 400px-plus glyph.
-    keep = [i + 1 for i, s in enumerate(sizes) if s > 400]
-    ys, xs = np.nonzero(np.isin(labels, keep))
-    return xs.min(), ys.min(), xs.max(), ys.max()
+    labels, _ = ndi.label(core)
+    seed = labels[SEED[1], SEED[0]]
+    if seed == 0:
+        raise SystemExit("SEED is not inside the blob -- check WINDOW / thresholds")
+    blob = ndi.binary_dilation(labels == seed, disk(BRIDGE))
+    return ndi.binary_fill_holes(blob)
 
 
 def outline(blob):
@@ -188,14 +199,34 @@ def close_flat(outline, arc, top, prec=1):
     return outline + (" L" + f + "," + f) % (arc[-1][0], top) +         (" L" + f + "," + f) % (arc[0][0], top) + "Z"
 
 
+def profile(arc, height, rows):
+    """[y, left, right] across the closed shape, in viewBox units.
+
+    Read off the same arc the path is drawn from, not the mask, so a face
+    fitted against it lines up with the edge people actually see.
+    """
+    ring = np.vstack([arc, [[arc[-1][0], 0.0], [arc[0][0], 0.0]]])
+    a, b = ring, np.roll(ring, -1, axis=0)
+    out = []
+    for y in np.linspace(0.0, height, rows):
+        # Half-open, so a vertex on the scan line is counted once.
+        cross = ((a[:, 1] <= y) & (b[:, 1] > y)) | ((b[:, 1] <= y) & (a[:, 1] > y))
+        if not cross.any():
+            continue
+        t = (y - a[cross, 1]) / (b[cross, 1] - a[cross, 1])
+        xs = a[cross, 0] + t * (b[cross, 0] - a[cross, 0])
+        out.append((round(y, 1), round(xs.min(), 1), round(xs.max(), 1)))
+    return out
+
+
 def main():
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     src = os.path.join(root, SOURCE)
     x0, y0, x1, y1 = WINDOW
-    rgb = np.asarray(Image.open(src).convert("RGB")).astype(int)[y0:y1, x0:x1]
+    rgba = np.asarray(Image.open(src).convert("RGBA")).astype(int)[y0:y1, x0:x1]
+    rgb = rgba[..., :3]
 
-    blob = isolate(rgb)
-    wx0, wy0, wx1, wy1 = wordmark_box(rgb, blob)
+    blob = isolate(rgb, rgba[..., 3])
     arc = smooth(resample(outline(blob), SAMPLES), SMOOTH)
 
     # Normalise: traced x/y -> viewBox, with the flat top at y = 0.
@@ -207,12 +238,10 @@ def main():
     edge = to_path(arc)
     path = close_flat(edge, arc, 0.0)
 
-    box = {
-        "x": (wx0 - bx0) / (bx1 - bx0),
-        "y": (wy0 - TOP_CUT) / (by1 - TOP_CUT),
-        "width": (wx1 - wx0) / (bx1 - bx0),
-        "height": (wy1 - wy0) / (by1 - TOP_CUT),
-    }
+    rows = profile(arc, height, PROFILE_ROWS)
+    mid = min(rows, key=lambda r: abs(r[0] - height / 2))
+    centre = ((mid[1] + mid[2]) / 2, height / 2)
+    rows_js = ",\n".join("  [%.1f, %.1f, %.1f]" % r for r in rows)
 
     view = "0 0 %d %.1f" % (VIEW_WIDTH, height)
     body = f'''// The JUST NIBBLE IT badge blob, traced from the pouch artwork
@@ -238,25 +267,81 @@ export const NIBBLE_BLOB_PATH =
 export const NIBBLE_BLOB_OUTLINE =
   '{edge}'
 
-/**
- * Where the wordmark sits inside the blob, as fractions of the viewBox --
- * measured off the same artwork, so the badge reproduces the pack's spacing
- * instead of a guess at it.
- */
-export const NIBBLE_BLOB_WORDMARK = {{
-  x: {box["x"]:.4f},
-  y: {box["y"]:.4f},
-  width: {box["width"]:.4f},
-  height: {box["height"]:.4f},
-}}
-
 export const NIBBLE_BLOB_ASPECT = {VIEW_WIDTH / height:.4f}
 
 /**
- * The blob with something held in its wordmark slot.
+ * The blob's own centre, in viewBox units: halfway down, midway between the
+ * edges at that height. Every face the badge shows is centred here, so the
+ * logo and the words that swap in all land on one spot instead of each
+ * finding its own.
+ */
+export const NIBBLE_BLOB_CENTRE = {{ x: {centre[0]:.1f}, y: {centre[1]:.1f} }}
+
+/**
+ * The blob's width row by row: [y, left edge, right edge], in viewBox units,
+ * read off the same trace the path is drawn from.
+ */
+export const NIBBLE_BLOB_PROFILE = [
+{rows_js}
+]
+
+const [, , VIEW_W, VIEW_H] = NIBBLE_BLOB_VIEWBOX.split(' ').map(Number)
+
+/**
+ * The largest box of a given aspect (width / height) that fits inside the
+ * blob centred on NIBBLE_BLOB_CENTRE, as percentages of the blob -- ready to
+ * drop into left / top / width / height.
  *
- * Give it a width (or a height plus `aspect-[--nibble-blob-aspect]`); the
- * aspect ratio comes from the trace, so the lobes never stretch.
+ * `inset` is the clear space kept all round, as a fraction of the blob's
+ * width. `maxHeight` caps the box as a fraction of the blob's height, for a
+ * face short enough that filling the width would blow it up past its
+ * neighbours.
+ *
+ * The centre is fixed rather than solved for. Letting each face slide to
+ * wherever it fits biggest buys a few per cent of size and costs the thing
+ * that makes the rotation look deliberate: every face landing on one spot.
+ */
+export function fitInBlob(aspect, {{ inset = 0.06, maxHeight = 1 }} = {{}}) {{
+  const pad = inset * VIEW_W
+  const {{ x: cx, y: cy }} = NIBBLE_BLOB_CENTRE
+
+  const fits = (h) => {{
+    const half = (aspect * h) / 2 + pad
+    const top = cy - h / 2 - pad
+    const bottom = cy + h / 2 + pad
+    // The flat top is the header's own edge, not the blob's -- a face may not
+    // run up into it any more than it may run off the lobes.
+    if (top < 0 || bottom > VIEW_H) return false
+    return NIBBLE_BLOB_PROFILE.every(
+      ([y, left, right]) => y < top || y > bottom || (left <= cx - half && right >= cx + half),
+    )
+  }}
+
+  let lo = 0
+  let hi = VIEW_H
+  for (let i = 0; i < 24; i++) {{
+    const mid = (lo + hi) / 2
+    if (fits(mid)) lo = mid
+    else hi = mid
+  }}
+
+  const h = Math.min(lo, maxHeight * VIEW_H)
+  const w = aspect * h
+  return {{
+    left: `${{((cx - w / 2) / VIEW_W) * 100}}%`,
+    top: `${{((cy - h / 2) / VIEW_H) * 100}}%`,
+    width: `${{(w / VIEW_W) * 100}}%`,
+    height: `${{(h / VIEW_H) * 100}}%`,
+  }}
+}}
+
+/**
+ * The blob, with its children laid over the whole of it. Children place
+ * themselves with fitInBlob -- the blob does not guess a slot for them,
+ * because the right slot depends on the shape of what goes in it.
+ *
+ * Give it a width; the aspect ratio comes from the trace, so the lobes never
+ * stretch.
  *
  * `stroke` is for the pages whose own background is as dark as the badge: in
  * cream it disappears, over anything else it cuts the silhouette back out.
@@ -294,17 +379,7 @@ export function NibbleBlob({{
           />
         )}}
       </svg>
-      <span
-        className="absolute grid place-items-center"
-        style={{{{
-          left: `${{NIBBLE_BLOB_WORDMARK.x * 100}}%`,
-          top: `${{NIBBLE_BLOB_WORDMARK.y * 100}}%`,
-          width: `${{NIBBLE_BLOB_WORDMARK.width * 100}}%`,
-          height: `${{NIBBLE_BLOB_WORDMARK.height * 100}}%`,
-        }}}}
-      >
-        {{children}}
-      </span>
+      <span className="absolute inset-0">{{children}}</span>
     </span>
   )
 }}
@@ -317,7 +392,8 @@ export function NibbleBlob({{
     print("traced %d samples -> src/components/ui/NibbleBlob.jsx" % SAMPLES)
     print("  viewBox   %s" % view)
     print("  path      %d chars" % len(path))
-    print("  wordmark  x %.4f  y %.4f  w %.4f  h %.4f" % tuple(box[k] for k in ("x", "y", "width", "height")))
+    print("  centre    %.1f, %.1f" % centre)
+    print("  profile   %d rows" % len(rows))
 
 
 if __name__ == "__main__":

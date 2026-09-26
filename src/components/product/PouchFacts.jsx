@@ -18,13 +18,13 @@ import { contrastRatio } from '../../data/products'
 const SHADOW_REST = '4px 5px 0 #0d2818'
 const SHADOW_AIR = '16px 22px 0 rgba(13, 40, 24, 0.22)'
 
-function Slap({ turn, i, className = '', style, children }) {
+export function Slap({ turn, i, className = '', style, children }) {
   const reduce = useReducedMotion()
   return (
     <motion.div
       className={`jni-sticker jni-peel ${className}`}
       style={{ ...style, rotate: turn }}
-      initial={reduce ? false : { opacity: 0, y: -70, scale: 1.2, rotate: turn - 9, boxShadow: SHADOW_AIR }}
+      initial={reduce ? false : { opacity: 0, y: -70, scale: 1.08, rotate: turn - 9, boxShadow: SHADOW_AIR }}
       whileInView={{ opacity: 1, y: 0, scale: 1, rotate: turn, boxShadow: SHADOW_REST }}
       whileHover={reduce ? undefined : { y: -6, rotate: turn * 0.3, boxShadow: '8px 11px 0 #0d2818' }}
       viewport={{ once: true, amount: 0.5 }}

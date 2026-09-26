@@ -1,0 +1,427 @@
+/*
+ * Why Flipo's: the monitor on the hero's desk. See WhyFlipos.jsx.
+ *
+ * Laptops (1024+) get a fixed-size artboard, 1180 x 600, zoomed to fit the
+ * screen; every desktop measurement below is at that size. Below 1024 the
+ * monitor stacks over a 2 x 2 grid of notes lying on the desk.
+ */
+
+.wf-section {
+  --wf-ink: #0d2818;
+  --wf-wall: #fbf6d0;
+  --wf-desk: #f3c63b;
+  --wf-desk-grain: #e0b330;
+  --wf-teal: #4db8ae;
+  --wf-screen: #0c2a1f;
+  /* The office wall's lower half and rail: the bezel teal knocked back into
+     the wall cream, so the monitor still stands off it. */
+  --wf-wall-low: color-mix(in oklab, #4db8ae 30%, #fbf6d0);
+  --wf-wall-rail: #fffbea;
+  overflow: clip;
+  background: var(--wf-wall);
+}
+
+
+.wf-stage {
+  position: relative;
+  padding: 64px 0 104px;
+}
+
+.wf-rig {
+  position: relative;
+  width: min(620px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+/* ---------- the monitor ---------- */
+
+.wf-monitor {
+  position: relative;
+  z-index: 1;
+}
+.wf-frame {
+  position: relative;
+  aspect-ratio: 16 / 10.5;
+  padding: 14px 14px 34px;
+  border: 5px solid var(--wf-ink);
+  border-radius: 20px;
+  background: var(--wf-teal);
+  box-shadow: 7px 9px 0 rgb(13 40 24 / 0.92);
+}
+
+.wf-screen {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  border: 5px solid var(--wf-ink);
+  border-radius: 12px;
+  background:
+    radial-gradient(90% 70% at 50% 40%, rgb(77 184 174 / 0.16), transparent 70%),
+    var(--wf-screen);
+}
+.wf-screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, rgb(0 0 0 / 0.18) 0 1px, transparent 1px 3px),
+    linear-gradient(112deg, transparent 58%, rgb(255 255 255 / 0.06) 58.5%, rgb(255 255 255 / 0.06) 66%, transparent 66.5%);
+}
+
+.wf-bouncer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  height: 72px;
+  width: auto;
+  filter: drop-shadow(0 6px 6px rgb(0 0 0 / 0.45));
+  transform: translate(60px, 40px);
+  will-change: transform;
+  user-select: none;
+}
+
+.wf-title {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  font-size: clamp(38px, 10vw, 62px);
+  font-weight: 400;
+  line-height: 1;
+  color: var(--wf-desk);
+  text-shadow:
+    0 0 16px rgb(243 198 59 / 0.55),
+    4px 5px 0 #071a16;
+  pointer-events: none;
+}
+
+.wf-confetti {
+  position: absolute;
+  z-index: 2;
+  width: 0;
+  height: 0;
+}
+.wf-confetti i {
+  position: absolute;
+  left: -4px;
+  top: -3px;
+  width: 9px;
+  height: 6px;
+  border-radius: 1px;
+  background: var(--c);
+}
+.wf-confetti i.is-tri {
+  width: 10px;
+  height: 10px;
+  border-radius: 0;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.wf-chin {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 34px;
+}
+.wf-led {
+  position: absolute;
+  top: 50%;
+  right: 26px;
+  width: 9px;
+  height: 9px;
+  margin-top: -4px;
+  border: 2px solid var(--wf-ink);
+  border-radius: 50%;
+  background: #c3d92e;
+  box-shadow: 0 0 8px 2px rgb(195 217 46 / 0.7);
+}
+
+.wf-stand {
+  position: relative;
+  display: block;
+  width: 170px;
+  height: auto;
+  margin: -3px auto 0;
+}
+
+/* ---------- the notes ---------- */
+
+.wf-notes {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 14px;
+  margin: 0;
+  padding: 26px 4px 8px;
+  list-style: none;
+}
+/* The desk the notes lie on (phones) -- full bleed. */
+.wf-notes::before {
+  content: '';
+  position: absolute;
+  inset: 0 -100vw -400px;
+  z-index: -1;
+  border-top: 5px solid var(--wf-ink);
+  background: linear-gradient(var(--wf-desk) 0 22px, var(--wf-desk-grain) 22px 26px, var(--wf-desk) 26px);
+}
+
+.wf-note {
+  position: relative;
+  padding: 14px 12px 14px;
+  border: 3px solid var(--wf-ink);
+  border-radius: 3px;
+  background:
+    linear-gradient(rgb(13 40 24 / 0.07), rgb(13 40 24 / 0) 20px),
+    var(--note);
+  box-shadow: 4px 6px 0 rgb(13 40 24 / 0.28);
+  color: var(--wf-ink);
+  cursor: default;
+}
+.wf-note-art {
+  width: 58px;
+}
+.wf-note-art img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.wf-note-title {
+  margin-top: 6px;
+  font-size: 19px;
+  font-weight: 400;
+  line-height: 1;
+}
+.wf-note-text {
+  margin-top: 5px;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: rgb(13 40 24 / 0.82);
+  text-wrap: pretty;
+}
+
+/* The campaign's own desk props, at the far ends of the desk (laptops with
+   wall to spare only). */
+.wf-props,
+.wf-wall {
+  display: none;
+}
+
+/* ---------- laptops: the fixed-size artboard ---------- */
+
+@media (min-width: 1024px) {
+  .wf-stage {
+    padding: 64px 0 96px;
+  }
+  .wf-rig {
+    width: 1180px;
+    height: 600px;
+  }
+  /* The desk, hung off the rig so it zooms with it. */
+  .wf-rig::before {
+    content: '';
+    position: absolute;
+    top: 522px;
+    left: -100vw;
+    right: -100vw;
+    z-index: -1;
+    height: 800px;
+    border-top: 5px solid var(--wf-ink);
+    background: linear-gradient(var(--wf-desk) 0 26px, var(--wf-desk-grain) 26px 30px, var(--wf-desk) 30px);
+  }
+
+  /* The wall behind the monitor. See WhyWall.jsx. Sits under the desk
+     (the rig's ::before, z -1) so nothing on it can land on the desktop. */
+  .wf-wall {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+  }
+  .wf-wall img {
+    position: absolute;
+    height: auto;
+  }
+  .wf-wall--scatter img.is-pale {
+    opacity: 0.3;
+  }
+
+  .wf-dado {
+    position: absolute;
+    top: 350px;
+    left: -100vw;
+    right: -100vw;
+    height: 200px;
+    border-top: 5px solid var(--wf-ink);
+    background:
+      linear-gradient(var(--wf-wall-rail) 0 14px, var(--wf-ink) 14px 19px, transparent 19px),
+      var(--wf-wall-low);
+  }
+  .wf-cable {
+    position: absolute;
+    top: 440px;
+    left: 380px;
+  }
+  .wf-switch {
+    position: absolute;
+    top: 250px;
+    left: -120px;
+    width: 38px;
+    height: 58px;
+    border: 5px solid var(--wf-ink);
+    border-radius: 8px;
+    background: #fffbea;
+    box-shadow: inset 0 -14px 0 -8px rgb(13 40 24 / 0.12);
+  }
+  .wf-switch::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 12px;
+    width: 10px;
+    height: 20px;
+    margin-left: -5px;
+    border: 3px solid var(--wf-ink);
+    border-radius: 3px;
+    background: var(--wf-teal);
+  }
+  .wf-frame-pic {
+    display: none;
+    position: absolute;
+    top: 40px;
+    left: calc(100% + 40px);
+    width: 150px;
+    margin: 0;
+    transform: rotate(2deg);
+  }
+  .wf-rig[data-room='on'] .wf-frame-pic {
+    display: block;
+  }
+  .wf-frame-pic-mat {
+    display: grid;
+    place-items: center;
+    height: 170px;
+    border: 8px solid var(--wf-ink);
+    background: #fffbea;
+    box-shadow: 6px 8px 0 rgb(13 40 24 / 0.25);
+  }
+  .wf-frame-pic-mat img {
+    position: static;
+    height: 120px;
+    width: auto;
+  }
+  .wf-frame-pic figcaption {
+    margin: 10px auto 0;
+    width: max-content;
+    padding: 3px 10px;
+    border: 3px solid var(--wf-ink);
+    border-radius: 4px;
+    background: var(--wf-desk);
+    font-family: var(--font-brand);
+    font-size: 13px;
+    color: var(--wf-ink);
+  }
+
+  .wf-rig[data-room='on'] .wf-props {
+    display: block;
+  }
+  .wf-prop {
+    position: absolute;
+    width: auto;
+    filter: drop-shadow(0 8px 6px rgb(13 40 24 / 0.2));
+  }
+  .wf-prop--envelope {
+    top: 418px;
+    right: calc(100% + 30px);
+    height: 138px;
+    transform: rotate(-5deg);
+  }
+  .wf-prop--mug {
+    top: 408px;
+    left: calc(100% + 34px);
+    height: 144px;
+  }
+
+  .wf-monitor {
+    position: absolute;
+    top: 8px;
+    left: 250px;
+    width: 680px;
+  }
+  .wf-frame {
+    height: 432px;
+    aspect-ratio: auto;
+    padding: 22px 22px 48px;
+    border-width: 6px;
+    border-radius: 26px;
+    box-shadow: 10px 12px 0 rgb(13 40 24 / 0.92);
+  }
+  .wf-bouncer {
+    height: 108px;
+  }
+  .wf-title {
+    font-size: 84px;
+  }
+  .wf-chin {
+    height: 48px;
+  }
+  .wf-led {
+    right: 32px;
+    width: 11px;
+    height: 11px;
+    margin-top: -5px;
+  }
+  .wf-stand {
+    width: 240px;
+    margin-top: -4px;
+  }
+
+  .wf-notes {
+    position: static;
+    display: block;
+    padding: 0;
+  }
+  .wf-notes::before {
+    display: none;
+  }
+  .wf-note {
+    position: absolute;
+    z-index: 2;
+    width: 200px;
+    padding: 16px 16px 18px;
+  }
+  .wf-note--flavour {
+    top: 30px;
+    left: 70px;
+  }
+  .wf-note--desk {
+    top: 20px;
+    left: 906px;
+  }
+  .wf-note--creative {
+    top: 258px;
+    left: 58px;
+  }
+  .wf-note--brain {
+    top: 266px;
+    left: 918px;
+  }
+  .wf-note-art {
+    width: 76px;
+  }
+  .wf-note-title {
+    margin-top: 8px;
+    font-size: 23px;
+  }
+  .wf-note-text {
+    margin-top: 6px;
+    font-size: 13.5px;
+  }
+}

@@ -5,7 +5,7 @@ import { ArrowRight } from 'lucide-react'
 import { products, bundles } from '../data/products'
 import { ProductCard, BundleCard } from '../components/product/ProductCard'
 import { BrandHeading, Blob } from '../components/ui/Primitives'
-import { TriangleCluster } from '../components/home/FlavourGrid'
+import { TriangleCluster } from '../components/ui/TriangleCluster'
 import DoodleField from '../components/ui/DoodleField'
 import HeatMeter from '../components/product/HeatMeter'
 
