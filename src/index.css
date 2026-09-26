@@ -1,3 +1,7 @@
+@import './styles/cta-shape.css';
+@import './styles/pdp.css';
+@import './styles/bundle.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -34,6 +38,7 @@
    --------------------------------------------------------------------------- */
 :root {
   --site-header-offset: 6.5rem;
+  --site-ticker-height: 1.75rem;
   --color-bg-cream: #fbf6d0;
   --color-bg-dark: #071a16;
   --color-accent-teal: #4db8ae;
@@ -108,16 +113,24 @@
     color: var(--color-text-light);
   }
 
+  /* The button wears the brand's own traced shape -- keyline and field both
+     inside one stretched background image. See src/styles/cta-shape.css. The
+     border and radius are gone with it: they were the approximation. Padding
+     runs a little wider than the old rule to clear the bowed edges, which cut
+     in further at the middle than a radius ever did. */
   .jni-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    min-height: 2.75rem;
-    padding: 0.6rem 1.6rem;
-    border: var(--border-width-cta) solid var(--color-border);
-    border-radius: var(--radius-organic);
-    background: var(--color-cta-yellow);
+    min-height: 2.9rem;
+    padding: 0.7rem 2rem;
+    border: 0;
+    border-radius: 0;
+    background-color: transparent;
+    background-image: var(--jni-cta-shape);
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
     color: var(--color-text-dark);
     font-family: var(--font-brand);
     font-size: 0.95rem;
@@ -128,8 +141,8 @@
     transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.16s ease;
   }
   .jni-btn:hover {
-    background: var(--color-cta-yellow-hover);
     transform: scale(1.05);
+    filter: brightness(1.06);
   }
   .jni-btn:active {
     transform: scale(0.95);
@@ -485,4 +498,996 @@
   display: block;
   width: 100%;
   height: auto;
+}
+
+/* ---------------------------------------------------------------------------
+   THE FLAVOUR DOSSIER -- the product page's hero.
+
+   This was a hover state on the homepage: rest the pointer on a pack for a
+   second and the flavour grid flooded with that pouch's colour, the cards
+   dissolved, and the pack opened as an annotated spread with a buy block
+   beside it. It was the best thing on the site and almost nobody found it,
+   because it needed a pointer that happened to linger in one spot.
+
+   It is now the product page. Same composition, same treatment, none of the
+   machinery: no dwell timer, no fuse, no dissolve, no fixed overlay, no
+   close. It is a section that is simply there when you click a pack -- which
+   is what someone who wants to study one flavour does anyway, and it reaches
+   touch, search, and anyone arriving on a shared link.
+
+   The ground is the pouch's own print colour, set per page from packPalettes.
+   --------------------------------------------------------------------------- */
+
+.jni-dossier {
+  position: relative;
+  isolation: isolate;
+  /* This section owns the top of the page now, so it clears the fixed header
+     itself -- the cream wrapper used to do it for the old hero. The header
+     hangs no badge on product pages, so only its row needs clearing; on wide
+     screens the breadcrumb moves up into it (see "one screen" below). */
+  padding-top: calc(var(--site-header-offset) + 0.5rem);
+  overflow: clip;
+  color: var(--color-text-light);
+  /* At least a full screen plus the wave cut into its foot (SectionEdge's
+     --edge-h), so the wave sits just under the fold and nothing of the next
+     section shows until the reader scrolls. */
+  min-height: calc(100svh + var(--edge-h, 0px));
+}
+
+/* The flavour's name, set as large as the width allows, behind the spread.
+   Low contrast on purpose: it is texture that happens to be legible. */
+.jni-dossier-word {
+  position: absolute;
+  z-index: 0;
+  left: -0.04em;
+  bottom: 0.04em;
+  font-family: var(--font-brand);
+  font-size: clamp(7rem, 23vw, 21rem);
+  line-height: 0.8;
+  white-space: nowrap;
+  opacity: 0.22;
+  pointer-events: none;
+  user-select: none;
+}
+
+.jni-dossier-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 46fr) minmax(0, 54fr);
+  /* Wide enough that the pouch's right-hand note has clear air before the
+     panel starts, instead of running into the flavour switcher. */
+  gap: clamp(32px, 7vw, 128px);
+  align-items: center;
+  position: relative;
+  z-index: 1;
+  max-width: 1320px;
+  /* The "Reseal it" note hangs off the pouch's left edge; this keeps room
+     for it so it never runs off the screen. Dropped with the notes below
+     1024px, where the layout is one column. */
+  padding-left: clamp(0px, 6.5vw, 100px);
+  margin: 0 auto;
+}
+
+/* ---- the pouch ----------------------------------------------------------- */
+.jni-dossier-pack {
+  justify-self: center;
+  width: 100%;
+  max-width: min(42vw, 500px);
+}
+
+.jni-dossier-crumbs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+  font-size: 13px;
+  opacity: 0.8;
+}
+.jni-dossier-crumbs a:hover {
+  text-decoration: underline;
+}
+
+/* The pouch and the doodles that scatter out from behind it on load. */
+.jni-dossier-stage {
+  position: relative;
+}
+.jni-dossier-doodle {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+}
+.jni-dossier-stage .jni-dossier-frame {
+  z-index: 1;
+}
+/* The torn-edge idiom the CTA shape and the pack badges use, scaled with the
+   viewport so a small tile is not wearing a 30px round. `.jni-card-media` is
+   the same shape on the homepage cards. */
+.jni-card-media,
+.jni-dossier-frame {
+  border-radius: clamp(13px, 2.3vw, 30px) clamp(10px, 1.8vw, 24px)
+    clamp(14px, 2.5vw, 32px) clamp(9px, 1.6vw, 22px);
+}
+
+.jni-dossier-frame {
+  position: relative;
+  aspect-ratio: 1;
+  border: 2px solid;
+  background: #f7f1c8;
+  box-shadow: 14px 16px 0 rgba(7, 26, 22, 0.55);
+}
+.jni-dossier-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+/* Sized to the square photograph, which is the box the arrow coordinates were
+   drawn against. */
+.jni-dossier-marks {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  height: 100%;
+  aspect-ratio: 1;
+  overflow: visible;
+  pointer-events: none;
+  transition: opacity 240ms ease;
+}
+.jni-dossier-marks path {
+  fill: none;
+  stroke: #fbf6d0;
+  /* Width in viewBox units, NOT non-scaling-stroke: with that on, dash lengths
+     are measured in user units and drawn in screen units, and every arrow
+     renders as a dashed line instead of hiding. */
+  stroke-width: 0.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: var(--len) var(--len);
+  stroke-dashoffset: var(--len);
+  filter: drop-shadow(0 0 1.6px rgba(7, 26, 22, 0.75));
+}
+/* The second pass of each line, a hair off the first, the way a pen goes over
+   a line twice. Two clean strokes read as a diagram; two that disagree
+   slightly read as drawn. */
+.jni-dossier-marks path.ghost {
+  opacity: 0.45;
+  stroke-width: 0.62;
+}
+.jni-dossier-marks.lit path {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 620ms cubic-bezier(0.4, 0.75, 0.3, 1);
+  transition-delay: calc(var(--i, 0) * 110ms);
+}
+.jni-dossier-marks.lit path.ghost {
+  transition-delay: calc(var(--i, 0) * 110ms + 70ms);
+}
+
+/* The notes and the arrows point at features of the POUCH. On any other frame
+   in the gallery -- a desk, a flat-lay -- they would be pointing at nothing,
+   so they stand down until the pack shot is back. */
+.jni-dossier-annotations[data-off] {
+  opacity: 0;
+  pointer-events: none;
+}
+.jni-dossier-annotations {
+  transition: opacity 240ms ease;
+}
+
+.jni-dossier-note {
+  position: absolute;
+  z-index: 5;
+  width: 9.4rem;
+  padding: 9px 11px 10px;
+  border: 3px solid var(--color-border);
+  border-radius: 15px 10px 17px 9px / 10px 16px 9px 15px;
+  background: var(--color-bg-cream);
+  box-shadow: 4px 5px 0 var(--color-border);
+  color: var(--color-text-dark);
+  font-size: 13px;
+  line-height: 1.34;
+  text-align: left;
+  text-wrap: pretty;
+  animation: jni-dossier-tag-in 420ms cubic-bezier(0.34, 1.4, 0.64, 1) both;
+  animation-delay: calc(200ms + var(--i, 0) * 120ms);
+}
+.jni-dossier-note b {
+  display: block;
+  width: fit-content;
+  margin-bottom: 5px;
+  padding-bottom: 1px;
+  border-bottom: 3px solid var(--pin, var(--color-border));
+  font-family: var(--font-brand);
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: 0.015em;
+}
+.jni-dossier-note.p-a {
+  left: -17%;
+  top: 2%;
+  --turn: -2.8deg;
+}
+.jni-dossier-note.p-b {
+  right: -15%;
+  top: 38%;
+  --turn: 2.2deg;
+}
+
+@keyframes jni-dossier-tag-in {
+  from {
+    opacity: 0;
+    transform: translate(5px, 12px) scale(0.88) rotate(0deg);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(var(--turn, 0deg));
+  }
+}
+
+/* The rest of the gallery, under the pouch rather than beside it: the spread
+   needs its left column for the pack and its notes. */
+.jni-dossier-thumbs {
+  display: flex;
+  gap: 12px;
+  margin-top: 30px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.jni-dossier-thumbs button {
+  rotate: var(--tilt, 0deg);
+  width: 64px;
+  aspect-ratio: 1;
+  padding: 0;
+  overflow: hidden;
+  border: 3px solid rgba(251, 246, 208, 0.3);
+  border-radius: 14px 10px 15px 9px;
+  background: #f7f1c8;
+  transition: border-color 0.16s ease, transform 0.16s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.jni-dossier-thumbs button:hover {
+  transform: translateY(-2px);
+}
+.jni-dossier-thumbs button[aria-current='true'] {
+  border-color: var(--color-bg-cream);
+  box-shadow: 3px 4px 0 rgba(7, 26, 22, 0.5);
+}
+.jni-dossier-thumbs img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ---- the panel ----------------------------------------------------------- */
+.jni-dossier-panel {
+  justify-self: end;
+  align-self: center;
+  max-width: min(36rem, 100%);
+  min-width: 0;
+}
+
+.jni-dossier-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.jni-dossier-badge {
+  padding: 4px 11px 5px;
+  border: 2.5px solid var(--color-border);
+  border-radius: 999px;
+  box-shadow: 2px 3px 0 var(--color-border);
+  color: var(--color-text-dark);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+/* HeatMeter draws its chillies at 12-14px, which is right beside a card's
+   price but reads as three slivers in this eyebrow, next to a display title.
+   The component takes a className for its wrapper only, so the scale is set
+   from here rather than adding a size prop used in exactly one place. */
+.jni-dossier-eyebrow [role='img'] > span {
+  width: 19px;
+}
+
+.jni-dossier-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13.5px;
+  opacity: 0.9;
+}
+.jni-dossier-rating i {
+  font-style: normal;
+  opacity: 0.62;
+}
+
+/* The page's subject, so this is the h1. The probe could lead on the flavour's
+   tagline because the card already named the pack; a product page cannot. */
+.jni-dossier-title {
+  margin-bottom: 10px;
+  font-family: var(--font-brand);
+  font-weight: 400;
+  line-height: 0.94;
+  font-size: clamp(2.6rem, 5vw, 4.6rem);
+  -webkit-text-stroke: 0.055em var(--color-bg-dark);
+  paint-order: stroke fill;
+  text-shadow: 0.045em 0.06em 0 var(--color-bg-dark);
+  text-wrap: balance;
+}
+.jni-dossier-sub {
+  margin-bottom: 18px;
+  max-width: 30ch;
+  font-size: clamp(15px, 1.15vw, 18px);
+  font-weight: 700;
+  line-height: 1.4;
+  opacity: 0.92;
+  text-wrap: pretty;
+}
+
+/* ---- price and quantity -------------------------------------------------- */
+.jni-dossier-price {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.jni-dossier-price b {
+  padding: 4px 16px 6px;
+  border: 3px solid var(--color-border);
+  border-radius: 18px 13px 19px 12px;
+  background: var(--color-cta-yellow);
+  box-shadow: 3px 4px 0 var(--color-border);
+  color: var(--color-text-dark);
+  font-family: var(--font-brand);
+  font-weight: 400;
+  font-size: clamp(1.9rem, 2.8vw, 2.6rem);
+  line-height: 1.1;
+}
+.jni-dossier-price s {
+  font-size: 1rem;
+  opacity: 0.45;
+}
+.jni-dossier-price em {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  opacity: 0.6;
+}
+
+/* Chips, not a stepper. A stepper costs one click per pack and cannot show
+   what the next step is worth while you are deciding. */
+.jni-dossier-qty {
+  display: flex;
+  gap: 9px;
+  margin-bottom: 16px;
+}
+.jni-dossier-chip {
+  min-width: 80px;
+  padding: 9px 12px 10px;
+  border: 3px solid var(--color-border);
+  border-radius: 15px 10px 17px 9px / 10px 16px 9px 15px;
+  background: var(--color-bg-cream);
+  box-shadow: 3px 4px 0 var(--color-border);
+  color: var(--color-text-dark);
+  text-align: center;
+  line-height: 1.15;
+  transition: transform 0.16s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.jni-dossier-chip:hover {
+  transform: translateY(-2px);
+}
+.jni-dossier-chip[aria-pressed='true'] {
+  transform: translateY(-3px);
+  box-shadow: 4px 6px 0 var(--color-border);
+}
+.jni-dossier-chip b {
+  display: block;
+  font-family: var(--font-brand);
+  font-weight: 400;
+  font-size: 19px;
+}
+.jni-dossier-chip i {
+  display: block;
+  font-style: normal;
+  font-size: 10.5px;
+  opacity: 0.7;
+}
+
+/* ₹499 unlocks free shipping and nothing said so until the checkout page. One
+   pack leaves ₹329 on the table; this is the only place that number is visible
+   while it can still change the order. */
+.jni-dossier-ship {
+  margin-bottom: 18px;
+}
+.jni-dossier-ship-track {
+  height: 13px;
+  border: 2.5px solid var(--color-border);
+  border-radius: 999px;
+  background: rgba(251, 246, 208, 0.22);
+  overflow: hidden;
+}
+/* The bar's own box, so the free-shipping chillies can burst from its end. */
+.jni-dossier-ship-bar {
+  position: relative;
+}
+.jni-dossier-burst {
+  position: absolute;
+  right: -6px;
+  top: -10px;
+  width: 30px;
+  pointer-events: none;
+}
+.jni-dossier-ship-fill {
+  height: 100%;
+  transition: width 420ms cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+.jni-dossier-ship p {
+  margin-top: 7px;
+  font-size: 12.5px;
+  opacity: 0.9;
+}
+.jni-dossier-ship b {
+  font-family: var(--font-brand);
+  font-weight: 400;
+  font-size: 15px;
+  color: var(--jni-dossier-accent, var(--color-accent-yellow));
+}
+
+.jni-dossier-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+}
+/* Wears the brand's traced CTA shape via .jni-btn; only the scale is set here,
+   because this is the one primary action on the page. */
+.jni-dossier-buy {
+  flex: 1 1 auto;
+  min-height: 4.1rem;
+  padding: 0.85rem 2.4rem;
+  font-size: 1.5rem;
+}
+/* A squash, not a shrink: the button gives like something soft. */
+.jni-dossier-buy:active {
+  transform: scale(1.03, 0.9);
+}
+.jni-dossier-ghost {
+  flex: 0 0 auto;
+  padding: 0.7rem 1.3rem;
+  border: 2.5px dashed rgba(245, 240, 220, 0.55);
+  border-radius: 18px;
+  font-size: 14px;
+  transition: border-color 0.16s ease, background-color 0.16s ease;
+}
+.jni-dossier-ghost:hover {
+  border-color: var(--color-text-light);
+  background: rgba(245, 240, 220, 0.1);
+}
+.jni-dossier-trust {
+  margin-top: 16px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+}
+
+/* ---- flavour switcher ---------------------------------------------------- */
+.jni-dossier-k {
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  opacity: 0.7;
+}
+.jni-dossier-switch {
+  margin-bottom: 20px;
+}
+.jni-dossier-switch-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.jni-dossier-flav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 3px solid var(--color-border);
+  border-radius: 15px 10px 17px 9px / 10px 16px 9px 15px;
+  background: var(--color-bg-cream);
+  box-shadow: 3px 4px 0 var(--color-border);
+  color: var(--color-text-dark);
+  transition: transform 0.16s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.jni-dossier-flav:hover {
+  transform: translateY(-3px);
+}
+.jni-dossier-flav[aria-current='page'] {
+  transform: translateY(-3px) rotate(-1deg);
+  box-shadow: 4px 6px 0 var(--color-border);
+}
+.jni-dossier-flav img {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
+  object-fit: cover;
+}
+.jni-dossier-flav > span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+.jni-dossier-flav b {
+  font-family: var(--font-brand);
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1;
+  white-space: nowrap;
+}
+/* HeatMeter's label sits at 11-12px beside a card price; in a chip under a
+   15px name it needs to step down, and the chillies tighten up with it. */
+.jni-dossier-flav-heat {
+  gap: 4px;
+}
+.jni-dossier-flav-heat > span {
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+}
+
+/* Between tablet and wide desktop the chips are too narrow for the label
+   beside the chillies; the chillies alone still read as the heat scale, and
+   the meter keeps its own aria-label. */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .jni-dossier-flav-heat > span {
+    display: none;
+  }
+}
+
+/* ---- phone gallery ------------------------------------------------------- */
+.jni-dossier-strip,
+.jni-dossier-dots {
+  display: none;
+}
+.jni-dossier-strip {
+  gap: 14px;
+  margin: 0 -1.25rem;
+  padding: 6px 1.25rem 18px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.jni-dossier-strip::-webkit-scrollbar {
+  display: none;
+}
+.jni-dossier-strip-card {
+  flex: 0 0 min(78vw, 340px);
+  aspect-ratio: 1;
+  overflow: hidden;
+  scroll-snap-align: start;
+  rotate: var(--tilt, 0deg);
+  border: 3px solid var(--color-border);
+  border-radius: 15px 10px 17px 9px / 10px 16px 9px 15px;
+  background: #f7f1c8;
+  box-shadow: 8px 10px 0 rgba(7, 26, 22, 0.5);
+}
+.jni-dossier-strip-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.jni-dossier-dots {
+  justify-content: center;
+  gap: 6px;
+}
+.jni-dossier-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 99px;
+  background: rgba(251, 246, 208, 0.35);
+  transition: width 0.2s ease;
+}
+.jni-dossier-dots span[data-on] {
+  width: 22px;
+  background: var(--color-bg-cream);
+}
+
+/* The pouch thrown into the header cart by Add to cart. */
+.jni-dossier-flight {
+  position: fixed;
+  z-index: 80;
+  width: 56px;
+  height: 56px;
+  border: 2px solid var(--color-border);
+  border-radius: 12px;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+/* Switching flavour: the new page grows out of the chip that was tapped. The
+   only view transition on the site, so it can own the root pair. */
+::view-transition-old(root) {
+  animation: none;
+}
+::view-transition-new(root) {
+  animation: jni-flood 560ms cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+@keyframes jni-flood {
+  from {
+    clip-path: circle(0 at var(--jni-flood-x, 50%) var(--jni-flood-y, 50%));
+  }
+  to {
+    clip-path: circle(150vmax at var(--jni-flood-x, 50%) var(--jni-flood-y, 50%));
+  }
+}
+
+/* ---- one screen ---------------------------------------------------------- */
+/* On a laptop the whole spread -- pouch, thumbnails and every line of the buy
+   block down to the trust line -- has to be on screen at once, or the price
+   and the button sit under the fold on the page whose job is to sell.
+
+   With no badge in the header, the only things in its row are the two side
+   clusters, so the breadcrumb moves up into that row, on the clusters' centre
+   line between them. The spread itself fills the screen under it: the section
+   is a full screen tall (plus the wave, which falls just below the fold), the
+   pouch is sized off the height that is there, and whatever height is left
+   over is split above and below, so a tall monitor gets a centred spread
+   rather than one crowded to the top. At laptop heights the buy block's
+   spacing tightens so it fits in the same box. */
+@media (min-width: 1024px) {
+  /* Doubled class to outrank the section's Tailwind paddings. The top clears
+     the header row and the breadcrumb in it; the bottom clears the wave. */
+  .jni-dossier.jni-grain {
+    --dossier-max: 1320px;
+    --dossier-top: calc(var(--site-ticker-height, 28px) + 34px + 20px + clamp(10px, 2vh, 18px));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-top: var(--dossier-top);
+    padding-bottom: calc(var(--edge-h, 0px) + 24px);
+  }
+  /* A page with more in its hero than the spread (the Party Six carries its
+     launch banner) wraps the spread in one screen of its own, so the extra
+     starts below the fold instead of peeking up into the first view. */
+  .jni-dossier .jni-dossier-screen {
+    display: flex;
+    min-height: calc(100svh - var(--dossier-top) - 24px);
+    flex-direction: column;
+    justify-content: center;
+  }
+  /* The grid gives up its own stacking layer so the breadcrumb can be placed
+     against the section; the name behind the spread drops a layer to stay
+     behind it. */
+  .jni-dossier .jni-dossier-grid {
+    position: static;
+    width: 100%;
+    max-width: var(--dossier-max);
+  }
+  .jni-dossier .jni-dossier-word {
+    z-index: -1;
+    bottom: calc(var(--edge-h, 0px) + 0.04em);
+  }
+  /* On the header row, at the start of the pouch column: the section's side
+     padding, the centring margin of the capped grid, then the grid's gutter. */
+  .jni-dossier .jni-dossier-crumbs {
+    position: absolute;
+    z-index: 2;
+    top: calc(var(--site-ticker-height, 28px) + 34px);
+    left: calc(48px + max(0px, (100% - 96px - var(--dossier-max)) / 2) + clamp(0px, 6.5vw, 100px));
+    margin: 0;
+  }
+  /* 230px: the header row, the breadcrumb, the thumbnails and the foot. */
+  .jni-dossier .jni-dossier-pack {
+    max-width: min(42vw, 600px, calc(100svh - 230px));
+  }
+  .jni-dossier .jni-dossier-thumbs {
+    margin-top: clamp(16px, 2.8vh, 30px);
+  }
+  .jni-dossier .jni-dossier-thumbs button {
+    width: clamp(52px, 7vh, 64px);
+  }
+  .jni-dossier .jni-dossier-title {
+    font-size: clamp(2.4rem, min(5vw, 7.4vh), 4.6rem);
+  }
+}
+/* Big monitors: the spread is allowed wider, so the pouch can grow into the
+   height instead of leaving it empty. */
+@media (min-width: 1600px) {
+  .jni-dossier.jni-grain {
+    --dossier-max: 1560px;
+  }
+}
+@media (min-width: 1024px) and (max-height: 860px) {
+  .jni-dossier .jni-dossier-eyebrow {
+    margin-bottom: 10px;
+  }
+  .jni-dossier .jni-dossier-sub {
+    margin-bottom: 12px;
+  }
+  .jni-dossier .jni-dossier-switch {
+    margin-bottom: 14px;
+  }
+  .jni-dossier .jni-dossier-price {
+    margin-bottom: 12px;
+  }
+  .jni-dossier .jni-dossier-price b {
+    padding: 2px 14px 4px;
+    font-size: clamp(1.7rem, 3.8vh, 2.6rem);
+  }
+  .jni-dossier .jni-dossier-qty {
+    margin-bottom: 12px;
+  }
+  .jni-dossier .jni-dossier-chip {
+    padding: 7px 12px 8px;
+  }
+  .jni-dossier .jni-dossier-ship {
+    margin-bottom: 14px;
+  }
+  .jni-dossier .jni-dossier-buy {
+    min-height: 3.5rem;
+    padding: 0.7rem 2.2rem;
+    font-size: 1.35rem;
+  }
+  .jni-dossier .jni-dossier-trust {
+    margin-top: 12px;
+  }
+}
+
+/* ---- narrow screens ------------------------------------------------------ */
+@media (max-width: 1023px) {
+  /* The whole annotation layer, not just the notes: there is no room either
+     side of the pack for a note, and an arrow with nothing on the end of it
+     is a line pointing at nothing. */
+  .jni-dossier-annotations {
+    display: none;
+  }
+  /* minmax(0, ...) rather than 1fr: the flavour chips scroll sideways on a
+     phone, and a bare 1fr column grows to their full width instead. */
+  .jni-dossier-grid {
+    padding-left: 0;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+  /* Phones and tablets swap the framed pouch and its thumbnails for a swipe
+     strip, so the pack shot fills the width and the rest of the gallery is a
+     thumb-flick away rather than a row of 50px squares. */
+  .jni-dossier-pack {
+    max-width: 100%;
+  }
+  /* One column here: the panel sits under the pouch, left-aligned. */
+  .jni-dossier-panel {
+    justify-self: start;
+  }
+  .jni-dossier-stage,
+  .jni-dossier-thumbs {
+    display: none;
+  }
+  .jni-dossier-strip,
+  .jni-dossier-dots {
+    display: flex;
+  }
+  .jni-dossier-word {
+    top: 22rem;
+    bottom: auto;
+    font-size: clamp(6rem, 34vw, 12rem);
+  }
+}
+@media (max-width: 639px) {
+  .jni-dossier-pack {
+    max-width: 100%;
+  }
+  .jni-dossier-title {
+    font-size: clamp(2rem, 9vw, 2.9rem);
+  }
+  .jni-dossier-qty {
+    flex-wrap: wrap;
+  }
+  .jni-dossier-actions {
+    flex-direction: column;
+  }
+  .jni-dossier-buy {
+    width: 100%;
+  }
+  .jni-dossier-ghost {
+    padding: 0.8rem 1.3rem;
+  }
+  /* Three chips will not fit a phone side by side; they scroll instead of
+     squeezing the names. */
+  .jni-dossier-switch-row {
+    display: flex;
+    margin: 0 -1.25rem;
+    padding: 4px 1.25rem 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .jni-dossier-flav {
+    flex: 0 0 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jni-dossier-ship-fill,
+  .jni-dossier-marks,
+  .jni-dossier-annotations {
+    transition: none;
+  }
+  .jni-dossier-note {
+    animation: none;
+    opacity: 1;
+    transform: rotate(var(--turn, 0deg));
+  }
+  .jni-dossier-marks path,
+  .jni-dossier-marks.lit path {
+    stroke-dashoffset: 0;
+    transition: none;
+  }
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
+
+/* The launch bar runs like a news ticker: the message repeats along a track
+   that slides by exactly one run and starts over.
+
+   It travels right to left, the way a news crawl does, so each message enters
+   at the right edge and is read on its way across. Sent the other way the
+   words arrive left-first and you read each one as it leaves.
+
+   Paused on hover, because the bar is a link and a moving target is a poor one
+   to aim at -- and not run at all under reduced motion, where the track simply
+   sits at its start and fills the width. */
+@keyframes jni-ticker-crawl {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.jni-ticker {
+  animation: jni-ticker-crawl 32s linear infinite;
+  will-change: transform;
+}
+
+.jni-ticker:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jni-ticker {
+    animation: none;
+  }
+}
+
+/* The doodle edge's ride keyframes are generated per panel in DoodleBorder,
+   from the same geometry the panel is clipped to. */
+
+/* Motion path is what the doodle edge is built on. Where it is missing the
+   doodles cannot be placed at all, so the panel takes its keyline back. */
+@supports not (offset-path: path('M 0 0')) {
+  .jni-doodle-edge {
+    border: var(--border-width-thick) solid var(--color-border);
+    border-bottom: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Hero pendant lamp. See HeroCarousel (THE LAMP) and HeroDeskLife.
+
+   md+: .hero-lamp-rig spans from the ceiling (the ticker's bottom edge) down
+   to just under the packs' foot line, centred on the front pack, and rotates
+   about its top-centre -- the point the cord hangs from. The shade sits as
+   high as it can below the header, but never lower than just above the
+   packs, and the beam runs from its rim down to the desk. Everything inside
+   is measured against the rig's own height, which is why --lamp-top is
+   written relative to it.
+
+   Phones: .hero-pendant hangs on a short cord from the top of the pack
+   cluster's box, and .hero-pendant-light swings about that same point.
+   --------------------------------------------------------------------------- */
+.hero-lamp-rig {
+  /* keep in step with the cluster's width in HeroCarousel */
+  --packs-w: clamp(320px, min(40vw, 62vh), 620px);
+  --packs-h: calc(var(--packs-w) * 0.86);
+  /* the front pack's own height: 46% of the box wide, at the pouch's 1:1.63 */
+  --front-h: calc(var(--packs-w) * 0.75);
+  /* clear air between the shade's rays and the front pack's top, enough for
+     the pack's 18px hover lift and the shade's swing */
+  --lamp-gap: 36px;
+  --shade-w: clamp(200px, min(20vw, 29vh), 320px);
+  --shade-h: calc(var(--shade-w) * 0.5);
+  --ceil: var(--site-ticker-height, 1.75rem);
+  /* the shade's top, from the ceiling: as low as it can hang while still
+     clearing the front pack by --lamp-gap, but never up under the header.
+     The rig's bottom sits 16px under the packs' foot, so the front pack's top
+     is at 100% - 16px - --front-h. The packs' box is capped by viewport
+     height (see --packs-w), which is what keeps the second term below the
+     first on short screens rather than letting the packs cover the shade. */
+  --lamp-top: max(
+    calc(var(--site-header-offset, 6.5rem) + 6px - var(--ceil)),
+    calc(100% - 16px - var(--front-h) - var(--lamp-gap) - var(--shade-h))
+  );
+  position: absolute;
+  top: var(--ceil);
+  bottom: calc(var(--foot) - 16px);
+  left: calc(100% - 10vw - var(--packs-w) / 2);
+  width: calc(var(--shade-w) * 2.4);
+  margin-left: calc(var(--shade-w) * -1.2);
+  transform-origin: 50% 0;
+  pointer-events: none;
+}
+.hero-lamp-rig .hero-lamp-cord {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 4px;
+  height: calc(var(--lamp-top) + 6px);
+  margin-left: -2px;
+  background: #0d2818;
+}
+.hero-lamp-shade {
+  position: absolute;
+  top: var(--lamp-top);
+  left: 50%;
+  width: var(--shade-w);
+  height: var(--shade-h);
+  margin-left: calc(var(--shade-w) / -2);
+}
+.hero-lamp-beam {
+  position: absolute;
+  left: 0;
+  top: calc(var(--lamp-top) + var(--shade-h) * 0.787);
+  width: 100%;
+  height: calc(100% - var(--lamp-top) - var(--shade-h) * 0.787);
+}
+.hero-lamp-pool {
+  position: absolute;
+  left: -4%;
+  bottom: -16px;
+  width: 108%;
+  height: 64px;
+}
+
+.hero-pendant,
+.hero-pendant-light {
+  --shade-w: 170px;
+  --shade-h: 85px;
+  --cord: 40px;
+  pointer-events: none;
+}
+.hero-pendant {
+  left: 50%;
+  bottom: calc(100% - 6px);
+  width: var(--shade-w);
+  height: calc(var(--cord) + var(--shade-h));
+  margin-left: calc(var(--shade-w) / -2);
+  transform-origin: 50% 0;
+}
+.hero-pendant .hero-lamp-cord {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 4px;
+  height: calc(var(--cord) + 6px);
+  margin-left: -2px;
+  background: linear-gradient(transparent, #0d2818 70%);
+}
+.hero-pendant-shade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: var(--shade-h);
+}
+.hero-pendant-light {
+  transform-origin: 50% calc((var(--cord) + var(--shade-h) - 6px) * -1);
 }

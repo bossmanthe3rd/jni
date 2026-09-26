@@ -1,16 +1,15 @@
-import HeroCarousel from '../components/home/HeroCarousel'
-import WhyFlipos from '../components/home/WhyFlipos'
+import HeroWhyZoom from '../components/home/HeroWhyZoom'
 import FlavourScrollStage from '../components/home/FlavourScrollStage'
-import FlavourGrid from '../components/home/FlavourGrid'
+import FlavourVending from '../components/home/FlavourVending'
 import Testimonials from '../components/home/Testimonials'
 
 export default function HomePage() {
   return (
     <>
-      <HeroCarousel />
-      <WhyFlipos />
+      {/* The hero and Why Flipo's, as one camera move on laptops. */}
+      <HeroWhyZoom />
       <FlavourScrollStage />
-      <FlavourGrid />
+      <FlavourVending />
       <Testimonials />
     </>
   )

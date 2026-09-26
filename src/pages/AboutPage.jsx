@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { BrandHeading, Blob, Sparkle } from '../components/ui/Primitives'
-import { KeyboardIcon, StarDoodle } from '../components/icons/WhyIcons'
+import { KeyboardIcon, Rosette, StarDoodle } from '../components/icons/WhyIcons'
 import DoodleField from '../components/ui/DoodleField'
 import BlobPanel from '../components/ui/BlobPanel'
 
@@ -19,11 +19,11 @@ export default function AboutPage() {
           className="relative overflow-hidden px-5 pb-14 pt-10 text-center sm:px-8 lg:px-12"
         >
           <div className="relative mx-auto mb-7 inline-block">
-            <Sparkle className="absolute -left-10 -top-2 h-7 w-7" />
+            <Rosette className="absolute -left-12 -top-1 h-8 w-8" fill="#F3C63B" />
             <BrandHeading as="h1" fill="#F3C63B" className="text-5xl sm:text-6xl lg:text-7xl">
               About Us
             </BrandHeading>
-            <Sparkle className="absolute -right-10 -top-2 h-7 w-7" />
+            <Rosette className="absolute -right-12 -top-1 h-8 w-8" fill="#F3C63B" />
           </div>
 
           <BrandHeading

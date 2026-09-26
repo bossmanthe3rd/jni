@@ -44,9 +44,10 @@ function BurstBadge({ className = '', children }) {
 function CtaDecor() {
   return (
     <>
-      {/* Cream wave lip along the top edge of the footer */}
+      {/* Cream wave lip along the top edge of the footer. A page whose last
+          section cuts its own edge into the footer hides this (pdp.css). */}
       <svg
-        className="absolute inset-x-0 top-0 h-10 w-full sm:h-12"
+        className="jni-footer-lip absolute inset-x-0 top-0 h-10 w-full sm:h-12"
         viewBox="0 0 1440 90"
         preserveAspectRatio="none"
         aria-hidden="true"
@@ -350,6 +351,19 @@ export default function SiteFooter() {
           seed={41}
         />
         <div className="mx-auto max-w-6xl px-5 py-6 sm:px-8 lg:px-12 lg:py-12">
+          {/* The arched lockup, from the brand folder's `curvee logo`. The
+              header wears the stacked one; this is the wide cut, and the
+              footer is the only place on the site with the width to carry it. */}
+          <img
+            src="/assets/brand/wordmark-arched.webp"
+            alt="Just Nibble It"
+            width="1600"
+            height="207"
+            loading="lazy"
+            decoding="async"
+            className="mx-auto mb-8 w-full max-w-md opacity-90 lg:mb-12 lg:max-w-xl"
+          />
+
           {/* Mobile / tablet: accordion */}
           <div className="lg:hidden">
             {footerColumns.map((column) => {

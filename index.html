@@ -4,15 +4,16 @@
     <meta charset="UTF-8" />
     <link rel="icon" href="/demo_LOGO.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Just Nibble It - bold baked FMCG snacks, real ingredients, zero guilt, maximum crunch." />
+    <meta name="description" content="Just Nibble It - bold FMCG snacks, real ingredients, big flavour, maximum crunch." />
     <meta name="theme-color" content="#0D2818" />
-    <title>Just Nibble It - Bold Baked Snacks</title>
+    <title>Just Nibble It - Bold Snacks, Big Crunch</title>
 
-    <!-- LCP is the first hero slide, which is the SWEET CHILLI background.
-         This used to preload hero-bg-peri.jpg -- slide two, which is not on
-         screen at first paint -- so the real LCP image was discovered late and
-         a second, unused image competed with it for bandwidth. -->
-    <link rel="preload" as="image" href="/assets/hero/hero-bg-sweet.jpg" fetchpriority="high" />
+    <!-- LCP is the first hero slide's pack shot (Sweet Chilli Rush). The hero
+         used to be a full-bleed background photo with the headline baked in;
+         it is now the same propped pack image the scroll stage below uses, so
+         this preload was repointed from the old hero-bg-sweet.jpg to that
+         smaller, shared asset. -->
+    <link rel="preload" as="image" href="/assets/products/sweet-chilli-rush-pack.webp" fetchpriority="high" />
 
     <!-- Both brand faces are self-hosted (see @font-face in src/index.css), so
          the render-blocking Google Fonts stylesheet is gone: it was fetching

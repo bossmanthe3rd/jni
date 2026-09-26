@@ -8,12 +8,31 @@ import { products } from './products'
  *   { text: "Launch drop: all 3 FLIPO'S flavours for Rs. 499",
  *     backgroundColor: '#E85D4C', textColor: '#FBF6D0' }
  */
+/**
+ * The launch-offer banner. `endsAt` is an ISO string: set it and the banner
+ * counts down and then removes itself. Left null the offer runs open-ended,
+ * and the "only for 24 hours" painted into the artwork is the one claim on it
+ * that code cannot keep honest.
+ */
+export const launchOffer = {
+  slug: 'flipos-party-six',
+  alt: "Launch offer: six FLIPO's packets for Rs. 299, down from Rs. 949",
+  endsAt: null,
+}
+
+/*
+ * The two ticker lines used to disagree with each other and with the
+ * catalogue: desktop offered three flavours for 399 when the trio is 499, and
+ * mobile offered the six-pack. Both now carry the launch offer, and the link
+ * goes to the pack being offered rather than the combos index.
+ */
 export const ticker = {
-  text: "Launch drop: all 3 FLIPO's flavours for Rs. 399",
-  mobileText: "Launch Drop: FLIPO'S Pack of 6 for 299/-",
+  // One line for every width: the bar scrolls now, so a shorter phone variant
+  // has nothing left to solve.
+  text: "Launch offer: FLIPO's pack of 6 for Rs. 299",
   backgroundColor: '#f8d43a',
   textColor: '#111111',
-  link: '/combos',
+  link: '/combos/flipos-party-six',
   active: true,
 }
 
@@ -52,13 +71,41 @@ export const heroSlides = [
   },
 ]
 
-export const HERO_INTERVAL = 5600
+export const HERO_INTERVAL = 7000
 
 export const whyFeatures = [
-  { id: 'flavour', lines: ['Bold', 'Flavour'], loopClass: 'why-icon-flame', overlay: null },
-  { id: 'desk', lines: ['Desk', 'Crunch'], loopClass: 'why-icon-keys', overlay: 'keys' },
-  { id: 'creative', lines: ['Creative', 'Sidekick'], loopClass: 'why-icon-pencils', overlay: null },
-  { id: 'brain', lines: ['Brain', 'Break'], loopClass: 'why-icon-burst', overlay: 'burst' },
+  {
+    id: 'flavour',
+    image: '/assets/why-flipos/bold-flavour.webp',
+    lines: ['Bold', 'Flavour'],
+    blurb: 'Real heat, in every single piece. No shy flavours here.',
+    loopClass: 'why-icon-flame',
+    overlay: null,
+  },
+  {
+    id: 'desk',
+    image: '/assets/why-flipos/desk-crunch.webp',
+    lines: ['Desk', 'Crunch'],
+    blurb: 'Clean fingers. Nothing greasy near the keyboard.',
+    loopClass: 'why-icon-keys',
+    overlay: 'keys',
+  },
+  {
+    id: 'creative',
+    image: '/assets/why-flipos/creative-sidekick.webp',
+    lines: ['Creative', 'Sidekick'],
+    blurb: 'Snack now, big idea later. Usually.',
+    loopClass: 'why-icon-pencils',
+    overlay: null,
+  },
+  {
+    id: 'brain',
+    image: '/assets/why-flipos/brain-break.webp',
+    lines: ['Brain', 'Break'],
+    blurb: 'The ninety-second reset your afternoon needs.',
+    loopClass: 'why-icon-burst',
+    overlay: 'burst',
+  },
 ]
 
 export const testimonials = [
@@ -110,7 +157,7 @@ export const testimonials = [
 ]
 
 export const TESTIMONIAL_INTERVAL = 5000
-export const TESTIMONIAL_STAR_COLOR = '#1D4ED8'
+
 
 export const socialLinks = [
   { label: 'Instagram', href: 'https://www.instagram.com/justnibbleit/' },

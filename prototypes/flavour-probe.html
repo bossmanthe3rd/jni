@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Our flavours — read the pack</title>
+
+<!--
+  PROTOTYPE v2. Nothing here is wired into the app. v1 is kept alongside as
+  flavour-probe-v1.html.
+
+  Design Read
+    artifact          interactive prototype, one section of a DTC snack site
+    audience          the brand owner, judging a look-and-feel decision
+    visual language   Indian snack packaging -- flat keylines, bubble display
+                      type, flood colour, ingredient doodles
+    mode              redesign - overhaul (prototype only); brand invariants held
+    variance 8 · motion 6 · density 4 · assets 9 · fidelity 8
+
+  Asset > Spec. Every piece of identity here is the real thing: the pouch
+  photography, Milkyway and ComicSansMS3, the packPalettes grounds and accents,
+  the doodle artwork, and copy from products.js and the PDP accordion. Nothing
+  identity-bearing is redrawn in CSS.
+
+  What changed from v1, and why
+    v1 hung four identical cream boxes in the four corners of three identical
+    cards -- twelve copies of the same title-over-body stack, all the same
+    size. No hierarchy, and the pouch, which at asset dependence 9 is the main
+    character, was crowded by its own annotations.
+
+    The signature is now one move: THE SECTION RENAMES ITSELF to whatever you
+    point at. The masthead swaps from "Our flavours" to the flavour and its
+    heat, the ground floods with that pouch's colour, and the pack rises. The
+    heat fact is promoted out of a box and set as type, which leaves three
+    notes instead of four equal ones -- so the annotations support the pouch
+    rather than compete with it.
+
+  Served from the dev server so /assets/... resolves:
+    http://localhost:5173/prototypes/flavour-probe.html
+    ...?probe=2   freezes a flavour, for stills
+-->
+
+<style>
+  @font-face {
+    font-family: 'Milkyway';
+    src: url('/assets/fonts/milkyway.woff2') format('woff2');
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'ComicSansMS3';
+    src: url('/assets/fonts/comic-sans-ms3.woff2') format('woff2');
+    font-display: swap;
+  }
+
+  :root {
+    /* Brand tokens, taken from the site -- not invented here. */
+    --ink: #071a16;
+    --cream: #fbf6d0;
+    --sunshine: #f3c63b;
+
+    /* Set by whichever flavour is live. Cream/ink at rest. */
+    --ground: var(--cream);
+    --accent: var(--ink);
+    --on-ground: var(--ink);
+
+    /* 8pt ladder. */
+    --s1: 8px; --s2: 16px; --s3: 24px; --s4: 32px;
+    --s5: 48px; --s6: 64px; --s7: 96px;
+
+    --keyline: 4px;
+    --swell: 560ms;
+    --pop: cubic-bezier(0.34, 1.45, 0.64, 1);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'ComicSansMS3', 'Comic Sans MS', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* =====================================================================
+     STAGE — the flood.
+
+     `:has()` reads which pack is live and hands the section that pouch's own
+     ground and accent. Everything downstream reads those two variables rather
+     than knowing anything about flavours.
+     ===================================================================== */
+  .stage {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 100vh;
+    padding: var(--s6) clamp(var(--s3), 5vw, var(--s7));
+    background-color: var(--ground);
+    transition: background-color var(--swell) cubic-bezier(0.3, 0.8, 0.3, 1);
+  }
+
+  .stage:has(.card.live[data-f='sweet-chilli-rush']), .stage.f-sweet-chilli-rush {
+    --ground: #c8180d; --accent: #f59120; --on-ground: var(--cream);
+  }
+  .stage:has(.card.live[data-f='jalapeno-kick']), .stage.f-jalapeno-kick {
+    --ground: #0b5c2e; --accent: #c3d92e; --on-ground: var(--cream);
+  }
+  .stage:has(.card.live[data-f='peri-peri-punch']), .stage.f-peri-peri-punch {
+    --ground: #5c0d16; --accent: #c8102e; --on-ground: var(--cream);
+  }
+  body[data-flood='none'] .stage,
+  body[data-flood='card'] .stage { background-color: var(--cream); }
+
+  /* Ingredient drift. Each flavour's doodles are drawn in its own colours, so
+     on its own ground they vanish -- green jalapenos on deep green. Screened,
+     they lift off the flood as a lighter tone of it and keep their hue. */
+  .drift {
+    position: absolute; inset: -6%; z-index: 0;
+    opacity: 0; background-repeat: no-repeat;
+    transform: scale(1.08) rotate(-1.5deg);
+    transition: opacity var(--swell) ease, transform 1.6s cubic-bezier(0.2, 0.7, 0.3, 1);
+    mix-blend-mode: screen; pointer-events: none;
+  }
+  .stage:has(.card.live[data-f='sweet-chilli-rush']) .drift.sweet-chilli-rush,
+  .stage.f-sweet-chilli-rush .drift.sweet-chilli-rush,
+  .stage:has(.card.live[data-f='jalapeno-kick']) .drift.jalapeno-kick,
+  .stage.f-jalapeno-kick .drift.jalapeno-kick,
+  .stage:has(.card.live[data-f='peri-peri-punch']) .drift.peri-peri-punch,
+  .stage.f-peri-peri-punch .drift.peri-peri-punch {
+    opacity: 0.3; transform: none;
+  }
+  body[data-drift='off'] .drift,
+  body[data-flood='none'] .drift,
+  body[data-flood='card'] .drift { opacity: 0 !important; }
+
+  /* =====================================================================
+     MASTHEAD — the signature.
+
+     Two titles share one grid cell. At rest the section is called "Our
+     flavours"; point at a pouch and the section takes that pouch's name. The
+     heat line rides with it, which is what lets the heat fact leave its box
+     and be set as type -- the largest thing on screen after the name itself.
+     ===================================================================== */
+  .masthead {
+    position: relative; z-index: 3;
+    display: grid;
+    max-width: 44rem;
+    margin: 0 0 clamp(var(--s4), 4vw, var(--s6));
+    min-height: clamp(9rem, 16vw, 13.5rem);
+  }
+  .title { grid-area: 1 / 1; align-self: start; }
+
+  .title h1, .title h2 {
+    margin: 0;
+    font-family: 'Milkyway', system-ui, sans-serif;
+    font-weight: 400;
+    font-size: clamp(3.2rem, 8vw, 6rem);
+    line-height: 0.92;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  .title h1 { color: var(--sunshine); -webkit-text-stroke: 3.5px var(--ink); paint-order: stroke fill; }
+  .title h2 { color: var(--accent); }
+
+  .rest { transition: opacity 300ms ease, transform 420ms var(--pop); }
+  .live-title {
+    opacity: 0; transform: translateY(14px);
+    transition: opacity 300ms ease, transform 460ms var(--pop);
+  }
+  .stage:has(.card.live) .rest {
+    opacity: 0; transform: translateY(-14px) scale(0.97); pointer-events: none;
+  }
+  .stage:has(.card.live) .live-title {
+    opacity: 1; transform: none; transition-delay: 90ms;
+  }
+
+  /* The heat fact, promoted out of a note and set as type. */
+  .heat-line {
+    margin: var(--s2) 0 0; max-width: 30rem;
+    font-size: clamp(0.95rem, 1.5vw, 1.15rem); line-height: 1.45;
+    color: var(--on-ground); text-wrap: pretty;
+  }
+  .heat-line em {
+    font-style: normal;
+    font-family: 'Milkyway', system-ui, sans-serif;
+    font-size: 1.3em; color: var(--accent); margin-right: 0.35em;
+  }
+  .standfirst {
+    margin: var(--s2) 0 0; max-width: 26rem;
+    font-size: 0.95rem; line-height: 1.5; opacity: 0.72; text-wrap: pretty;
+  }
+
+  /* =====================================================================
+     SHELF
+     ===================================================================== */
+  .shelf {
+    position: relative; z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(var(--s2), 3vw, var(--s5));
+    align-items: start;
+    /* The outer packs' notes reach ~19% of a card beyond it. Insetting the
+       shelf from the stage's own padding is what keeps the first and last
+       from being clipped by the viewport. */
+    margin-inline: clamp(0px, 4vw, 90px);
+  }
+  @media (max-width: 900px) { .shelf { grid-template-columns: 1fr; max-width: 28rem; } }
+
+  .card {
+    position: relative;
+    border: 0; padding: 0; background: none; font: inherit; color: inherit;
+    text-align: left; cursor: pointer;
+    transition: filter var(--swell) ease, opacity var(--swell) ease,
+      transform var(--swell) var(--pop);
+  }
+  .card:focus { outline: none; }
+
+  /* Everything not live steps back. Lighter than v1: once a dark ground sat
+     behind them they were going almost black. */
+  .stage:has(.card.live) .card:not(.live) {
+    filter: blur(5px) saturate(0.4) brightness(0.92);
+    opacity: 0.26; transform: scale(0.93);
+  }
+  .card.live { z-index: 5; }
+  .stage:has(.card.live) .card.live { transform: scale(1.09) rotate(-0.8deg); }
+  body[data-lift='subtle'] .stage:has(.card.live) .card.live { transform: scale(1.02); }
+  body[data-lift='subtle'] .stage:has(.card.live) .card:not(.live) { transform: none; opacity: 0.42; }
+
+  .media {
+    position: relative; aspect-ratio: 1;
+    border: var(--keyline) solid var(--ink);
+    border-radius: 34px 26px 36px 24px;
+    background: #f7f1c8;
+    transition: box-shadow var(--swell) ease, background-color var(--swell) ease;
+  }
+  .media > img {
+    display: block; width: 100%; height: 100%; object-fit: cover;
+    border-radius: 30px 22px 32px 20px;
+  }
+  .card.live .media { box-shadow: 12px 14px 0 var(--ink); }
+  .card:focus-visible .media { outline: 4px solid var(--sunshine); outline-offset: 5px; }
+  body[data-flood='card'] .card.live .media { box-shadow: 12px 14px 0 var(--ground); }
+
+  .label {
+    display: flex; align-items: baseline; gap: var(--s2); flex-wrap: wrap;
+    margin-top: var(--s2);
+    font-family: 'Milkyway', system-ui, sans-serif; font-size: 1.4rem;
+    transition: color var(--swell) ease;
+  }
+  .label span {
+    font-family: 'ComicSansMS3', system-ui, sans-serif;
+    font-size: 0.66rem; font-weight: 700;
+    letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.55;
+  }
+  .stage:has(.card.live) .label { color: var(--on-ground); }
+  .stage:has(.card.live) .card.live .label span { color: var(--accent); opacity: 1; }
+
+  /* =====================================================================
+     NOTES — three, not four, and not all the same size.
+     ===================================================================== */
+  .marks {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    overflow: visible; pointer-events: none; z-index: 4;
+  }
+  .marks path {
+    fill: none; stroke: var(--cream);
+    /* Width in viewBox units, NOT non-scaling-stroke: with that on, dash
+       lengths are measured in user units and drawn in screen units, and the
+       arrows render as dashes instead of hiding. */
+    stroke-width: 0.9;
+    stroke-linecap: round; stroke-linejoin: round;
+    stroke-dasharray: var(--len) var(--len);
+    stroke-dashoffset: var(--len);
+    filter: drop-shadow(0 0 1.5px rgba(7, 26, 22, 0.6));
+  }
+  /* The second pass of each line, a hair off the first, the way a pen goes
+     over a line twice. Two clean strokes read as a diagram; two that disagree
+     slightly read as drawn. */
+  .marks path.ghost { opacity: 0.45; stroke-width: 0.62; }
+  .marks.lit path { transition: stroke-dashoffset 620ms cubic-bezier(0.4, 0.75, 0.3, 1); }
+  .card.live .marks path { stroke-dashoffset: 0; }
+  .card.live .marks path.ghost { transition-delay: 70ms; }
+  body[data-ink='heavy'] .marks path { stroke-width: 1.45; }
+  body[data-ink='heavy'] .marks path.ghost { stroke-width: 0.95; }
+
+  .tag {
+    position: absolute; z-index: 5;
+    padding: var(--s1) 10px 9px;
+    border: 3px solid var(--ink);
+    border-radius: 15px 10px 17px 9px / 10px 16px 9px 15px;
+    background: var(--cream);
+    box-shadow: 4px 5px 0 var(--ink);
+    font-size: 10.5px; line-height: 1.32; text-align: left;
+    opacity: 0; transform: translate(5px, 12px) scale(0.88);
+    transition: opacity 300ms ease, transform 420ms var(--pop);
+    pointer-events: none;
+  }
+  .tag b {
+    display: block; width: fit-content;
+    margin-bottom: 5px; padding-bottom: 1px;
+    border-bottom: 3px solid var(--pin, var(--ink));
+    font-family: 'Milkyway', system-ui, sans-serif;
+    font-size: 13px; letter-spacing: 0.015em; color: var(--ink);
+  }
+  .card.live .tag { opacity: 1; }
+  /* Pinned by hand: three positions, three angles, three widths. A grid of
+     four identical boxes is what made v1 read as a diagram. */
+  .card.live .t-a { transform: rotate(-2.8deg); transition-delay: 140ms; }
+  .card.live .t-b { transform: rotate(2.2deg);  transition-delay: 250ms; }
+  .card.live .t-c { transform: rotate(-1.6deg); transition-delay: 360ms; }
+
+  .t-a { left: -19%;  top: 3%;    width: 8.2rem; }
+  .t-b { right: -17%; top: 38%;   width: 7.4rem; }
+  .t-c { left: -13%;  bottom: 5%; width: 9rem; }
+
+  .tag .pip { position: absolute; width: 28px; top: -15px; right: -12px; transform: rotate(16deg); }
+  .tag .pip.left { right: auto; left: -13px; top: -11px; transform: rotate(-22deg); }
+
+  body[data-notes='minimal'] .tag, body[data-notes='minimal'] .marks,
+  body[data-notes='panel'] .tag,   body[data-notes='panel'] .marks { display: none; }
+
+  /* Alternative direction: the facts as a back-of-pack spec list, which is
+     where ingredients and net weight live on a real pouch. */
+  .spec {
+    position: absolute; left: calc(100% + var(--s3)); top: 5%;
+    width: 15rem; z-index: 5; display: none;
+    opacity: 0; transform: translateX(-10px);
+    transition: opacity 320ms ease, transform 420ms var(--pop);
+    pointer-events: none;
+  }
+  body[data-notes='panel'] .spec { display: block; }
+  body[data-notes='panel'] .card.live .spec { opacity: 1; transform: none; transition-delay: 160ms; }
+  .spec dl { margin: 0; }
+  .spec div {
+    display: grid; grid-template-columns: 5.6rem 1fr; gap: var(--s2);
+    padding: 9px 0; border-top: 2px solid rgba(251, 246, 208, 0.35);
+  }
+  .spec div:first-child { border-top: 3px solid var(--cream); }
+  .spec dt { font-family: 'Milkyway', system-ui, sans-serif; font-size: 11.5px; color: var(--accent); }
+  .spec dd { margin: 0; font-size: 11px; line-height: 1.4; color: var(--on-ground); }
+
+  /* =====================================================================
+     TWEAKS — hidden entirely when closed, so the artifact reads as final.
+     ===================================================================== */
+  .tweaks-btn {
+    position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+    width: 44px; height: 44px;
+    border: 3px solid var(--ink); border-radius: 14px 10px 15px 9px;
+    background: var(--sunshine); color: var(--ink);
+    font-family: 'Milkyway', system-ui, sans-serif; font-size: 19px;
+    cursor: pointer; box-shadow: 3px 4px 0 var(--ink);
+  }
+  .tweaks {
+    position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+    width: 288px; padding: var(--s3);
+    border: 3px solid var(--ink); border-radius: 20px 14px 22px 12px;
+    background: var(--cream); box-shadow: 6px 7px 0 var(--ink);
+    font-size: 12px; display: none;
+  }
+  .tweaks[data-open='true'] { display: block; }
+  .tweaks h3 {
+    margin: 0 0 var(--s2);
+    font-family: 'Milkyway', system-ui, sans-serif; font-size: 18px; font-weight: 400;
+  }
+  .tweaks label { display: block; margin-bottom: 11px; }
+  .tweaks label > span { display: block; margin-bottom: 4px; font-weight: 700; opacity: 0.7; }
+  .tweaks select {
+    width: 100%; padding: 6px 8px;
+    border: 2px solid var(--ink); border-radius: 9px;
+    background: #fff; font: inherit; color: var(--ink);
+  }
+  .tweaks p { margin: var(--s2) 0 0; font-size: 11px; line-height: 1.45; opacity: 0.6; }
+  .tweaks .close {
+    position: absolute; top: 9px; right: 12px;
+    border: 0; background: none; cursor: pointer; font-size: 18px; color: var(--ink);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stage, .card, .drift, .tag, .marks path, .rest, .live-title, .spec, .media {
+      transition: none !important;
+    }
+  }
+  @media (max-width: 900px) {
+    .t-a, .t-c { left: 2%; }
+    .t-b { right: 2%; }
+    .tag { width: 7.4rem !important; }
+    .spec { position: static; width: auto; margin-top: var(--s2); }
+  }
+</style>
+</head>
+<body data-notes="tags" data-flood="section" data-lift="bold" data-drift="on" data-ink="normal">
+
+<section class="stage">
+  <div class="drift sweet-chilli-rush"></div>
+  <div class="drift jalapeno-kick"></div>
+  <div class="drift peri-peri-punch"></div>
+
+  <header class="masthead">
+    <div class="title rest">
+      <h1>Our flavours</h1>
+      <p class="standfirst">Three of them. Point at one and it will tell you what is in it.</p>
+    </div>
+    <div class="title live-title" id="liveTitle" aria-live="polite">
+      <h2></h2>
+      <p class="heat-line"><em></em><span></span></p>
+    </div>
+  </header>
+
+  <div class="shelf" id="shelf"></div>
+</section>
+
+<button class="tweaks-btn" id="tweaksBtn" aria-label="Open tweaks">◐</button>
+<div class="tweaks" id="tweaks" data-open="false">
+  <button class="close" id="tweaksClose" aria-label="Close tweaks">×</button>
+  <h3>Tweaks</h3>
+  <label><span>Notes</span>
+    <select data-k="notes">
+      <option value="tags">Pinned notes + arrows</option>
+      <option value="panel">Back-of-pack spec list</option>
+      <option value="minimal">Name and heat only</option>
+    </select>
+  </label>
+  <label><span>Flood</span>
+    <select data-k="flood">
+      <option value="section">Whole section</option>
+      <option value="card">Pack only</option>
+      <option value="none">None — stay cream</option>
+    </select>
+  </label>
+  <label><span>Lift</span>
+    <select data-k="lift">
+      <option value="bold">Bold</option>
+      <option value="subtle">Subtle</option>
+    </select>
+  </label>
+  <label><span>Ingredient drift</span>
+    <select data-k="drift"><option value="on">On</option><option value="off">Off</option></select>
+  </label>
+  <label><span>Ink weight</span>
+    <select data-k="ink"><option value="normal">Normal</option><option value="heavy">Heavy</option></select>
+  </label>
+  <p>Prototype — not wired into the site. Hover or tab through the shelf.
+     Touch has no hover, so shipping needs a tap-to-open fallback.</p>
+</div>
+
+<script>
+  // Grounds and accents are packPalettes from PackDoodles.jsx; copy is
+  // products.js and the PDP accordion. Nothing invented.
+  const FLAVOURS = [
+    {
+      slug: 'sweet-chilli-rush', name: 'Sweet Chilli Rush', heat: 'Sweet Heat', accent: '#f59120',
+      heatLine: 'Sweet lands first. The heat catches up about three chips later.',
+      ingredients: 'Sweet chilli seasoning, red chilli, crisp fried base.',
+      doodles: ['sweet', 'rounded_chillie', 'chillie_art', 'sweet', 'rounded_chillie'],
+    },
+    {
+      slug: 'jalapeno-kick', name: 'Jalapeño Kick', heat: 'Fresh Heat', accent: '#c3d92e',
+      heatLine: 'Green, bright and properly punchy — flavour first, heat a few bites behind.',
+      ingredients: 'Jalapeño seasoning, green pepper, crisp fried base.',
+      doodles: ['jalapeno', 'Asset_4', 'jalapeno', 'rounded_chillie', 'Asset_4'],
+    },
+    {
+      slug: 'peri-peri-punch', name: 'Peri Peri Punch', heat: 'Big Heat', accent: '#c8102e',
+      heatLine: 'No warm-up. Straight to the punch, and it stays there.',
+      ingredients: 'Peri peri seasoning, red chilli, crisp fried base.',
+      doodles: ['chillie_art', 'rounded_chillie', 'chillie_art', 'sweet', 'rounded_chillie'],
+    },
+  ]
+
+  // Each line leaves its note and lands on the thing it names. Percentages of
+  // the square frame -- the studio framing is identical across the three packs,
+  // so one set serves all of them.
+  const ARROWS = [
+    { d: 'M21,13 C32,14 39,19 46,26', head: [46, 26, 39.5, 22.5, 40, 29.5] },  // the zip seal
+    { d: 'M79,42 C72,44 66,46 60,49', head: [60, 49, 65.5, 46, 66, 52] },      // the window
+    { d: 'M26,84 C31,79 35,73 40,66', head: [40, 66, 34.5, 66.5, 38.5, 71] },  // the seasoning
+  ]
+
+  const PIP = {
+    chilli: '<svg class="pip" viewBox="0 0 34 64" aria-hidden="true"><path d="M17 8c5-6 11-7 12-2s-5 7-8 8c6 4 9 14 6 26-3 13-13 22-19 20S2 44 6 33s8-18 11-25Z" fill="var(--pin)" stroke="#071a16" stroke-width="3.4" stroke-linejoin="round"/></svg>',
+    seed: '<svg class="pip left" viewBox="0 0 40 28" aria-hidden="true"><ellipse cx="20" cy="14" rx="15" ry="9.5" transform="rotate(-14 20 14)" fill="var(--pin)" stroke="#071a16" stroke-width="3.4"/></svg>',
+  }
+
+  // Three notes, not four: the heat fact is promoted into the masthead and set
+  // as type, so what is left is only what you can point at on the pouch.
+  const NOTES = (f) => [
+    { cls: 't-a', title: 'Reseal it', body: 'Zip-lock stand-up pouch — stash the rest for later.', pip: '' },
+    { cls: 't-b', title: 'Fried crisp', body: 'Fried for the snap — the crunch is the whole point.', pip: PIP.chilli },
+    { cls: 't-c', title: "What's in it", body: f.ingredients, pip: PIP.seed },
+  ]
+
+  const SPEC = (f) => [
+    ['Heat', f.heat],
+    ['Ingredients', f.ingredients],
+    ['Net weight', '100 gms'],
+    ['Pack', 'Resealable stand-up pouch'],
+    ['Shelf life', '6 months from packaging'],
+  ]
+
+  const svgNS = 'http://www.w3.org/2000/svg'
+
+  document.getElementById('shelf').innerHTML = FLAVOURS.map((f) => `
+    <button class="card" type="button" data-f="${f.slug}" style="--pin:${f.accent}"
+            aria-label="${f.name} — ${f.heat}">
+      <div class="media">
+        <img src="/assets/products/${f.slug}-plp.webp" alt="${f.name} pouch" loading="eager">
+        <svg class="marks" viewBox="0 0 100 100" aria-hidden="true"></svg>
+        ${NOTES(f).map((n) => `<span class="tag ${n.cls}">${n.pip}<b>${n.title}</b>${n.body}</span>`).join('')}
+        <div class="spec"><dl>${SPEC(f).map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl></div>
+      </div>
+      <div class="label">${f.name} <span>${f.heat}</span></div>
+    </button>
+  `).join('')
+
+  FLAVOURS.forEach((f) => {
+    const el = document.querySelector('.drift.' + f.slug)
+    el.style.backgroundImage = f.doodles.map((d) => `url('/assets/doodles/${d}.png')`).join(',')
+    el.style.backgroundSize = 'auto 104px, auto 120px, auto 84px, auto 108px, auto 92px'
+    el.style.backgroundPosition = '3% 16%, 92% 22%, 11% 82%, 86% 84%, 52% 4%'
+  })
+
+  /*
+   * A `live` class rather than `:hover` alone: the same class is set by
+   * pointer and by keyboard focus, so tabbing through the shelf reveals a pack
+   * exactly as pointing at it does. The CSS then describes one state instead
+   * of two parallel selector chains.
+   */
+  const stage = document.querySelector('.stage')
+  const shelf = document.getElementById('shelf')
+  const liveTitle = document.getElementById('liveTitle')
+  const cards = [...document.querySelectorAll('.card')]
+
+  function setLive(card) {
+    cards.forEach((c) => c.classList.toggle('live', c === card))
+    if (!card) return
+    const f = FLAVOURS.find((x) => x.slug === card.dataset.f)
+    liveTitle.querySelector('h2').textContent = f.name
+    liveTitle.querySelector('em').textContent = f.heat + '.'
+    liveTitle.querySelector('span').textContent = f.heatLine
+  }
+
+  cards.forEach((card) => {
+    card.addEventListener('pointerenter', () => setLive(card))
+    card.addEventListener('focus', () => setLive(card))
+  })
+  shelf.addEventListener('pointerleave', () => setLive(null))
+  shelf.addEventListener('focusout', (e) => {
+    if (!shelf.contains(e.relatedTarget)) setLive(null)
+  })
+
+  const probe = Number(new URLSearchParams(location.search).get('probe') || 0)
+  if (probe) {
+    const card = cards[probe - 1]
+    stage.classList.add('f-' + card.dataset.f)
+    setLive(card)
+  }
+
+  /*
+   * Two passes per line: the drawn one and a ghost a hair off it. Built in
+   * script so each path measures itself and hands its own length to the dash
+   * reveal -- a shared guess makes the short ones finish early and the long
+   * ones snap.
+   */
+  const jitter = (d, k) =>
+    d.replace(/\d+(?:\.\d+)?/g, (n) => (Number(n) + Math.sin(Number(n) * 12.9898 + k) * 0.75).toFixed(2))
+
+  document.querySelectorAll('.marks').forEach((svg) => {
+    ARROWS.forEach((a, i) => {
+      const [hx, hy, ax, ay, bx, by] = a.head
+      const headD = `M${ax},${ay} L${hx},${hy} L${bx},${by}`
+      ;[[a.d, 0], [headD, 0], [jitter(a.d, i + 1), 1], [jitter(headD, i + 5), 1]].forEach(([d, ghost]) => {
+        const p = document.createElementNS(svgNS, 'path')
+        p.setAttribute('d', d)
+        if (ghost) p.setAttribute('class', 'ghost')
+        svg.appendChild(p)
+        p.style.setProperty('--len', p.getTotalLength().toFixed(1))
+      })
+    })
+  })
+
+  // Only once every path has measured itself and is sitting hidden: before
+  // that `--len` is unset, the dash is invalid and the arrow is solid, and
+  // transitioning out of that drew every line on the page for a moment.
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.marks').forEach((svg) => svg.classList.add('lit'))
+  })
+
+  // --- Tweaks ---------------------------------------------------------------
+  const panel = document.getElementById('tweaks')
+  const btn = document.getElementById('tweaksBtn')
+  const show = (open) => {
+    panel.dataset.open = String(open)
+    btn.style.display = open ? 'none' : 'block'
+  }
+  btn.addEventListener('click', () => show(true))
+  document.getElementById('tweaksClose').addEventListener('click', () => show(false))
+  panel.querySelectorAll('select').forEach((sel) => {
+    sel.value = document.body.dataset[sel.dataset.k]
+    sel.addEventListener('change', () => { document.body.dataset[sel.dataset.k] = sel.value })
+  })
+</script>
+</body>
+</html>

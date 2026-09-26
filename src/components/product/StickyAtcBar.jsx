@@ -13,7 +13,21 @@ import { AnimatePresence, motion } from 'framer-motion'
  * The bar takes over exactly when the real CTA leaves the viewport, so the two
  * are never on screen together asking for the same tap.
  */
-export default function StickyAtcBar({ name, price, originalPrice, onAdd, watchRef }) {
+/*
+ * Pass `image` for the floating variant the product page uses: a dark pill
+ * that sits above the page edge with the pouch in it, so the bar reads as the
+ * same pack you were just looking at rather than a generic strip.
+ */
+export default function StickyAtcBar({
+  name,
+  price,
+  originalPrice,
+  onAdd,
+  watchRef,
+  image,
+  ctaLabel = 'Nibble Now',
+  unit = '1 pack',
+}) {
   const [visible, setVisible] = useState(false)
   const seen = useRef(false)
 
@@ -32,6 +46,34 @@ export default function StickyAtcBar({ name, price, originalPrice, onAdd, watchR
     io.observe(el)
     return () => io.disconnect()
   }, [watchRef])
+
+  if (image) {
+    return (
+      <AnimatePresence>
+        {visible && (
+          <motion.div
+            initial={{ y: '140%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '140%' }}
+            transition={{ type: 'spring', stiffness: 320, damping: 30 }}
+            className="jni-atc-float md:hidden"
+          >
+            <img src={image} alt="" />
+            <p>
+              <b>{name}</b>
+              <span>
+                {unit} · ₹{price}
+                {originalPrice > price && <s>₹{originalPrice}</s>}
+              </span>
+            </p>
+            <button type="button" onClick={onAdd} className="jni-btn">
+              {ctaLabel}
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    )
+  }
 
   return (
     <AnimatePresence>
@@ -58,7 +100,7 @@ export default function StickyAtcBar({ name, price, originalPrice, onAdd, watchR
               </p>
             </div>
             <button type="button" onClick={onAdd} className="jni-btn h-11 min-h-0 shrink-0 px-7">
-              Nibble Now
+              {ctaLabel}
             </button>
           </div>
         </motion.div>

@@ -63,7 +63,7 @@ def _catmull_closed(pts):
 
 
 def wavy_disc(r=R, lobes=9, amp=0.030, n=44, seed=7):
-    """The chip's rim: round, with the gentle scallop the baked disc has."""
+    """The chip's rim: round, with the gentle scallop the fried disc has."""
     rnd = random.Random(seed)
     pts = []
     for i in range(n):

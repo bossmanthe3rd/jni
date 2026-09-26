@@ -1,0 +1,503 @@
+/*
+ * Why Flipo's: the monitor on the hero's desk. See WhyFlipos.jsx.
+ *
+ * Laptops (1024+) get a fixed-size artboard, 1180 x 600, zoomed to fit the
+ * screen; every desktop measurement below is at that size. Below 1024 the
+ * monitor stacks over a 2 x 2 grid of notes lying on the desk.
+ */
+
+/* The hero stands a copy of the monitor on its desk (.hero-monitor), so the
+   monitor's colours are shared with it. */
+.wf-section,
+.hero-monitor {
+  --wf-ink: #0d2818;
+  --wf-wall: #fbf6d0;
+  --wf-desk: #f3c63b;
+  --wf-desk-grain: #e0b330;
+  --wf-teal: #4db8ae;
+  --wf-screen: #0c2a1f;
+}
+.wf-section {
+  overflow: clip;
+  background: var(--wf-wall);
+}
+
+.wf-stage {
+  position: relative;
+  padding: 64px 0 104px;
+}
+
+.wf-rig {
+  position: relative;
+  width: min(620px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+/* ---------- the monitor ---------- */
+
+.wf-monitor {
+  position: relative;
+  z-index: 1;
+}
+.wf-frame {
+  position: relative;
+  aspect-ratio: 16 / 10.5;
+  padding: 14px 14px 34px;
+  border: 5px solid var(--wf-ink);
+  border-radius: 20px;
+  background: var(--wf-teal);
+  box-shadow: 7px 9px 0 rgb(13 40 24 / 0.92);
+}
+
+.wf-screen {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  border: calc(5px * var(--wf-stroke, 1)) solid var(--wf-ink);
+  border-radius: 12px;
+  background:
+    radial-gradient(90% 70% at 50% 40%, rgb(77 184 174 / 0.16), transparent 70%),
+    var(--wf-screen);
+}
+.wf-screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, rgb(0 0 0 / 0.18) 0 1px, transparent 1px 3px),
+    linear-gradient(112deg, transparent 58%, rgb(255 255 255 / 0.06) 58.5%, rgb(255 255 255 / 0.06) 66%, transparent 66.5%);
+}
+
+/* The screensaver's layer: the bouncing pack, its confetti and the heading. */
+.wf-saver {
+  position: absolute;
+  inset: 0;
+}
+
+.wf-bouncer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  height: 72px;
+  width: auto;
+  filter: drop-shadow(0 6px 6px rgb(0 0 0 / 0.45));
+  transform: translate(60px, 40px);
+  will-change: transform;
+  user-select: none;
+}
+
+.wf-title {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  font-size: clamp(38px, 10vw, 62px);
+  font-weight: 400;
+  line-height: 1;
+  color: var(--wf-desk);
+  text-shadow:
+    0 0 16px rgb(243 198 59 / 0.55),
+    4px 5px 0 #071a16;
+  pointer-events: none;
+}
+
+.wf-confetti {
+  position: absolute;
+  z-index: 2;
+  width: 0;
+  height: 0;
+}
+.wf-confetti i {
+  position: absolute;
+  left: -4px;
+  top: -3px;
+  width: 9px;
+  height: 6px;
+  border-radius: 1px;
+  background: var(--c);
+}
+.wf-confetti i.is-tri {
+  width: 10px;
+  height: 10px;
+  border-radius: 0;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.wf-chin {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 34px;
+}
+.wf-led {
+  position: absolute;
+  top: 50%;
+  right: 26px;
+  width: 9px;
+  height: 9px;
+  margin-top: -4px;
+  border: 2px solid var(--wf-ink);
+  border-radius: 50%;
+  background: #c3d92e;
+  box-shadow: 0 0 8px 2px rgb(195 217 46 / 0.7);
+}
+
+.wf-stand {
+  position: relative;
+  display: block;
+  width: 170px;
+  height: auto;
+  margin: -3px auto 0;
+}
+
+/* ---------- the notes ---------- */
+
+.wf-notes {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 14px;
+  margin: 0;
+  padding: 26px 4px 8px;
+  list-style: none;
+}
+/* The desk the notes lie on (phones) -- full bleed. */
+.wf-notes::before {
+  content: '';
+  position: absolute;
+  inset: 0 -100vw -400px;
+  z-index: -1;
+  border-top: 5px solid var(--wf-ink);
+  background: linear-gradient(var(--wf-desk) 0 22px, var(--wf-desk-grain) 22px 26px, var(--wf-desk) 26px);
+}
+
+.wf-note {
+  position: relative;
+  padding: 14px 12px 14px;
+  border: 3px solid var(--wf-ink);
+  border-radius: 3px;
+  background:
+    linear-gradient(rgb(13 40 24 / 0.07), rgb(13 40 24 / 0) 20px),
+    var(--note);
+  box-shadow: 4px 6px 0 rgb(13 40 24 / 0.28);
+  color: var(--wf-ink);
+  cursor: default;
+}
+.wf-note-art {
+  width: 58px;
+}
+.wf-note-art img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.wf-note-title {
+  margin-top: 6px;
+  font-size: 19px;
+  font-weight: 400;
+  line-height: 1;
+}
+.wf-note-text {
+  margin-top: 5px;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: rgb(13 40 24 / 0.82);
+  text-wrap: pretty;
+}
+
+/* The campaign's own desk props, at the far ends of the desk (laptops with
+   wall to spare only). */
+.wf-props,
+.wf-wall {
+  display: none;
+}
+
+/* ---------- laptops: the fixed-size artboard ---------- */
+
+@media (min-width: 1024px) {
+  .wf-stage {
+    padding: 64px 0 96px;
+  }
+  .wf-rig {
+    width: 1180px;
+    height: 600px;
+  }
+  /* The desk, hung off the rig so it zooms with it. At the end of the hero's
+     camera move its line is set to meet the hero's desk (--wf-desk-top). */
+  .wf-rig::before {
+    content: '';
+    position: absolute;
+    top: var(--wf-desk-top, 522px);
+    left: -100vw;
+    right: -100vw;
+    z-index: -1;
+    height: 800px;
+    border-top: 5px solid var(--wf-ink);
+    background: linear-gradient(var(--wf-desk) 0 26px, var(--wf-desk-grain) 26px 30px, var(--wf-desk) 30px);
+  }
+
+  /* The wall behind the monitor. See WhyWall.jsx. Sits under the desk
+     (the rig's ::before, z -1) so nothing on it can land on the desktop. */
+  .wf-wall {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+  }
+  .wf-wall img {
+    position: absolute;
+    height: auto;
+  }
+  .wf-wall img.is-pale {
+    opacity: 0.3;
+  }
+
+
+  .wf-rig[data-room='on'] .wf-props {
+    display: block;
+  }
+  .wf-prop {
+    position: absolute;
+    width: auto;
+    filter: drop-shadow(0 8px 6px rgb(13 40 24 / 0.2));
+  }
+  .wf-prop--envelope {
+    top: calc(var(--wf-desk-top, 522px) - 104px);
+    right: calc(100% + 30px);
+    height: 138px;
+    transform: rotate(-5deg);
+  }
+  .wf-prop--mug {
+    top: calc(var(--wf-desk-top, 522px) - 114px);
+    left: calc(100% + 34px);
+    height: 144px;
+  }
+
+  .wf-monitor {
+    position: absolute;
+    top: 8px;
+    left: 250px;
+    width: 680px;
+  }
+  .wf-frame {
+    height: 432px;
+    aspect-ratio: auto;
+    padding: 22px 22px 48px;
+    border-width: calc(6px * var(--wf-stroke, 1));
+    border-radius: 26px;
+    box-shadow: calc(10px * var(--wf-stroke, 1)) calc(12px * var(--wf-stroke, 1)) 0 rgb(13 40 24 / 0.92);
+  }
+  .wf-stand path {
+    stroke-width: calc(6px * var(--wf-stroke, 1));
+  }
+  .wf-bouncer {
+    height: 108px;
+  }
+  .wf-title {
+    font-size: 84px;
+  }
+  .wf-chin {
+    height: 48px;
+  }
+  .wf-led {
+    right: 32px;
+    width: 11px;
+    height: 11px;
+    margin-top: -5px;
+  }
+  .wf-stand {
+    width: 240px;
+    margin-top: -4px;
+  }
+
+  .wf-notes {
+    position: static;
+    display: block;
+    padding: 0;
+  }
+  .wf-notes::before {
+    display: none;
+  }
+  .wf-note {
+    position: absolute;
+    z-index: 2;
+    width: 200px;
+    padding: 16px 16px 18px;
+  }
+  .wf-note--flavour {
+    top: 30px;
+    left: 70px;
+  }
+  .wf-note--desk {
+    top: 20px;
+    left: 906px;
+  }
+  .wf-note--creative {
+    top: 258px;
+    left: 58px;
+  }
+  .wf-note--brain {
+    top: 266px;
+    left: 918px;
+  }
+  .wf-note-art {
+    width: 76px;
+  }
+  .wf-note-title {
+    margin-top: 8px;
+    font-size: 23px;
+  }
+  .wf-note-text {
+    margin-top: 6px;
+    font-size: 13.5px;
+  }
+}
+
+/* ---------- laptops: the end of the hero's camera move ---------- */
+
+/* Staged (see HeroWhyZoom), the section is the pinned screen the camera
+   arrives at: exactly one screen tall, the artboard centred in it. */
+@media (min-width: 1024px) {
+  .wf-section--staged {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100vh;
+  }
+  .wf-section--staged .wf-stage {
+    padding: 40px 0 72px;
+  }
+}
+
+/* ---------- the hero's copy of the monitor ---------- */
+
+/* Laid out at the section's native size -- so the camera move can hand one
+   over to the other, and both screens share one bouncing pack -- and shrunk
+   to its place on the hero desk by HeroMonitor. It carries the hero's copy
+   on its screen, set in native pixels too. */
+.hero-monitor {
+  position: absolute;
+  pointer-events: none;
+}
+.hero-monitor .wf-monitor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 680px;
+  transform-origin: 0 0;
+}
+
+.hero-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: auto;
+}
+.hero-screen-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  height: 100%;
+  padding: 26px 40px 30px;
+}
+.hero-screen-kicker {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgb(251 246 208 / 0.72);
+}
+.hero-screen-title {
+  margin: 0;
+  font-size: 68px;
+  line-height: 0.95;
+  text-wrap: balance;
+  filter: drop-shadow(0 0 14px rgb(243 198 59 / 0.35));
+}
+.hero-screen-line {
+  margin: 14px 0 0;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: rgb(251 246 208 / 0.86);
+}
+.hero-screen-cta {
+  margin-top: 20px;
+}
+
+/* Price and rating: a sticky note on the bezel's lower-right corner, over
+   the chin -- clear of the header's badge, the packs and the keyboard. */
+.hero-price-note {
+  position: absolute;
+  top: 346px;
+  right: 30px;
+  z-index: 5;
+  width: max-content;
+  padding: 14px 14px 12px;
+  border: 3px solid var(--wf-ink);
+  border-radius: 3px;
+  background:
+    linear-gradient(rgb(13 40 24 / 0.07), rgb(13 40 24 / 0) 20px),
+    #fbf6d0;
+  box-shadow: 4px 6px 0 rgb(13 40 24 / 0.28);
+  color: var(--wf-ink);
+  white-space: nowrap;
+  transform: rotate(-6deg);
+}
+.hero-price-note-price {
+  margin: 0;
+  font-size: 34px;
+  line-height: 1;
+}
+.hero-price-note-price span {
+  margin-left: 8px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.hero-price-note-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
+  font-size: 14px;
+  font-weight: 900;
+}
+.hero-price-note-rating span span {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ---------- the hero's backdrop during the camera move ---------- */
+
+/* Wall above, the desk's edge, desktop and dark front lip below, off every
+   side of the hero, lined up with the hero's own desk -- so however far the
+   camera slides, it only ever finds more room. --desk and --lip repeat the
+   hero section's laptop values. */
+.hero-zoom-layer {
+  --desk: clamp(220px, 31vh, 300px);
+  --lip: clamp(52px, 7vh, 70px);
+}
+.hero-zoom-bleed {
+  position: absolute;
+  inset: -60vh -100vw;
+  z-index: -1;
+  background: linear-gradient(
+    #fbf6d0 0 calc(160vh - var(--desk) + 5px),
+    #0d2818 calc(160vh - var(--desk) + 5px) calc(160vh - var(--desk) + 9px),
+    #f3c63b calc(160vh - var(--desk) + 9px) calc(160vh - var(--lip)),
+    #0d2818 calc(160vh - var(--lip))
+  );
+}

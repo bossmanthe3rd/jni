@@ -6,3 +6,15 @@ dist
 
 # Claude Code local (per-machine) settings
 .claude/settings.local.json
+
+# Python bytecode from the tools/ generators
+__pycache__/
+
+# Raw design source from the shared Drive (112 MB of PNGs). The derived,
+# web-ready assets live in public/assets/ and are committed; these originals
+# stay in Drive so clones do not carry them.
+reference/drive/
+
+# Illustrator design source (49 MB). Same policy as reference/drive above --
+# the web-ready assets derived from it are committed, the original is not.
+reference/*.ai

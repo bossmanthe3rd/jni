@@ -6,6 +6,27 @@ const P = '/assets/products'
 
 export const FREE_SHIPPING_THRESHOLD = 499
 
+/** Flat delivery charge below the threshold. Was a bare 49 inside
+ *  CheckoutPage; the probe now quotes a delivered total up front, so the two
+ *  have to read from the same number or the price will change under the
+ *  customer between the button and the bill. */
+export const SHIPPING_FLAT = 49
+
+/** What the order actually costs, delivered. */
+export function deliveredTotal(subtotal) {
+  return subtotal + (subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FLAT)
+}
+
+/** Ink for a receipt's rubber stamp and marker ring: each flavour's own hue,
+ *  taken dark enough to read on paper (jalapeño's lime would vanish). Shared by
+ *  the vending machine's receipt and the checkout bill. */
+export const STAMP_INK = {
+  'sweet-chilli-rush': '#d4361c',
+  'jalapeno-kick': '#1f7a33',
+  'peri-peri-punch': '#9d1636',
+}
+export const STAMP_INK_BUNDLE = '#1d6f67'
+
 export const products = [
   {
     id: 1,
@@ -16,8 +37,8 @@ export const products = [
     tagline: 'Sweet, Spicy, Irresistible.',
     description:
       'A glossy sweet-chilli crunch with a slow, playful heat built for movie nights and desk drawers.',
-    price: 169,
-    originalPrice: 199,
+    price: 170,
+    originalPrice: 190,
     stockQuantity: 180,
     badge: 'Crowd pleaser',
     category: "FLIPO's",
@@ -42,21 +63,24 @@ export const products = [
       },
       {
         src: `${P}/sweet-chilli-rush-life-desk.webp`,
+        caption: 'The late-night desk',
         thumb: `${P}/sweet-chilli-rush-life-desk-thumb.webp`,
         alt: 'Sweet Chilli Rush on a late-night desk with laptop, notes and headphones',
       },
       {
         src: `${P}/sweet-chilli-rush-life-creator.webp`,
+        caption: 'The creator flat-lay',
         thumb: `${P}/sweet-chilli-rush-life-creator-thumb.webp`,
         alt: 'Sweet Chilli Rush on a content creator flat-lay with camera, mic and swatches',
       },
       {
         src: `${P}/sweet-chilli-rush-life-studio.webp`,
+        caption: 'The design studio',
         thumb: `${P}/sweet-chilli-rush-life-studio-thumb.webp`,
         alt: 'Sweet Chilli Rush on a design studio desk with sketches and type specimens',
       },
     ],
-    ingredients: ['Sweet chilli seasoning', 'Red chilli', 'Crisp baked base'],
+    ingredients: ['Sweet chilli seasoning', 'Red chilli', 'Crisp fried base'],
     seoKeywords: 'spicy chips buy online, buy crisp potato chips, premium snacks India',
     weight: '100 gms',
     rating: { value: 4.7, count: 98 },
@@ -64,6 +88,14 @@ export const products = [
     flavourHeading: 'Sweet. Full of Character.',
     flavourDescription:
       'A glossy sweet-chilli crunch balanced with real heat, delivering craveable sweetness first, fire right after.',
+    // What each bite tastes like, in order -- drawn as the PDP's heat climb.
+    heatBites: [
+      'Glossy sweetness first.',
+      'The sweet chilli rounds out.',
+      'A slow, playful heat arrives.',
+      'Sweet Heat. Fire right after.',
+      'Your hand goes back in anyway.',
+    ],
   },
   {
     id: 2,
@@ -74,8 +106,8 @@ export const products = [
     tagline: 'A spicy little kick.',
     description:
       'A crisp jalapeño-led bite with fresh pepper character and a clean finish that keeps the hand going back.',
-    price: 169,
-    originalPrice: 199,
+    price: 170,
+    originalPrice: 190,
     stockQuantity: 160,
     badge: 'Fresh drop',
     category: "FLIPO's",
@@ -100,26 +132,30 @@ export const products = [
       },
       {
         src: `${P}/jalapeno-kick-life-designer.webp`,
+        caption: "The designer's desk",
         thumb: `${P}/jalapeno-kick-life-designer-thumb.webp`,
         alt: 'Jalapeño Kick on a designer desk with type specimens and colour swatches',
       },
       {
         src: `${P}/jalapeno-kick-life-creator.webp`,
+        caption: 'The creator setup',
         thumb: `${P}/jalapeno-kick-life-creator-thumb.webp`,
         alt: 'Jalapeño Kick on a content creator setup with camera, mic and neon sign',
       },
       {
         src: `${P}/jalapeno-kick-life-founder.webp`,
+        caption: "The founder's desk",
         thumb: `${P}/jalapeno-kick-life-founder-thumb.webp`,
         alt: 'Jalapeño Kick on a founder desk with laptop, notebook and roadmap',
       },
       {
         src: `${P}/jalapeno-kick-life-trader.webp`,
+        caption: "The trader's desk",
         thumb: `${P}/jalapeno-kick-life-trader-thumb.webp`,
         alt: 'Jalapeño Kick on a trading desk with market charts on screen',
       },
     ],
-    ingredients: ['Jalapeño seasoning', 'Green pepper', 'Crisp baked base'],
+    ingredients: ['Jalapeño seasoning', 'Green pepper', 'Crisp fried base'],
     seoKeywords: 'buy healthy snacks online, order gourmet snacks, premium snacks India',
     weight: '100 gms',
     rating: { value: 4.6, count: 143 },
@@ -127,6 +163,14 @@ export const products = [
     flavourHeading: 'Fresh. Full of Character.',
     flavourDescription:
       'A crisp jalapeño-led bite with fresh pepper character, delivering clean heat that keeps the hand going back.',
+    // What each bite tastes like, in order -- drawn as the PDP's heat climb.
+    heatBites: [
+      'Fresh pepper, clean and green.',
+      'The jalapeño character comes up.',
+      'A bright, clean heat builds.',
+      'Fresh Heat, still clean on the finish.',
+      'Your hand goes back in anyway.',
+    ],
   },
   {
     id: 3,
@@ -137,8 +181,8 @@ export const products = [
     tagline: 'Fire with every crunch.',
     description:
       'A deep peri-peri hit with chilli warmth, a savoury finish, and enough crunch to headline any snack break.',
-    price: 169,
-    originalPrice: 199,
+    price: 170,
+    originalPrice: 190,
     stockQuantity: 220,
     badge: 'Heat hero',
     category: "FLIPO's",
@@ -163,21 +207,24 @@ export const products = [
       },
       {
         src: `${P}/peri-peri-punch-life-flatlay.webp`,
+        caption: 'The work flat-lay',
         thumb: `${P}/peri-peri-punch-life-flatlay-thumb.webp`,
         alt: 'Peri Peri Punch flat-lay on a work desk with laptop, notes and headphones',
       },
       {
         src: `${P}/peri-peri-punch-life-office.webp`,
+        caption: 'The office desk',
         thumb: `${P}/peri-peri-punch-life-office-thumb.webp`,
         alt: 'Peri Peri Punch on an office desk beside a laptop, coffee and sticky notes',
       },
       {
         src: `${P}/peri-peri-punch-life-creator.webp`,
+        caption: 'The creator setup',
         thumb: `${P}/peri-peri-punch-life-creator-thumb.webp`,
         alt: 'Peri Peri Punch on a content creator desk with camera, mic and neon sign',
       },
     ],
-    ingredients: ['Peri peri seasoning', 'Red chilli', 'Crisp baked base'],
+    ingredients: ['Peri peri seasoning', 'Red chilli', 'Crisp fried base'],
     seoKeywords: 'peri peri snack packs, spicy chips buy online, premium snacks India',
     weight: '100 gms',
     rating: { value: 4.8, count: 125 },
@@ -185,6 +232,14 @@ export const products = [
     flavourHeading: 'Spicy. Full of Character.',
     flavourDescription:
       'A lively kick balanced with savoury depth, delivering flavour first, heat second.',
+    // What each bite tastes like, in order -- drawn as the PDP's heat climb.
+    heatBites: [
+      'Savoury depth lands first.',
+      'The peri-peri tang comes through.',
+      'Then the warmth starts to build.',
+      'Big Heat. Properly warm now.',
+      'Your hand goes back in anyway.',
+    ],
   },
 ]
 
@@ -197,10 +252,29 @@ export const bundles = [
     description:
       'Sweet Chilli Rush, Jalapeño Kick, and Peri Peri Punch in one first-date-with-the-brand box.',
     price: 499,
-    originalPrice: 507,
+    // Three singles at list price. Derived, not quoted: the brand folder shows
+    // the trio at 499 without a strike-through.
+    originalPrice: 570,
     packetCount: 3,
     badge: 'Launch favourite',
-    imageUrl: '/assets/brand/bundle-of-3.jpeg',
+    imageUrl: '/assets/pick/flipos-flavour-trio-1.webp',
+    gallery: [
+      {
+        src: '/assets/pick/flipos-flavour-trio-1.webp',
+        thumb: '/assets/pick/flipos-flavour-trio-1-thumb.webp',
+        alt: "All three FLIPO's packs stood together on a studio plinth",
+      },
+      {
+        src: '/assets/pick/flipos-flavour-trio-2.webp',
+        thumb: '/assets/pick/flipos-flavour-trio-2-thumb.webp',
+        alt: "The trio with loose chips and fresh chillies scattered around them",
+      },
+      {
+        src: '/assets/pick/flipos-flavour-trio-3.webp',
+        thumb: '/assets/pick/flipos-flavour-trio-3-thumb.webp',
+        alt: "The three flavours laid out side by side, front facing",
+      },
+    ],
     includes: products.map((p) => p.shortName),
     lineItems: products.map((p) => ({ productId: p.id, productSlug: p.slug, quantity: 1 })),
     isBundle: true,
@@ -220,10 +294,29 @@ export const bundles = [
     description:
       'A six-pack flavour stack made for house parties, office tables, and people who do not share nicely.',
     price: 299,
-    originalPrice: 1014,
+    // The launch banner in the brand folder strikes 949, not the sum of six
+    // singles at list price.
+    originalPrice: 949,
     packetCount: 6,
     badge: 'Launch price',
-    imageUrl: '/assets/products/flipos-promo.webp',
+    imageUrl: '/assets/pick/flipos-party-six-1.webp',
+    gallery: [
+      {
+        src: '/assets/pick/flipos-party-six-1.webp',
+        thumb: '/assets/pick/flipos-party-six-1-thumb.webp',
+        alt: "Six FLIPO's packs lined up, two of each flavour",
+      },
+      {
+        src: '/assets/pick/flipos-party-six-2.webp',
+        thumb: '/assets/pick/flipos-party-six-2-thumb.webp',
+        alt: 'The six-pack stack with chillies and loose chips around it',
+      },
+      {
+        src: '/assets/pick/flipos-party-six-3.webp',
+        thumb: '/assets/pick/flipos-party-six-3-thumb.webp',
+        alt: 'The party six spread across a table, ready to share',
+      },
+    ],
     includes: products.map((p) => `2x ${p.shortName}`),
     lineItems: products.map((p) => ({ productId: p.id, productSlug: p.slug, quantity: 2 })),
     isBundle: true,
@@ -303,7 +396,7 @@ function relativeLuminance(hex) {
   return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
 }
 
-function contrastRatio(a, b) {
+export function contrastRatio(a, b) {
   const la = relativeLuminance(a)
   const lb = relativeLuminance(b)
   return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05)
