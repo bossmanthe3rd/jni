@@ -46,12 +46,14 @@ export default function CrateLine({ item, onQty, onRemove, compact = false }) {
           {item.selectedWeight || item.weight}
           {item.flavor ? ` · ${item.flavor}` : ''}
         </p>
-        <div className={`flex flex-wrap items-center gap-x-4 gap-y-2 ${compact ? 'mt-2' : 'mt-3'}`}>
+        <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 ${compact ? 'mt-2' : 'mt-3'}`}>
           <QtyStepper qty={item.qty} onChange={onQty} size={compact ? 'sm' : 'md'} />
           <button
             type="button"
             onClick={onRemove}
-            className="inline-flex items-center gap-1 text-xs font-bold text-ink/55 transition hover:text-[#d4361c]"
+            // 44px tall, padded out rather than sized up, so the line keeps its
+            // quiet look but the button is a real target beside the stepper.
+            className="-mx-2 inline-flex min-h-[44px] items-center gap-1 px-2 text-xs font-bold text-ink/55 transition hover:text-[#d4361c]"
           >
             <Trash2 size={14} /> Remove
             <span className="sr-only"> {name}</span>

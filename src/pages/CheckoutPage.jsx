@@ -46,7 +46,7 @@ export default function CheckoutPage() {
         <div className="relative mx-auto max-w-6xl px-4 pb-10 pt-[calc(var(--site-header-offset)+1.25rem)] sm:px-8 sm:pb-12 lg:px-0">
           <Link
             to="/#products"
-            className="inline-flex items-center gap-1.5 text-sm font-bold text-ink/70 underline-offset-4 hover:text-ink hover:underline"
+            className="-ml-1 inline-flex min-h-[44px] items-center gap-1.5 px-1 text-sm font-bold text-ink/70 underline-offset-4 hover:text-ink hover:underline"
           >
             <ArrowLeft size={16} /> Keep shopping
           </Link>

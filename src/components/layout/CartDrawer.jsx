@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { X } from 'lucide-react'
 import { useCart } from '../../store/cartStore'
 import { SHIPPING_FLAT, toCartProduct } from '../../data/products'
@@ -11,6 +11,8 @@ import CrateLine from '../checkout/CrateLine'
 import DeliveryNudge from '../checkout/DeliveryNudge'
 import EmptySlot from '../checkout/EmptySlot'
 import { cartTotals, itemCount } from '../checkout/cartTotals'
+import { trapTab } from '../../lib/focusTrap'
+import { useScrollLock } from '../../lib/scrollLock'
 import '../../styles/checkout.css'
 
 /**
@@ -25,20 +27,37 @@ export default function CartDrawer() {
   const { items, isOpen, closeCart, setQty, removeItem, addItem } = useCart()
   const { subtotal, shipping, total, packs } = cartTotals(items)
 
-  // A drawer over a dimmed page is a modal, so it gets the two things a modal
-  // owes the reader: Escape closes it, and the page behind it stops scrolling
-  // instead of sliding around under the overlay.
+  // A drawer over a dimmed page is a modal, so it gets what a modal owes the
+  // reader: Escape closes it, focus moves into it (and back out on close),
+  // and the page behind it stops scrolling instead of sliding around under
+  // the overlay.
+  useScrollLock(isOpen)
+
+  // Any navigation closes it -- Back included -- or it would stay over the
+  // new page with scrolling still locked.
+  const { pathname } = useLocation()
+  useEffect(() => {
+    closeCart()
+  }, [pathname, closeCart])
+
+  const panelRef = useRef(null)
   useEffect(() => {
     if (!isOpen) return
+    const opener = document.activeElement
     const onKey = (e) => {
       if (e.key === 'Escape') closeCart()
+      if (e.key === 'Tab') trapTab(e, panelRef.current)
     }
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    // After the slide-in has started, so focus does not scroll a panel that
+    // is still off-canvas.
+    const id = window.requestAnimationFrame(() =>
+      panelRef.current?.querySelector('[data-drawer-close]')?.focus({ preventScroll: true })
+    )
     window.addEventListener('keydown', onKey)
     return () => {
-      document.body.style.overflow = prevOverflow
+      window.cancelAnimationFrame(id)
       window.removeEventListener('keydown', onKey)
+      opener?.focus?.({ preventScroll: true })
     }
   }, [isOpen, closeCart])
 
@@ -51,7 +70,9 @@ export default function CartDrawer() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closeCart}
-            className="fixed inset-0 z-[60] bg-ink/60 backdrop-blur-sm"
+            // The blur is desktop-only: a full-screen backdrop-filter over the
+            // whole page is one of the most expensive paints a phone can do.
+            className="fixed inset-0 z-[60] bg-ink/70 md:bg-ink/60 md:backdrop-blur-sm"
             aria-hidden="true"
           />
           <motion.aside
@@ -62,7 +83,8 @@ export default function CartDrawer() {
             role="dialog"
             aria-modal="true"
             aria-label="Your crate"
-            className="ck-drawer fixed right-0 top-0 z-[61] flex h-full w-full max-w-md flex-col border-l-[3px] border-ink bg-cream"
+            ref={panelRef}
+            className="ck-drawer fixed right-0 top-0 z-[61] flex h-full w-full max-w-md flex-col border-ink bg-cream sm:border-l-[3px]"
           >
             {/* The wall strip. */}
             <div className="flex items-center justify-between gap-4 px-5 pb-5 pt-5">
@@ -78,7 +100,8 @@ export default function CartDrawer() {
                 type="button"
                 onClick={closeCart}
                 aria-label="Close cart"
-                className="grid h-10 w-10 shrink-0 place-items-center rounded-full border-[2.5px] border-ink bg-cream text-ink transition hover:bg-ink hover:text-cream"
+                data-drawer-close=""
+                className="grid h-11 w-11 shrink-0 place-items-center rounded-full border-[2.5px] border-ink bg-cream text-ink transition hover:bg-ink hover:text-cream"
               >
                 <X size={18} />
               </button>
@@ -112,7 +135,7 @@ export default function CartDrawer() {
                 </div>
               ) : (
                 <>
-                  <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-8 pt-6">
+                  <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-8 pt-6">
                     <ul className="space-y-3">
                       <AnimatePresence initial={false}>
                         {items.map((item) => (

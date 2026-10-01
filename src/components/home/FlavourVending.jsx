@@ -9,6 +9,8 @@ import {
   useReducedMotion,
 } from 'framer-motion'
 import { ChevronUp, Minus, Plus } from 'lucide-react'
+import { useScrollLock } from '../../lib/scrollLock'
+import { trapTab } from '../../lib/focusTrap'
 import {
   STAMP_INK as STAMP,
   STAMP_INK_BUNDLE as STAMP_BUNDLE,
@@ -100,6 +102,8 @@ export default function FlavourVending() {
   const busy = useRef(false)
   const touched = useRef(false)
   const alive = useRef(true)
+  // Whether the section is still on screen when a pack lands (see land()).
+  const sectionShown = useRef(true)
   useEffect(() => {
     alive.current = true
     return () => {
@@ -147,7 +151,9 @@ export default function FlavourVending() {
         setReceipt(code)
         setPhase('ready')
         setTyped('')
-        if (byUser) setSheetOpen(true)
+        // Only if the reader is still here: scroll away mid-vend and the sheet
+        // would otherwise pop open, and lock scrolling, when they come back.
+        if (byUser && sectionShown.current) setSheetOpen(true)
         busy.current = false
       }
 
@@ -196,6 +202,16 @@ export default function FlavourVending() {
   const machineRef = useRef(null)
   const machineInView = useInView(machineRef, { once: true, amount: 0.45 })
   const sectionInView = useInView(sectionRef, { amount: 0.12 })
+
+  // The bulbs, the coil and the clock run on CSS loops; with the machine
+  // wholly off screen they hold where they are rather than repaint unseen.
+  useEffect(() => {
+    const section = sectionRef.current
+    if (!section) return undefined
+    const io = new IntersectionObserver(([e]) => section.classList.toggle('vm-section--asleep', !e.isIntersecting))
+    io.observe(section)
+    return () => io.disconnect()
+  }, [])
   useEffect(() => {
     if (!machineInView) return undefined
     const t = setTimeout(() => {
@@ -205,8 +221,13 @@ export default function FlavourVending() {
   }, [machineInView, vend])
 
   useEffect(() => {
+    sectionShown.current = sectionInView
     if (!sectionInView) setSheetOpen(false)
   }, [sectionInView])
+
+  // Stable, because the sheet's focus effect runs again whenever onClose
+  // changes -- a fresh arrow each render pulled focus back to the start.
+  const closeSheet = useCallback(() => setSheetOpen(false), [])
 
   const pick = (code) => {
     touched.current = true
@@ -380,7 +401,7 @@ export default function FlavourVending() {
           open={sheetOpen}
           visible={sectionInView}
           onOpen={() => setSheetOpen(true)}
-          onClose={() => setSheetOpen(false)}
+          onClose={closeSheet}
         />
       )}
     </section>
@@ -715,13 +736,27 @@ function BigHeat({ product }) {
 /** The receipt on a phone: a tab along the bottom that opens into a sheet. */
 function ReceiptSheet({ slot, open, visible, onOpen, onClose }) {
   const drag = useDragControls()
+  const sheetRef = useRef(null)
+  const showing = visible && open
+
+  // Held still underneath, like the cart: scrolling the page behind the sheet
+  // used to carry the machine out of view, which closed the sheet on its own.
+  useScrollLock(showing)
 
   useEffect(() => {
-    if (!open) return undefined
-    const onKey = (e) => e.key === 'Escape' && onClose()
+    if (!showing) return undefined
+    const opener = document.activeElement
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose()
+      if (e.key === 'Tab') trapTab(e, sheetRef.current)
+    }
+    sheetRef.current?.focus({ preventScroll: true })
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      opener?.focus?.({ preventScroll: true })
+    }
+  }, [showing, onClose])
 
   if (typeof document === 'undefined') return null
   return createPortal(
@@ -748,8 +783,11 @@ function ReceiptSheet({ slot, open, visible, onOpen, onClose }) {
         <motion.div key="sheet" className="vm-sheet-root" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
           <button type="button" className="vm-sheet-scrim" aria-label="Close receipt" onClick={onClose} />
           <motion.div
+            ref={sheetRef}
+            tabIndex={-1}
             className="vm-sheet"
             role="dialog"
+            aria-modal="true"
             aria-label={`Receipt: ${slot.item.shortName}`}
             initial={{ y: '100%' }}
             animate={{ y: 0 }}

@@ -5,6 +5,7 @@ import { ShoppingCart, User, X } from 'lucide-react'
 import { useCart } from '../../store/cartStore'
 import { ticker, navLinks } from '../../data/site'
 import { StarDoodle } from '../icons/WhyIcons'
+import { useScrollLock } from '../../lib/scrollLock'
 import { BadgeFace } from './BadgeFace'
 import { NibbleBlob } from '../ui/NibbleBlob'
 import { BLOB_PATHS } from '../ui/BlobShapes'
@@ -213,6 +214,24 @@ export default function SiteHeader() {
   // link elsewhere on the page left it hanging open over the new route.
   useEffect(() => setNavOpen(false), [pathname, hash])
 
+  // The page holds still under the open menu, the same as under the cart.
+  useScrollLock(navOpen)
+
+  /* A link to where the reader already is changes nothing in the URL, so the
+     route's scroll handling never runs and the tap did nothing -- "Shop
+     flavours" from halfway down the homepage left you there. Do the scroll
+     here instead, once the menu has closed and released the page. */
+  const followNavLink = (link) => {
+    setNavOpen(false)
+    const here = pathname === link.to && (link.hash ? hash === `#${link.hash}` : !hash)
+    if (!here) return
+    window.requestAnimationFrame(() => {
+      const target = link.hash && document.getElementById(link.hash)
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      else window.scrollTo({ top: 0, behavior: 'smooth' })
+    })
+  }
+
   return (
     // The header no longer paints a strip, so most of this band is now just
     // page showing through. pointer-events-none hands those gaps back to the
@@ -249,7 +268,12 @@ export default function SiteHeader() {
 
       {/* Three islands, not a bar. The row only sets the height the controls
           centre on and the line the badge hangs from; it paints nothing. */}
-      <div data-intro-bar="" className="relative h-[4.5rem] sm:h-[5rem] lg:h-[5.5rem]">
+      {/* Inset from the notch in landscape: the controls are positioned against
+          this row, so narrowing it keeps them clear of the cut-out. */}
+      <div
+        data-intro-bar=""
+        className="relative h-[4.5rem] [margin-inline:env(safe-area-inset-left)_env(safe-area-inset-right)] sm:h-[5rem] lg:h-[5.5rem]"
+      >
         <Pebble
           shape="stamp1"
           className="pointer-events-auto absolute left-2 top-1/2 -translate-y-1/2 sm:left-6 lg:left-10"
@@ -307,7 +331,7 @@ export default function SiteHeader() {
             aria-label="Log in"
             title="Log in / Sign up"
             onClick={() => navigate('/account')}
-            className="relative grid h-10 w-10 place-items-center text-teal transition hover:text-sunshine sm:h-11 sm:w-11"
+            className="relative grid h-11 w-11 place-items-center text-teal transition hover:text-sunshine"
           >
             <User size={22} strokeWidth={1.8} />
           </button>
@@ -317,7 +341,7 @@ export default function SiteHeader() {
             title="Your cart"
             data-cart-icon="true"
             onClick={toggleCart}
-            className="relative grid h-10 w-10 place-items-center text-teal transition hover:text-sunshine sm:h-11 sm:w-11"
+            className="relative grid h-11 w-11 place-items-center text-teal transition hover:text-sunshine"
           >
             <ShoppingCart size={22} strokeWidth={1.8} />
             {qty > 0 && (
@@ -331,7 +355,23 @@ export default function SiteHeader() {
 
       <AnimatePresence>
         {navOpen && (
+          /* Dims the page and closes the menu on a tap outside it. Behind the
+             header's own controls (the header is its own stacking context),
+             so the menu button still reads as the way to close it. */
+          <motion.div
+            key="scrim"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setNavOpen(false)}
+            className="pointer-events-auto fixed inset-0 -z-10 bg-ink/50"
+            aria-hidden="true"
+          />
+        )}
+        {navOpen && (
           <motion.nav
+            key="nav"
             id="site-nav-drawer"
             aria-label="Main"
             initial={{ opacity: 0, y: -12 }}
@@ -348,7 +388,7 @@ export default function SiteHeader() {
                 <li key={link.label}>
                   <Link
                     to={link.hash ? `${link.to}#${link.hash}` : link.to}
-                    onClick={() => setNavOpen(false)}
+                    onClick={() => followNavLink(link)}
                     className="block py-2 font-brand text-2xl text-cream transition hover:text-sunshine"
                   >
                     {link.label}

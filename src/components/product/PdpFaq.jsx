@@ -7,6 +7,7 @@ import { legalBusinessDetails, socialLinks } from '../../data/site'
 import { packPalettes } from '../icons/PackDoodles'
 import { heatLevel } from './HeatMeter'
 import { useCart } from '../../store/cartStore'
+import { useCrateSubtotal } from '../checkout/cartTotals'
 
 /**
  * "Asked a lot", as a chat.
@@ -153,6 +154,7 @@ const bubbleIn = {
 export default function PdpFaq({ product }) {
   const navigate = useNavigate()
   const { addItem } = useCart()
+  const crateSubtotal = useCrateSubtotal()
   const ground = packPalettes[product.slug]?.ground || product.theme?.ink
   return (
     <FaqChat
@@ -160,8 +162,8 @@ export default function PdpFaq({ product }) {
       faqs={faqsFor(product)}
       accent={panelAccent({ ...product.theme, ink: ground })}
       avatar={`/assets/doodles/pack/${product.slug}-chilli-whole.svg`}
-      buyName={`One pack of ${product.shortName || product.name}`}
-      payable={deliveredTotal(Number(product.price))}
+      buyName={`One pack of ${product.shortName || product.name}${crateSubtotal ? ' with your crate' : ''}`}
+      payable={deliveredTotal(crateSubtotal + Number(product.price))}
       onBuy={() => {
         addItem(toCartProduct(product), 1)
         navigate('/checkout')

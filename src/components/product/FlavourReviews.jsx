@@ -56,7 +56,8 @@ function Score({ value, count }) {
 
   return (
     <div ref={ref} className="jni-sticker jni-reviews-score" style={{ '--turn': '1.5deg' }}>
-      <b aria-hidden="true">{shown.toFixed(1)}</b>
+      {/* Held still, the score is the value itself: `shown` only counts up. */}
+      <b aria-hidden="true">{(reduce ? value : shown).toFixed(1)}</b>
       <span>
         <span className="jni-reviews-stars" aria-hidden="true">
           {[0, 1, 2, 3, 4].map((i) => (

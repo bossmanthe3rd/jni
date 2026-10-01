@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import {
   BODY,
   BODY_INNER,
@@ -248,6 +249,9 @@ export function poseFlip(p, pose) {
 
 /** The rig's markup. `partsRef` collects the nodes `poseFlip` writes to. */
 export default function FlipArt({ partsRef, className = '', style }) {
+  // Flip is on the page more than once (the flavour stage and the reviews), so
+  // the clip needs an id of his own each time, or both point at the first.
+  const clip = `flip-body-clip-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
   const set = (key) => (node) => {
     if (!partsRef.current) partsRef.current = {}
     partsRef.current[key] = node
@@ -256,7 +260,7 @@ export default function FlipArt({ partsRef, className = '', style }) {
   return (
     <svg viewBox={FLIP_VIEWBOX} className={className} style={style} aria-hidden="true" focusable="false">
       <defs>
-        <clipPath id="flip-body-clip">
+        <clipPath id={clip}>
           <path d={BODY} />
         </clipPath>
       </defs>
@@ -287,7 +291,7 @@ export default function FlipArt({ partsRef, className = '', style }) {
               top of both so it stays crisp. */}
           <path d={BODY} style={{ fill: 'var(--flip-base)' }} stroke={INK} strokeWidth={KEY} strokeLinejoin="round" />
           <g
-            clipPath="url(#flip-body-clip)"
+            clipPath={`url(#${clip})`}
             style={{ stroke: 'var(--flip-lattice)' }}
             strokeWidth="4.5"
             strokeLinecap="round"
@@ -297,7 +301,7 @@ export default function FlipArt({ partsRef, className = '', style }) {
               <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} />
             ))}
           </g>
-          <g clipPath="url(#flip-body-clip)">
+          <g clipPath={`url(#${clip})`}>
             {SPECKLES.map(([cx, cy, r, op, rot, dark], i) => (
               <ellipse
                 key={i}

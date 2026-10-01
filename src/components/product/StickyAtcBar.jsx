@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 /**
@@ -10,8 +10,9 @@ import { AnimatePresence, motion } from 'framer-motion'
  * accordion and the reserved strip was simply 5rem of empty cream at the foot
  * of the page.
  *
- * The bar takes over exactly when the real CTA leaves the viewport, so the two
- * are never on screen together asking for the same tap.
+ * The bar is up whenever the real CTA is not, so the two are never on screen
+ * together asking for the same tap. It is hidden from lg up, where the dossier
+ * goes two-column and the buy block stays in view beside the pouch.
  */
 /*
  * Pass `image` for the floating variant the product page uses: a dark pill
@@ -29,22 +30,54 @@ export default function StickyAtcBar({
   unit = '1 pack',
 }) {
   const [visible, setVisible] = useState(false)
-  const seen = useRef(false)
 
+  /*
+   * Three signals decide the bar:
+   *
+   *   - the real CTA is on screen: hide, so two buttons never ask for one tap;
+   *   - the footer is on screen: hide, or the bar sits over its last links;
+   *   - the reader has either reached the CTA once, or scrolled most of a
+   *     screen. On a phone the CTA is ~1000px down, under the gallery, title,
+   *     switcher and price, so waiting to "see" it left the first screen with
+   *     no way to buy at all.
+   */
   useEffect(() => {
     const el = watchRef?.current
     if (!el) return
+    const state = { cta: false, footer: false, seen: false, scrolled: false }
+    const sync = () =>
+      setVisible(!state.cta && !state.footer && (state.seen || state.scrolled))
+
     const io = new IntersectionObserver(
-      ([entry]) => {
-        // Only after the reader has actually reached the CTA once -- otherwise
-        // the bar is already up on first paint, before anyone has seen a price.
-        if (entry.isIntersecting) seen.current = true
-        setVisible(seen.current && !entry.isIntersecting)
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.target === el) {
+            state.cta = entry.isIntersecting
+            if (entry.isIntersecting) state.seen = true
+          } else {
+            state.footer = entry.isIntersecting
+          }
+        }
+        sync()
       },
       { threshold: 0 }
     )
     io.observe(el)
-    return () => io.disconnect()
+    const footer = document.querySelector('footer')
+    if (footer) io.observe(footer)
+
+    const onScroll = () => {
+      const scrolled = window.scrollY > window.innerHeight * 0.6
+      if (scrolled === state.scrolled) return
+      state.scrolled = scrolled
+      sync()
+    }
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      io.disconnect()
+      window.removeEventListener('scroll', onScroll)
+    }
   }, [watchRef])
 
   if (image) {
@@ -56,7 +89,7 @@ export default function StickyAtcBar({
             animate={{ y: 0 }}
             exit={{ y: '140%' }}
             transition={{ type: 'spring', stiffness: 320, damping: 30 }}
-            className="jni-atc-float md:hidden"
+            className="jni-atc-float lg:hidden"
           >
             <img src={image} alt="" />
             <p>
@@ -83,7 +116,7 @@ export default function StickyAtcBar({
           animate={{ y: 0 }}
           exit={{ y: '110%' }}
           transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-          className="fixed inset-x-0 bottom-0 z-40 border-t-[3px] border-ink bg-cream px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden"
+          className="fixed inset-x-0 bottom-0 z-40 border-t-[3px] border-ink bg-cream px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:hidden"
         >
           <div className="flex items-center gap-3">
             <div className="min-w-0 flex-1">

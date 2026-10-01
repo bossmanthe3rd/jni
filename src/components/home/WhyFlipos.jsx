@@ -1,7 +1,8 @@
 import { forwardRef, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useInView, useReducedMotion } from 'framer-motion'
 import { whyFeatures } from '../../data/site'
-import { WaveDivider } from '../ui/Primitives'
+import { WaveDivider, useMediaQuery } from '../ui/Primitives'
+import { FlipoMark } from '../icons/FlipoMark'
 import WhyWall from './WhyWall'
 import '../../styles/why-flipos.css'
 
@@ -162,9 +163,11 @@ function tickBounce(t) {
   const b = bounce
   const dt = b.last ? Math.min(0.05, (t - b.last) / 1000) : 0
   b.last = t
-  const pack = lead.pack.current
-  const maxX = lead.screen.current.clientWidth - pack.offsetWidth
-  const maxY = lead.screen.current.clientHeight - pack.offsetHeight
+  // Sizes come from the screen's ResizeObserver, not a read here: a read
+  // straight after last frame's transform write forces a layout every frame.
+  const { screenW, screenH, packW, packH } = lead.size
+  const maxX = screenW - packW
+  const maxY = screenH - packH
 
   b.x += b.vx * dt
   b.y += b.vy * dt
@@ -186,7 +189,7 @@ function tickBounce(t) {
     const nearX = b.x <= CORNER || b.x >= maxX - CORNER
     const nearY = b.y <= CORNER || b.y >= maxY - CORNER
     const corner = (hitX && nearY) || (hitY && nearX)
-    const at = { id: t, x: b.x + pack.offsetWidth / 2, y: b.y + pack.offsetHeight / 2 }
+    const at = { id: t, x: b.x + packW / 2, y: b.y + packH / 2 }
     b.screens.forEach((s) => {
       s.setFlavour(b.flavour)
       if (corner) s.burst(at)
@@ -215,6 +218,7 @@ function Screensaver({ decorative, saverOpacity, children }) {
       pack: packRef,
       lead: !decorative,
       active: false,
+      size: { screenW: 0, screenH: 0, packW: 0, packH: 0 },
       setFlavour,
       burst: (at) => {
         setBursts((list) => [...list, at])
@@ -224,7 +228,18 @@ function Screensaver({ decorative, saverOpacity, children }) {
     entry.current = e
     bounce.screens.add(e)
     if (packRef.current) packRef.current.style.transform = `translate(${bounce.x}px, ${bounce.y}px)`
+    const measure = () => {
+      const screen = screenRef.current
+      const pack = packRef.current
+      if (!screen || !pack) return
+      e.size = { screenW: screen.clientWidth, screenH: screen.clientHeight, packW: pack.offsetWidth, packH: pack.offsetHeight }
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    if (screenRef.current) ro.observe(screenRef.current)
+    if (packRef.current) ro.observe(packRef.current)
     return () => {
+      ro.disconnect()
       bounce.screens.delete(e)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -253,7 +268,15 @@ function Screensaver({ decorative, saverOpacity, children }) {
             <Confetti key={b.id} x={b.x} y={b.y} />
           ))}
         </AnimatePresence>
-        <Title className="wf-title font-brand">Why Flipo&apos;s?</Title>
+        {/* "Flipo's" is the pack's own lettering, not type -- the same mark as
+            on the pouch front. The words ride along for screen readers. */}
+        <Title className="wf-title font-brand">
+          <span className="wf-title-line">
+            Why
+            <FlipoMark className="wf-title-mark" />
+            <span className="sr-only"> Flipo&apos;s</span>?
+          </span>
+        </Title>
       </motion.div>
       {children}
     </div>
@@ -299,6 +322,11 @@ function StickyNote({ feature, index, staged, revealed }) {
   // arrives, and come back down if it backs away.
   const up = staged ? revealed : inView
   const [hot, setHot] = useState(false)
+  // Touch has no hover, so the doodle's loop never ran on a phone. There it
+  // plays while the note sits well inside the screen instead.
+  const noHover = useMediaQuery('(hover: none)')
+  const centred = useInView(ref, { amount: 0.9 })
+  const looping = hot || (noHover && centred && up && !reduceMotion)
   const note = NOTE[feature.id] || { bg: '#fbf6d0', tilt: 0 }
 
   return (
@@ -328,7 +356,7 @@ function StickyNote({ feature, index, staged, revealed }) {
       onHoverStart={() => setHot(true)}
       onHoverEnd={() => setHot(false)}
     >
-      <div className={`why-icon wf-note-art ${feature.loopClass} ${hot ? 'why-loop' : ''}`} aria-hidden="true">
+      <div className={`why-icon wf-note-art ${feature.loopClass} ${looping ? 'why-loop' : ''}`} aria-hidden="true">
         <img src={feature.image} alt="" width="512" height="512" loading="lazy" decoding="async" />
         {feature.overlay === 'keys' && (
           <span className="why-keys text-[#071A16]">

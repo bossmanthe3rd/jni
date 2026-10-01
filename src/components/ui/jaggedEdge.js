@@ -1,6 +1,7 @@
 /*
  * A panel edge cut the way a crisp pouch is cut: crimped along the top like
- * the heat seal, torn along the bottom like a pack just ripped open.
+ * the heat seal, crimped down both sides like the pouch's side seals, and torn
+ * along the bottom like a pack just ripped open.
  *
  * One call returns everything that has to agree about that edge -- the closed
  * path the panel is clipped to, the same path the doodle procession rides, and
@@ -115,6 +116,8 @@ function quadLength(a, c, b) {
  * @param {number} h  panel height, px
  * @param {object} o
  *   seal   { period, depth }        crimp teeth along the top
+ *   side   { period, depth } | null crimp teeth down both sides; null leaves
+ *                                   them straight
  *   tear   { step:[min,max], depth:[min,max] }  the torn bottom
  *   shelf  { x, width } | null      a flat run in the seal, for something to
  *                                   rest on (the mascot's hands)
@@ -147,12 +150,36 @@ export function jaggedEdge(w, h, o) {
   top.push({ x: w, y: 0, r: CORNER_R, reach: CORNER_REACH })
 
   const bottom = tear(w, h, o.tear, rnd)
-  const verts = [...top, ...bottom]
+
+  // The side seals run from the seal's corner down to where the tear begins,
+  // peaks on the panel's outer edge and valleys cut in by the side depth.
+  // crimp() works along one axis, so each side is laid out along y and turned
+  // onto its edge; the left one is walked bottom to top, the way the loop goes.
+  const side = o.side === undefined ? seal : o.side
+  let right = []
+  let left = []
+  if (side) {
+    right = crimp(0, bottom[0].y, 'peak', 'peak', side.period, side.depth).map((q) => ({
+      x: w - q.y,
+      y: q.x,
+      r: TOOTH_R,
+    }))
+    left = crimp(0, bottom[bottom.length - 1].y, 'peak', 'peak', side.period, side.depth)
+      .map((q) => ({ x: q.y, y: q.x, r: TOOTH_R }))
+      .reverse()
+  }
+
+  const verts = [...top, ...right, ...bottom, ...left]
   const n = verts.length
 
-  // Which stretch runs from each vertex to the next: the two corners that open
-  // a side mark it, and everything else is teeth.
-  const sideFrom = new Set([top.length - 1, n - 1])
+  // Which stretches run down or up a side. They ride at an even pace: the
+  // gravity rule would speed every tooth on the way down the right and slow
+  // every one on the way up the left, piling the procession up that side.
+  const sideFrom = new Set()
+  const rightFrom = top.length - 1
+  for (let i = rightFrom; i <= rightFrom + right.length; i += 1) sideFrom.add(i)
+  const leftFrom = top.length + right.length + bottom.length - 1
+  for (let i = leftFrom; i < n; i += 1) sideFrom.add(i)
 
   // --- fillet each vertex ------------------------------------------------------
   const cut = verts.map((P, i) => {

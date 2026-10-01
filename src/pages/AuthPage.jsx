@@ -7,6 +7,22 @@ import { useEffect, useState } from 'react'
  * and stores a JWT in localStorage. This clone has no backend, so submitting
  * shows a notice instead of authenticating. Markup matches the original.
  */
+/* 16px text: anything smaller and iOS Safari zooms the page in on focus and
+   leaves it zoomed after the keyboard closes. */
+const inputClass =
+  'h-12 w-full rounded-2xl border-thick border-outline bg-cream px-3 text-base font-semibold text-ink outline-none transition focus:border-teal'
+
+/* A visible label rather than a placeholder: the placeholder vanished the
+   moment anyone typed, and autofill keyed off nothing. */
+function Field({ label, children }) {
+  return (
+    <label className="grid gap-1.5">
+      <span className="text-xs font-extrabold uppercase tracking-[0.12em] text-ink/60">{label}</span>
+      {children}
+    </label>
+  )
+}
+
 export default function AuthPage() {
   const [mode, setMode] = useState('login')
   const [notice, setNotice] = useState('')
@@ -24,8 +40,8 @@ export default function AuthPage() {
 
   return (
     <div className="min-w-0 flex-grow">
-      <div className="bg-cream pt-24">
-        <div className="mx-auto grid min-h-[calc(100dvh-6rem)] max-w-7xl place-items-center px-4 py-10 sm:px-6 lg:px-8">
+      <div className="bg-cream pt-[var(--site-header-offset)]">
+        <div className="mx-auto grid min-h-[calc(100dvh-var(--site-header-offset))] max-w-7xl place-items-center px-4 py-10 sm:px-6 lg:px-8">
           <div className="jni-card w-full max-w-md p-5 shadow-doodle md:p-6">
             <p className="mb-2 text-xs font-extrabold uppercase tracking-[0.16em] text-teal">
               {isLogin ? 'Welcome back' : 'Join the crunch'}
@@ -36,25 +52,42 @@ export default function AuthPage() {
 
             <form className="grid gap-4" onSubmit={handleSubmit}>
               {!isLogin && (
-                <input
-                  type="text"
-                  placeholder="Name"
-                  required
-                  className="h-12 w-full rounded-2xl border-thick border-outline bg-cream px-3 text-sm font-semibold text-ink outline-none transition placeholder:text-ink/40 focus:border-teal"
-                />
+                <Field label="Name">
+                  <input
+                    type="text"
+                    name="name"
+                    autoComplete="name"
+                    autoCapitalize="words"
+                    enterKeyHint="next"
+                    required
+                    className={inputClass}
+                  />
+                </Field>
               )}
-              <input
-                type="email"
-                placeholder="Email"
-                required
-                className="h-12 w-full rounded-2xl border-thick border-outline bg-cream px-3 text-sm font-semibold text-ink outline-none transition placeholder:text-ink/40 focus:border-teal"
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                required
-                className="h-12 w-full rounded-2xl border-thick border-outline bg-cream px-3 text-sm font-semibold text-ink outline-none transition placeholder:text-ink/40 focus:border-teal"
-              />
+              <Field label="Email">
+                <input
+                  type="email"
+                  name="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  enterKeyHint="next"
+                  required
+                  className={inputClass}
+                />
+              </Field>
+              <Field label="Password">
+                <input
+                  type="password"
+                  name="password"
+                  autoComplete={isLogin ? 'current-password' : 'new-password'}
+                  enterKeyHint="go"
+                  required
+                  className={inputClass}
+                />
+              </Field>
               <button type="submit" className="jni-btn mt-1 w-full">
                 {isLogin ? 'Log in' : 'Create account'}
               </button>
@@ -74,7 +107,7 @@ export default function AuthPage() {
                   setMode(isLogin ? 'signup' : 'login')
                   setNotice('')
                 }}
-                className="ml-2 font-bold text-teal"
+                className="ml-1 inline-flex min-h-[44px] items-center px-1 font-bold text-teal"
               >
                 {isLogin ? 'Sign up' : 'Log in'}
               </button>

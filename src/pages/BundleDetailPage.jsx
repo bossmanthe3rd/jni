@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { bundles, deliveredTotal, getBundleBySlug, products } from '../data/products'
 import { useCart } from '../store/cartStore'
+import { rupee, useCrateSubtotal } from '../components/checkout/cartTotals'
 import StickyAtcBar from '../components/product/StickyAtcBar'
 import SectionEdge from '../components/product/SectionEdge'
 import TypeBands from '../components/product/TypeBands'
@@ -46,6 +47,8 @@ export default function BundleDetailPage() {
   const ctaRef = useRef(null)
   const navigate = useNavigate()
   const { addItem } = useCart()
+  const crateSubtotal = useCrateSubtotal()
+  const [qty, setQty] = useState(1)
 
   useEffect(() => {
     if (!bundle) return
@@ -92,14 +95,14 @@ export default function BundleDetailPage() {
   ]
 
   const handleBuy = () => {
-    addItem(toCartBundle(bundle), 1)
+    addItem(toCartBundle(bundle), qty)
     navigate('/checkout')
   }
 
   return (
     <div className="min-w-0 flex-grow bg-cream">
       <SectionEdge variant="wave" layer={6}>
-        <BundleDossier bundle={bundle} ctaRef={ctaRef} />
+        <BundleDossier bundle={bundle} ctaRef={ctaRef} onQtyChange={setQty} />
       </SectionEdge>
       <BoxFacts bundle={bundle} />
       <TypeBands
@@ -123,11 +126,11 @@ export default function BundleDetailPage() {
 
       <StickyAtcBar
         name={bundle.name}
-        price={bundle.price}
-        originalPrice={bundle.originalPrice}
+        price={Number(bundle.price) * qty}
+        originalPrice={Number(bundle.originalPrice) * qty}
         image={bundle.gallery?.[0]?.thumb || bundle.imageUrl}
-        unit="1 box"
-        ctaLabel={`Buy · ₹${deliveredTotal(Number(bundle.price))}`}
+        unit={qty === 1 ? '1 box' : `${qty} boxes`}
+        ctaLabel={`Buy · ${rupee(deliveredTotal(crateSubtotal + Number(bundle.price) * qty))}`}
         onAdd={handleBuy}
         watchRef={ctaRef}
       />

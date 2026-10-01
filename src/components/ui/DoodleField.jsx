@@ -1,6 +1,7 @@
 import { useMemo, useRef } from 'react'
 import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import { doodleComponents, packPalettes } from '../icons/PackDoodles'
+import { useMediaQuery } from './Primitives'
 
 /*
  * The pack's doodle ground, for the web.
@@ -156,7 +157,11 @@ export default function DoodleField({
     })
   }, [count, seed])
 
-  const moving = drift && !reduced
+  // No drift on phones. There most fields sit under a soft-light grain and a
+  // masked section edge, so a layer moving under them re-blends the whole
+  // section every scroll frame -- for parallax of a few pixels at that width.
+  const phone = useMediaQuery('(max-width: 767px)')
+  const moving = drift && !reduced && !phone
 
   // A field is clipped by its section's own `overflow-hidden`, so any doodle
   // straddling a section boundary gets sliced in half and the cut reads as a

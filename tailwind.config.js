@@ -8,6 +8,11 @@ const withAlpha = (varName) =>
 
 /** @type {import('tailwindcss').Config} */
 export default {
+  // Emits every hover: utility inside @media (hover: hover), so a tap on a
+  // phone does not leave the hover lift or colour stuck on.
+  future: {
+    hoverOnlyWhenSupported: true,
+  },
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
     screens: {

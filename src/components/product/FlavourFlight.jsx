@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { bundles, panelAccent, products } from '../../data/products'
 import { packPalettes } from '../icons/PackDoodles'
@@ -18,6 +18,9 @@ const rupee = (n) => `₹${Number(n).toLocaleString('en-IN')}`
 export default function FlavourFlight({ product }) {
   const { addItem, openCart } = useCart()
   const [justAdded, setJustAdded] = useState(null)
+  // The router keeps this page mounted from one flavour to the next, so the
+  // "added" mark is cleared by hand rather than following you to the next pack.
+  useEffect(() => setJustAdded(null), [product.slug])
   const ground = packPalettes[product.slug]?.ground || product.theme?.ink
   const accent = panelAccent({ ...product.theme, ink: ground })
 

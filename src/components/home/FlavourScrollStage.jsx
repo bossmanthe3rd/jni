@@ -469,7 +469,7 @@ export default function FlavourScrollStage() {
           aria-label="Jump to a flavour"
           className="absolute inset-x-0 bottom-4 z-50 flex justify-center sm:bottom-6"
         >
-          <ol className="flex items-center gap-3 sm:gap-5">
+          <ol className="flex items-center gap-1 sm:gap-5">
             {flavourStages.map((item, i) => {
               const on = i === active
               return (
@@ -478,7 +478,7 @@ export default function FlavourScrollStage() {
                     type="button"
                     onClick={() => scrollToChapter(i)}
                     aria-current={on ? 'true' : undefined}
-                    className="flex items-center gap-2.5 rounded-pill py-1 pr-1 outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                    className="flex min-h-[44px] items-center gap-2.5 rounded-pill px-2 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 sm:pl-0 sm:pr-1"
                     style={{ '--tw-ring-color': FOAM, '--tw-ring-offset-color': stage.ground }}
                   >
                     <span

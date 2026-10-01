@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { deliveredTotal, getProductBySlug, toCartProduct } from '../data/products'
 import { useCart } from '../store/cartStore'
+import { rupee, useCrateSubtotal } from '../components/checkout/cartTotals'
 import StickyAtcBar from '../components/product/StickyAtcBar'
 import FlavourDossier from '../components/product/FlavourDossier'
 import HeatClimb from '../components/product/HeatClimb'
@@ -43,6 +44,8 @@ export default function ProductDetailPage() {
   const ctaRef = useRef(null)
   const navigate = useNavigate()
   const { addItem } = useCart()
+  const crateSubtotal = useCrateSubtotal()
+  const [qty, setQty] = useState(1)
 
   // The live site injects Product JSON-LD per PDP.
   useEffect(() => {
@@ -73,11 +76,10 @@ export default function ProductDetailPage() {
 
   const ground = packPalettes[product.slug]?.ground || product.theme?.ink
 
-  /* The sticky mobile bar's own buy: it is outside the dossier, so it has no
-     access to the chip the reader chose, and one pack is the honest default
-     for a bar that shows a single-pack price. */
+  /* The sticky mobile bar's own buy: the dossier reports the pack chip the
+     reader lit, so "3 packs" chosen up top is still 3 packs down here. */
   const handleBuy = () => {
-    addItem(toCartProduct(product), 1)
+    addItem(toCartProduct(product), qty)
     navigate('/checkout')
   }
 
@@ -87,7 +89,7 @@ export default function ProductDetailPage() {
        section's cut edge and the footer. */
     <div className="min-w-0 flex-grow bg-cream">
       <SectionEdge variant="wave" layer={6}>
-        <FlavourDossier product={product} ctaRef={ctaRef} />
+        <FlavourDossier product={product} ctaRef={ctaRef} onQtyChange={setQty} />
       </SectionEdge>
       <SectionEdge variant="torn" layer={5}>
         <HeatClimb product={product} />
@@ -110,10 +112,11 @@ export default function ProductDetailPage() {
 
       <StickyAtcBar
         name={product.shortName || product.name}
-        price={product.price}
-        originalPrice={product.originalPrice}
+        price={Number(product.price) * qty}
+        originalPrice={Number(product.originalPrice) * qty}
         image={product.gallery?.[0]?.thumb || product.images.thumb}
-        ctaLabel={`Buy · ₹${deliveredTotal(Number(product.price))}`}
+        unit={qty === 1 ? '1 pack' : `${qty} packs`}
+        ctaLabel={`Buy · ${rupee(deliveredTotal(crateSubtotal + Number(product.price) * qty))}`}
         onAdd={handleBuy}
         watchRef={ctaRef}
       />
