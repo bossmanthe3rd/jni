@@ -102,27 +102,33 @@ export function SmartImage({ src, alt, className = '', wrapperClassName = '', ..
   )
 }
 
+/*
+ * The ::after pad takes each button's tap area to 44px without making the pill
+ * any bigger -- in the cart drawer the old 20px buttons sat right next to
+ * Remove, and a thumb aimed at "−" could land on either.
+ */
+const stepBtn =
+  'relative grid place-items-center rounded-full font-black leading-none text-ink transition after:absolute after:content-[""] hover:bg-ink/10'
+
 /** Bordered −/+ quantity stepper. */
 export function QtyStepper({ qty, onChange, className = '', size = 'md' }) {
   const small = size === 'sm'
   return (
     <div
       className={`inline-flex items-center gap-1 rounded-pill border-[2px] border-ink bg-cream ${
-        small ? 'px-1 py-0.5' : 'px-1.5 py-1'
+        small ? 'p-0.5' : 'p-1'
       } ${className}`}
     >
       <button
         type="button"
         aria-label="Decrease quantity"
         onClick={() => onChange(Math.max(1, qty - 1))}
-        className={`grid place-items-center rounded-full font-black leading-none text-ink transition hover:bg-ink/10 ${
-          small ? 'h-5 w-5 text-xs' : 'h-7 w-7 text-sm'
-        }`}
+        className={`${stepBtn} ${small ? 'h-8 w-8 text-sm after:-inset-1.5' : 'h-9 w-9 text-base after:-inset-1'}`}
       >
         &#8722;
       </button>
       <span
-        className={`min-w-[1.25rem] text-center font-black text-ink ${small ? 'text-[11px]' : 'text-sm'}`}
+        className={`min-w-[1.5rem] text-center font-black text-ink ${small ? 'text-sm' : 'text-base'}`}
         aria-live="polite"
       >
         {qty}
@@ -131,9 +137,7 @@ export function QtyStepper({ qty, onChange, className = '', size = 'md' }) {
         type="button"
         aria-label="Increase quantity"
         onClick={() => onChange(qty + 1)}
-        className={`grid place-items-center rounded-full font-black leading-none text-ink transition hover:bg-ink/10 ${
-          small ? 'h-5 w-5 text-xs' : 'h-7 w-7 text-sm'
-        }`}
+        className={`${stepBtn} ${small ? 'h-8 w-8 text-sm after:-inset-1.5' : 'h-9 w-9 text-base after:-inset-1'}`}
       >
         +
       </button>

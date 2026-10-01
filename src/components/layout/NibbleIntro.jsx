@@ -36,9 +36,9 @@ import { doodleComponents } from '../icons/PackDoodles'
  * crawlers are never gated behind the animation.
  */
 
-// Flip to true to show the intro only once per visitor. Left off so the intro
-// plays on every load while it is being reviewed. ?intro=1 / ?intro=0 override.
-const SHOW_ONCE = false
+// Once per visitor: every page load otherwise sat behind ~2.6s of overlay with
+// scrolling locked. ?intro=1 replays it for review; ?intro=0 skips it.
+const SHOW_ONCE = true
 const SEEN_KEY = 'jni-intro-seen'
 
 // Decided once per page load, at module scope. StrictMode double-invokes

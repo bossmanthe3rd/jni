@@ -3,17 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" href="/demo_LOGO.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- viewport-fit=cover makes env(safe-area-inset-*) report the real notch and
+         home-indicator sizes; without it every inset in the CSS resolved to 0. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="description" content="Just Nibble It - bold FMCG snacks, real ingredients, big flavour, maximum crunch." />
     <meta name="theme-color" content="#0D2818" />
     <title>Just Nibble It - Bold Snacks, Big Crunch</title>
 
-    <!-- LCP is the first hero slide's pack shot (Sweet Chilli Rush). The hero
-         used to be a full-bleed background photo with the headline baked in;
-         it is now the same propped pack image the scroll stage below uses, so
-         this preload was repointed from the old hero-bg-sweet.jpg to that
-         smaller, shared asset. -->
-    <link rel="preload" as="image" href="/assets/products/sweet-chilli-rush-pack.webp" fetchpriority="high" />
+    <!-- LCP is the front pouch on the hero desk: the first slide, Sweet Chilli
+         Rush (heroSlides[0]). This used to point at sweet-chilli-rush-pack.webp,
+         which only the flavour stage further down uses, lazily -- so the high-
+         priority fetch went to an image nobody sees on first paint. -->
+    <link rel="preload" as="image" href="/assets/hero/pouch-sweet-chilli-rush.webp" fetchpriority="high" />
 
     <!-- Both brand faces are self-hosted (see @font-face in src/index.css), so
          the render-blocking Google Fonts stylesheet is gone: it was fetching

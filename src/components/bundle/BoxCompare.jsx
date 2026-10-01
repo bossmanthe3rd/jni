@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { bundles, deliveredTotal, perPacketPrice, products } from '../../data/products'
 import { useCart } from '../../store/cartStore'
@@ -20,6 +20,8 @@ export default function BoxCompare({ bundle }) {
   const navigate = useNavigate()
   const { addItem, openCart } = useCart()
   const [justAdded, setJustAdded] = useState(null)
+  // Kept mounted from one box's page to the other's: clear the mark on the way.
+  useEffect(() => setJustAdded(null), [bundle.slug])
 
   const buy = (b) => {
     addItem(toCartBundle(b), 1)

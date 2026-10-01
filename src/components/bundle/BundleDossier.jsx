@@ -12,6 +12,7 @@ import {
 } from '../../data/products'
 import { launchOffer } from '../../data/site'
 import { useCart } from '../../store/cartStore'
+import { useCrateSubtotal } from '../checkout/cartTotals'
 import HeatMeter from '../product/HeatMeter'
 import DoodleField from '../ui/DoodleField'
 import LaunchBanner from '../promo/LaunchBanner'
@@ -144,9 +145,10 @@ function Stage({ bundle, flavours, reduce }) {
   )
 }
 
-export default function BundleDossier({ bundle, ctaRef }) {
+export default function BundleDossier({ bundle, ctaRef, onQtyChange }) {
   const navigate = useNavigate()
   const { addItem } = useCart()
+  const crateSubtotal = useCrateSubtotal()
   const reduce = useReducedMotion()
   const priceControls = useAnimationControls()
 
@@ -156,7 +158,8 @@ export default function BundleDossier({ bundle, ctaRef }) {
   const [flight, setFlight] = useState(null)
   const [burst, setBurst] = useState(0)
   const lastQty = useRef(qty)
-  const wasFree = useRef(false)
+  // null until first paint, so a crate already past the line doesn't burst on arrival.
+  const wasFree = useRef(null)
 
   const flavours = boxFlavours(bundle)
   const accent = bundle.theme?.accent || '#f3c63b'
@@ -165,11 +168,12 @@ export default function BundleDossier({ bundle, ctaRef }) {
   const photo = shot > 0 ? gallery[shot - 1] : null
   const perPack = perPacketPrice(bundle)
 
-  const subtotal = Number(bundle.price) * qty
-  const freeShipping = subtotal >= FREE_SHIPPING_THRESHOLD
-  const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal)
-  const progress = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100)
-  const payable = deliveredTotal(subtotal)
+  // The order Buy now places: what is in the crate already, plus this.
+  const order = crateSubtotal + Number(bundle.price) * qty
+  const freeShipping = order >= FREE_SHIPPING_THRESHOLD
+  const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - order)
+  const progress = Math.min(100, (order / FREE_SHIPPING_THRESHOLD) * 100)
+  const payable = deliveredTotal(order)
   const chillies = flavours.map(({ product }) => `/assets/doodles/pack/${product.slug}-chilli-whole.svg`)
 
   useEffect(() => {
@@ -183,8 +187,14 @@ export default function BundleDossier({ bundle, ctaRef }) {
     })
   }, [qty, reduce, priceControls])
 
+  /* The page's sticky mobile bar lives outside the dossier, so it is told
+     which chip is lit -- its buy has to add what the reader chose. */
   useEffect(() => {
-    if (freeShipping && !wasFree.current && !reduce) setBurst(Date.now())
+    onQtyChange?.(qty)
+  }, [qty, onQtyChange])
+
+  useEffect(() => {
+    if (freeShipping && wasFree.current === false && !reduce) setBurst(Date.now())
     wasFree.current = freeShipping
   }, [freeShipping, reduce])
 

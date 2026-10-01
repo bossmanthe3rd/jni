@@ -440,9 +440,13 @@ body:has(.ck-page) .jni-footer-lip {
 .ck-paybar {
   position: fixed;
   z-index: 40;
-  left: 10px;
-  right: 10px;
-  bottom: max(12px, env(safe-area-inset-bottom));
+  left: calc(10px + env(safe-area-inset-left));
+  right: calc(10px + env(safe-area-inset-right));
+  /* Added to the gap, not instead of it: max() left the bar flush on the
+     home indicator the moment the inset exceeded 12px. */
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  max-width: 560px;
+  margin-inline: auto;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -492,7 +496,7 @@ body:has(.ck-page) .jni-footer-lip {
 }
 .ck-stub {
   --zig: 8px;
-  padding: calc(14px + var(--zig)) 20px max(18px, env(safe-area-inset-bottom));
+  padding: calc(14px + var(--zig)) 20px calc(18px + env(safe-area-inset-bottom));
   background: var(--ck-paper);
   color: var(--ck-ink);
   -webkit-mask: conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) 50% /

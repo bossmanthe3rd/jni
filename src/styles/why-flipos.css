@@ -100,10 +100,25 @@
   font-weight: 400;
   line-height: 1;
   color: var(--wf-desk);
-  text-shadow:
-    0 0 16px rgb(243 198 59 / 0.55),
-    4px 5px 0 #071a16;
   pointer-events: none;
+}
+/* One line, lit and shadowed as a whole, so the lettered mark and the set
+   type either side of it take the same glow and the same hard offset. A
+   filter rather than text-shadow, which the mark (an SVG) would ignore. */
+.wf-title-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2em;
+  filter: drop-shadow(4px 5px 0 #071a16) drop-shadow(0 0 16px rgb(243 198 59 / 0.55));
+}
+/* The pack's mark runs bigger than the type round it, as it does on the
+   pouch, where it is the loudest thing on the front. */
+.wf-title-mark {
+  height: 1.4em;
+  width: auto;
+  flex: none;
+  margin-right: -0.12em;
+  overflow: visible;
 }
 
 .wf-confetti {

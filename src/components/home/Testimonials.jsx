@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useInView, useReducedMotion } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { TESTIMONIAL_INTERVAL, testimonials } from '../../data/site'
 import { BrandHeading, useMediaQuery } from '../ui/Primitives'
@@ -11,8 +11,8 @@ import DoodleBorder from '../ui/DoodleBorder'
 import { jaggedEdge } from '../ui/jaggedEdge'
 
 /*
- * The panel is cut like the pouch: a crimped seal along the top, a tear along
- * the bottom. Pixels, not percentages -- a phone gets fewer teeth, not smaller
+ * The panel is cut like the pouch: a crimped seal along the top and down both
+ * sides, a tear along the bottom. Pixels, not percentages -- a phone gets fewer teeth, not smaller
  * ones. The seal's teeth are kept big enough that a doodle visibly climbs each
  * one; a true pouch crimp at this scale would just make them jitter.
  */
@@ -103,24 +103,54 @@ export default function Testimonials() {
   const [paused, setPaused] = useState(false)
   const frame = useRef(null)
   const edge = usePanelEdge(frame)
+  const inView = useInView(frame, { amount: 0.3 })
+  const reduce = useReducedMotion()
+  const touch = useRef(null)
 
   useEffect(() => {
     setPage((p) => Math.min(p, pages - 1))
   }, [pages])
 
   useEffect(() => {
-    if (paused || pages < 2) return
+    // Only while someone can see it, and never under reduced motion: the
+    // cards moving on by themselves is exactly what that setting asks to stop.
+    if (paused || pages < 2 || !inView || reduce) return
     const id = window.setInterval(() => setPage((p) => (p + 1) % pages), TESTIMONIAL_INTERVAL)
     return () => window.clearInterval(id)
-  }, [paused, pages])
+  }, [paused, pages, inView, reduce])
 
   const go = (next) => setPage((next + pages) % pages)
-  const visible = testimonials.slice(page * perPage, page * perPage + perPage)
+  const pageList = Array.from({ length: pages }, (_, i) =>
+    testimonials.slice(i * perPage, i * perPage + perPage)
+  )
+
+  /* Swipe between pages on touch. Horizontal only -- a flick that is mostly
+     vertical is someone scrolling past, not paging. Touching also stops the
+     auto-advance: the reader has taken over. */
+  const onTouchStart = (e) => {
+    const t = e.touches[0]
+    touch.current = { x: t.clientX, y: t.clientY }
+    setPaused(true)
+  }
+  const onTouchEnd = (e) => {
+    const start = touch.current
+    touch.current = null
+    if (!start) return
+    const t = e.changedTouches[0]
+    const dx = t.clientX - start.x
+    const dy = t.clientY - start.y
+    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return
+    go(page + (dx < 0 ? 1 : -1))
+  }
 
   return (
     <section
       id="reviews"
-      className="bg-cream px-5 py-12 sm:px-8 sm:py-16 lg:px-12"
+      // overflow-x-clip: the doodles riding the panel edge travel out past the
+      // viewport on phones, and without a clip here they widened the whole
+      // document -- the fixed header stretched with it and the cart button
+      // was pushed off the right edge.
+      className="overflow-x-clip bg-cream px-5 py-12 sm:px-8 sm:py-16 lg:px-12"
     >
       <div className="relative mb-8 flex items-center justify-center">
         {/* Hidden on the narrowest screens: at 390px the outer pair reached
@@ -152,7 +182,7 @@ export default function Testimonials() {
             panel clips its own field, and a border that sits ON the edge has
             to be half outside it. */}
         <div
-          className="jni-doodle-edge relative isolate overflow-hidden bg-sunshine px-5 pb-20 pt-11 sm:px-10 sm:pt-12"
+          className="jni-doodle-edge relative isolate overflow-hidden bg-sunshine px-9 pb-20 pt-11 sm:px-14 sm:pt-12"
           style={edge ? { clipPath: `path("${edge.d}")` } : undefined}
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
@@ -168,18 +198,31 @@ export default function Testimonials() {
             count={8}
             seed={23}
           />
-          <div className="relative min-h-[210px] sm:min-h-[200px]">
-            <motion.div
-              key={page}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3"
-            >
-              {visible.map((review, i) => (
-                <ReviewCard key={review.name} review={review} index={i} />
-              ))}
-            </motion.div>
+          {/* Every page is laid into the same grid cell, and only the current
+              one is visible. The cell is therefore as tall as the tallest
+              page, so paging never changes the panel's height -- which used
+              to re-cut its clip path and restart the doodle procession. */}
+          <div
+            className="relative grid [&>*]:col-start-1 [&>*]:row-start-1"
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
+          >
+            {pageList.map((reviews, p) => (
+              <motion.div
+                key={`${perPage}-${p}`}
+                initial={false}
+                animate={p === page ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+                transition={{ duration: reduce ? 0 : 0.3, ease: 'easeOut' }}
+                aria-hidden={p !== page}
+                className={`grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 ${
+                  p === page ? '' : 'pointer-events-none invisible'
+                }`}
+              >
+                {reviews.map((review, i) => (
+                  <ReviewCard key={review.name} review={review} index={i} />
+                ))}
+              </motion.div>
+            ))}
           </div>
 
           <div className="mt-7 flex items-center justify-center gap-4">
@@ -187,11 +230,16 @@ export default function Testimonials() {
               type="button"
               aria-label="Previous reviews"
               onClick={() => go(page - 1)}
-              className="grid h-10 w-10 place-items-center rounded-full border-[3px] border-ink bg-cream text-ink transition hover:-translate-y-0.5 hover:shadow-doodle"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-full border-[3px] border-ink bg-cream text-ink transition hover:-translate-y-0.5 hover:shadow-doodle"
             >
               <ChevronLeft size={18} />
             </button>
-            <div className="flex items-center gap-2">
+            {/* Nine one-card pages make nine dots on a phone -- wider than the
+                panel, and each a 10px target. A count reads better there. */}
+            <p className="min-w-[4.5rem] text-center font-brand text-lg text-ink sm:hidden" aria-live="polite">
+              {page + 1} <span className="text-ink/50">/ {pages}</span>
+            </p>
+            <div className="hidden items-center gap-2 sm:flex">
               {Array.from({ length: pages }, (_, i) => (
                 <button
                   key={i}
@@ -208,14 +256,16 @@ export default function Testimonials() {
               type="button"
               aria-label="Next reviews"
               onClick={() => go(page + 1)}
-              className="grid h-10 w-10 place-items-center rounded-full border-[3px] border-ink bg-cream text-ink transition hover:-translate-y-0.5 hover:shadow-doodle"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-full border-[3px] border-ink bg-cream text-ink transition hover:-translate-y-0.5 hover:shadow-doodle"
             >
               <ChevronRight size={18} />
             </button>
           </div>
         </div>
 
-        <DoodleBorder geometry={edge} spacing={118} duration={26} className="z-30" />
+        {/* One doodle roughly every 230px of edge: at 118px apart the procession
+            crowded the panel and competed with the reviews. */}
+        <DoodleBorder geometry={edge} spacing={230} duration={26} className="z-30" />
       </div>
     </section>
   )

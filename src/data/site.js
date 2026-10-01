@@ -164,28 +164,6 @@ export const socialLinks = [
   { label: 'Facebook', href: 'https://www.facebook.com/' },
 ]
 
-export const footerStaticImage = {
-  src: '/assets/products/flipos-collection.webp',
-  alt: "The full FLIPO's range lined up",
-}
-
-export const footerRotatingImages = [
-  {
-    src: '/assets/products/peri-peri-punch-life-flatlay.webp',
-    alt: "FLIPO's Peri Peri Punch on a work-desk flat-lay",
-  },
-  {
-    src: '/assets/products/jalapeno-kick-life-creator.webp',
-    alt: "FLIPO's Jalapeno Kick on a creator's desk",
-  },
-  {
-    src: '/assets/products/sweet-chilli-rush-life-desk.webp',
-    alt: "FLIPO's Sweet Chilli Rush on a late-night desk",
-  },
-]
-
-export const FOOTER_IMAGE_INTERVAL = 3600
-
 export const footerColumns = [
   {
     title: 'About Us',

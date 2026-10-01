@@ -1,211 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { ArrowRight, ChevronDown, Facebook, Instagram, Mail, MapPin, Phone } from 'lucide-react'
-import {
-  FOOTER_IMAGE_INTERVAL,
-  footerColumns,
-  footerRotatingImages,
-  footerStaticImage,
-  legalBusinessDetails,
-} from '../../data/site'
-import { bundles } from '../../data/products'
-import { Blob, BrandHeading, Sparkle } from '../ui/Primitives'
+import { ChevronDown, Facebook, Instagram, Mail, MapPin, Phone } from 'lucide-react'
+import { footerColumns, legalBusinessDetails } from '../../data/site'
 import DoodleField from '../ui/DoodleField'
 
 const socialIcons = { Instagram, Facebook }
 const SOCIAL_BG = { Instagram: 'bg-[#E1306C]', Facebook: 'bg-[#1877F2]' }
 const SOCIAL_FG = { Instagram: 'text-[#E1306C]', Facebook: 'text-[#1877F2]' }
-
-/** Wobbly starburst badge on the launch-drop card. */
-function BurstBadge({ className = '', children }) {
-  return (
-    <div className={`relative grid place-items-center ${className}`}>
-      <svg viewBox="0 0 160 160" className="h-full w-full" aria-hidden="true">
-        <path
-          fill="#4DB8AE"
-          stroke="#071A16"
-          strokeWidth="4"
-          d="M80 8c8 0 12 8 20 8s12-8 20 0 0 12 8 20 8 12 0 20 8 12 0 20-8 12-8 20-12 8-20 8-12 8-20 0-12-8-20-8-12 8-20 0-8-12-8-20-8-12 0-20-8-12 0-20 8-12 8-20 12-8 20-8 12-8 20 0Z"
-        />
-      </svg>
-      {/* The label sits in the blob's inner area, not its bounding box. As a
-          two-row grid over inset-0 the number was pushed past the lower lobe and
-          landed on the dark card behind -- near-black on near-black, so the "3"
-          in "Bundle of 3" was effectively invisible. */}
-      <div className="absolute inset-[20%] flex flex-col items-center justify-center gap-0.5 text-center font-black uppercase leading-none text-[#05222a]">
-        {children}
-      </div>
-    </div>
-  )
-}
-
-/** Scattered decorative marks behind the CTA block, positioned as on the live site. */
-function CtaDecor() {
-  return (
-    <>
-      {/* Cream wave lip along the top edge of the footer. A page whose last
-          section cuts its own edge into the footer hides this (pdp.css). */}
-      <svg
-        className="jni-footer-lip absolute inset-x-0 top-0 h-10 w-full sm:h-12"
-        viewBox="0 0 1440 90"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        <path
-          fill="#FBF6D0"
-          d="M0 40 C 180 90 320 0 480 38 C 640 76 800 8 960 42 C 1120 76 1280 18 1440 48 L1440 90 L0 90 Z"
-        />
-      </svg>
-
-      <Blob className="pointer-events-none absolute left-[3%] top-[30%] h-16 w-16 opacity-60" />
-      <Blob className="pointer-events-none absolute bottom-[12%] right-[6%] h-24 w-24 opacity-40" />
-
-      {/* Chilli outline */}
-      <svg
-        className="pointer-events-none absolute -bottom-4 left-[38%] hidden h-28 w-16 rotate-12 opacity-25 lg:block"
-        viewBox="0 0 40 64"
-        fill="none"
-        aria-hidden="true"
-      >
-        <path
-          d="M20 8c2 6 12 10 12 24 0 14-5.5 24-12 30C13.5 56 8 46 8 32 8 18 18 14 20 8Z"
-          stroke="#4DB8AE"
-          strokeWidth="3"
-          strokeLinejoin="round"
-        />
-        <path d="M20 8c0 5-2 8-5 10" stroke="#4DB8AE" strokeWidth="3" strokeLinecap="round" />
-      </svg>
-
-      {/* Jalapeño slice outline */}
-      <svg
-        className="pointer-events-none absolute right-[26%] top-[22%] hidden h-12 w-16 opacity-30 lg:block"
-        viewBox="0 0 56 40"
-        fill="none"
-        aria-hidden="true"
-      >
-        <ellipse cx="28" cy="20" rx="18" ry="12" stroke="#77d21c" strokeWidth="3.2" />
-        <ellipse cx="28" cy="20" rx="8" ry="5.5" stroke="#77d21c" strokeWidth="2.6" />
-        <path d="M28 8v-4" stroke="#77d21c" strokeWidth="3" strokeLinecap="round" />
-      </svg>
-
-      {/* 8-point burst */}
-      <svg
-        className="pointer-events-none absolute left-[22%] top-[18%] hidden h-9 w-9 opacity-40 lg:block"
-        viewBox="0 0 64 64"
-        fill="#F3C63B"
-        aria-hidden="true"
-      >
-        <path d="M32 2 36 22 54 14 42 28 62 32 42 36 54 50 36 42 32 62 28 42 14 50 26 36 2 32 22 28 14 14 28 22Z" />
-      </svg>
-
-      <Sparkle className="pointer-events-none absolute bottom-[28%] right-[14%] hidden h-8 w-8 opacity-50 lg:block" />
-    </>
-  )
-}
-
-function FooterCta() {
-  const trio = bundles[0]
-  return (
-    <section className="relative overflow-hidden px-5 pb-14 pt-20 sm:px-8 sm:pt-24 lg:px-12">
-      <CtaDecor />
-      <div className="relative z-[1] mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.15fr,0.85fr] lg:gap-14">
-        <div>
-          <BrandHeading
-            as="p"
-            fill="#FBF6D0"
-            className="text-5xl leading-[0.95] sm:text-6xl lg:text-7xl"
-          >
-            JUST
-            <br />
-            NIBBLE IT
-          </BrandHeading>
-          <p className="mt-4 text-xs font-black uppercase tracking-[0.2em] text-teal sm:text-sm">
-            Bold flavours, irresistible crunch
-          </p>
-        </div>
-
-        <div className="relative rounded-[28px] border-[3px] border-teal bg-[#0C1B17] p-6 sm:p-8">
-          <BurstBadge className="absolute -right-3 -top-6 h-24 w-24 sm:-right-5 sm:-top-8 sm:h-28 sm:w-28">
-            <span className="text-[9px] leading-none">
-              Bundle
-              <br />
-              of
-            </span>
-            <span className="text-2xl leading-none">{trio.packetCount}</span>
-          </BurstBadge>
-          <p className="text-xs font-black uppercase tracking-[0.15em] text-teal">Launch drop</p>
-          <p className="mt-2 max-w-[16ch] font-display text-2xl text-sunshine sm:text-3xl">
-            All three flavours. One box.
-          </p>
-          <div className="mt-4 flex items-baseline gap-3">
-            <span className="font-display text-4xl text-sunshine">₹{trio.price}</span>
-            <span className="text-base font-bold text-white/40 line-through">
-              ₹{trio.originalPrice}
-            </span>
-          </div>
-          <Link to="/combos" className="jni-btn mt-6 w-fit px-8">
-            Shop the bundles <ArrowRight size={16} />
-          </Link>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function FooterGallery() {
-  const [index, setIndex] = useState(0)
-  useEffect(() => {
-    const id = window.setInterval(
-      () => setIndex((i) => (i + 1) % footerRotatingImages.length),
-      FOOTER_IMAGE_INTERVAL
-    )
-    return () => window.clearInterval(id)
-  }, [])
-  const active = footerRotatingImages[index]
-
-  return (
-    <div className="border-t border-white/10 px-5 py-10 sm:px-8 lg:px-12">
-      <div className="mx-auto grid max-w-6xl gap-4 sm:grid-cols-2">
-        <div className="relative aspect-[16/10] overflow-hidden rounded-[22px] border-[3px] border-teal/60 bg-[#0C1B17]">
-          <img
-            src={footerStaticImage.src}
-            alt={footerStaticImage.alt}
-            loading="lazy"
-            decoding="async"
-            className="h-full w-full object-cover"
-          />
-        </div>
-        <div className="relative aspect-[16/10] overflow-hidden rounded-[22px] border-[3px] border-teal/60 bg-[#0C1B17]">
-          <motion.img
-            key={active.src}
-            src={active.src}
-            alt={active.alt}
-            loading="lazy"
-            decoding="async"
-            initial={{ opacity: 0, scale: 1.04 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-          <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
-            {footerRotatingImages.map((img, i) => (
-              <button
-                key={img.src}
-                type="button"
-                aria-label={`Show footer image ${i + 1}`}
-                onClick={() => setIndex(i)}
-                className={`h-2 rounded-full border border-[#050D0B]/40 transition-all ${
-                  i === index ? 'w-6 bg-sunshine' : 'w-2 bg-white/60'
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 function ColumnBody({ column }) {
   if (column.socials) {
@@ -311,9 +112,11 @@ function FooterContact() {
                 {label}
               </p>
               {items.map((item) => (
-                <p key={item.text} className="mt-1 text-sm font-bold leading-6 text-white/75">
+                <p key={item.text} className="text-sm font-bold leading-6 text-white/75">
                   {item.href ? (
-                    <a href={item.href} className="transition hover:text-sunshine">
+                    // 44px tall rows: these are the tap-to-call and tap-to-mail
+                    // links, and they were 19px lines stacked 4px apart.
+                    <a href={item.href} className="inline-flex min-h-[44px] items-center transition hover:text-sunshine">
                       {item.text}
                     </a>
                   ) : (
@@ -337,10 +140,7 @@ export default function SiteFooter() {
 
   return (
     <footer className="on-dark bg-[#050D0B] text-white">
-      <FooterCta />
-      <FooterGallery />
-
-      <div className="relative isolate border-t border-white/10">
+      <div className="relative isolate">
         {/* The flattest surface on the site: six columns of links on near-black.
             Subtle, because everything on top of it is something to read. */}
         <DoodleField
@@ -350,7 +150,21 @@ export default function SiteFooter() {
           count={20}
           seed={41}
         />
-        <div className="mx-auto max-w-6xl px-5 py-6 sm:px-8 lg:px-12 lg:py-12">
+        {/* Cream wave lip along the top edge of the footer: the page's cream
+            runs on into it and ends in the curve. A page whose last section
+            cuts its own edge into the footer hides this (pdp.css). */}
+        <svg
+          className="jni-footer-lip absolute inset-x-0 top-0 h-10 w-full sm:h-12"
+          viewBox="0 0 1440 90"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <path
+            fill="#FBF6D0"
+            d="M0 0 L1440 0 L1440 48 C 1280 18 1120 76 960 42 C 800 8 640 76 480 38 C 320 0 180 90 0 40 Z"
+          />
+        </svg>
+        <div className="relative mx-auto max-w-6xl px-5 pb-6 pt-16 sm:px-8 sm:pt-20 lg:px-12 lg:pb-12 lg:pt-24">
           {/* The arched lockup, from the brand folder's `curvee logo`. The
               header wears the stacked one; this is the wide cut, and the
               footer is the only place on the site with the width to carry it. */}

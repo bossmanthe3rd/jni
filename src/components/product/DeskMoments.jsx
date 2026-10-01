@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useMediaQuery } from '../ui/Primitives'
 
 /**
  * The flavour's lifestyle shots as a strip of prints.
@@ -19,6 +20,10 @@ export default function DeskMoments({ product }) {
   const reduce = useReducedMotion()
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start end', 'end start'] })
   const drift = useTransform(scrollYProgress, [0, 1], [40, -40])
+  // Laptops only. Below that the rail is a swipe carousel with scroll-snap,
+  // and a row drifting up to 40px under it landed every snapped print off
+  // its mark, cropping the first or last one.
+  const wide = useMediaQuery('(min-width: 1024px)')
   const shots = (product.gallery || []).slice(1)
   if (!shots.length) return null
 
@@ -54,7 +59,7 @@ export default function DeskMoments({ product }) {
       </div>
 
       <div className="jni-desks-rail" ref={railRef}>
-        <motion.div className="jni-desks-row" style={{ x: reduce ? 0 : drift }}>
+        <motion.div className="jni-desks-row" style={{ x: reduce || !wide ? 0 : drift }}>
           {shots.map((s, i) => (
             <figure
               key={s.src}

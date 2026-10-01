@@ -64,7 +64,7 @@ export default function DeliveryNudge({ items, subtotal, onAdd, compact = false 
           <button
             type="button"
             onClick={() => onAdd(suggestion)}
-            className="inline-flex h-10 shrink-0 items-center gap-1 rounded-pill border-[2.5px] border-ink bg-sunshine px-4 text-sm font-black text-ink transition hover:bg-ink hover:text-cream"
+            className="inline-flex h-11 shrink-0 items-center gap-1 rounded-pill border-[2.5px] border-ink bg-sunshine px-4 text-sm font-black text-ink transition hover:bg-ink hover:text-cream"
           >
             <Plus size={15} /> Add
           </button>

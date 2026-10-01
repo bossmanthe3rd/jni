@@ -1,4 +1,4 @@
-import { useId, useMemo } from 'react'
+import { useEffect, useId, useMemo, useRef } from 'react'
 import { useReducedMotion } from 'framer-motion'
 import { ASPECT, doodleComponents, packPalettes } from '../icons/PackDoodles'
 import { rideAt } from './jaggedEdge'
@@ -8,15 +8,18 @@ import { rideAt } from './jaggedEdge'
  *
  * The packs never outline anything with a plain stroke -- an edge on a FLIPO's
  * pouch is where the ingredient field runs out. So instead of a keyline, this
- * sends chillies, pods, sections, stars and triangles around the panel's whole
- * perimeter, in all three flavours' colours, cycling so the range is always on
- * show.
+ * sends chillies around the panel's whole perimeter, in all three flavours'
+ * colours, cycling so the range is always on show.
  *
  * The travel is CSS motion path, not JavaScript: every doodle shares one
  * `offset-path` and one keyframed ride round it, each started at a negative
  * delay of its own share of the duration. That spaces them round the loop for
  * free and loops without a seam -- the doodle leaving the end IS the doodle
  * arriving at the start. Nothing recalculates per frame.
+ *
+ * An `offset-distance` animation restyles on the main thread every frame, and
+ * each doodle's turn holds a compositor layer, so the procession leaves the
+ * page while the panel is off screen (see below) rather than running unseen.
  *
  * The shape is not this component's to decide. The caller passes the
  * `geometry` from jaggedEdge() -- the same one its panel is clipped to -- so
@@ -33,48 +36,12 @@ import { rideAt } from './jaggedEdge'
 const FLAVOURS = ['peri-peri-punch', 'jalapeno-kick', 'sweet-chilli-rush']
 
 /*
- * Deliberately not the whole pack set. `seed` is a single chilli seed, which at
- * this size is a pale oval with a dark rim and reads as nothing at all -- it is
- * the shape nobody could name. Stars and triangles come from the section's own
- * confetti, the same marks that already frame the Testimonials heading, so the
- * edge is built from two vocabularies the page is already using rather than
- * five variations on one.
+ * Chillies only: the whole pod, the halved pod and the jalapeño, in all three
+ * flavours' colours. The slices, pepper sections and the confetti stars and
+ * triangles are out -- the round shapes read as blobs at this size, and a
+ * procession of pods says "chilli snack" at a glance.
  */
-const PACK_SHAPES = ['chilli-whole', 'chilli-half', 'chilli-slice', 'jalapeno', 'pepper-section']
-const CONFETTI_SHAPES = ['star', 'triangle']
-const POOL = [...PACK_SHAPES, ...CONFETTI_SHAPES]
-
-const CONFETTI_ASPECT = { star: 1, triangle: 1.14 }
-
-function Star({ palette, className }) {
-  return (
-    <svg className={className} viewBox="0 0 48 48" aria-hidden="true">
-      <path
-        d="M24 2 28.8 16.4 44 18.2 32.4 28 35.2 44 24 36.2 12.8 44 15.6 28 4 18.2 19.2 16.4Z"
-        fill={palette.fill}
-        stroke={palette.line}
-        strokeWidth="3.4"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
-function Triangle({ palette, className }) {
-  return (
-    <svg className={className} viewBox="0 0 20 18" aria-hidden="true">
-      <path
-        d="M10 1.6 18.4 16.4H1.6Z"
-        fill={palette.fill}
-        stroke={palette.line}
-        strokeWidth="2.4"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
-const EXTRA_COMPONENTS = { star: Star, triangle: Triangle }
+const POOL = ['chilli-whole', 'chilli-half', 'jalapeno']
 
 function mulberry32(seed) {
   let a = seed >>> 0
@@ -102,20 +69,31 @@ function rideKeyframes(name, geometry) {
 
 export default function DoodleBorder({
   geometry,
-  spacing = 120,
+  spacing = 220,
   duration = 26,
   seed = 7,
   className = '',
 }) {
   const reduce = useReducedMotion()
-  const name = `jni-ride-${useId().replace(/[^a-zA-Z0-9]/g, '')}`
+  /*
+   * One keyframes name per geometry, not per component. The panel's size can
+   * change after first paint -- fonts arriving and reflowing the cards, a
+   * resize -- and each change rebuilds the path. Rewriting the keyframes in
+   * place under the same name left the doodles already riding on their old
+   * timeline while any new ones started fresh, so the procession fell out of
+   * step and bunched into part of the loop, leaving the rest of the edge bare.
+   * A new name, with the procession remounted under a matching key, restarts
+   * every doodle together at its own even share of the loop.
+   */
+  const geoKey = geometry ? `${geometry.w}x${geometry.h}` : ''
+  const name = `jni-ride-${useId().replace(/[^a-zA-Z0-9]/g, '')}-${geoKey}`
 
   // How many doodles is a question about the perimeter, not about the panel.
   // A fixed count strung round a phone-width box is a necklace; round a
   // desktop one it is a dotted line. Spacing them at a set distance and
   // letting the count follow keeps one density at every width.
   const count = geometry
-    ? Math.max(12, Math.min(44, Math.round((2 * geometry.w + 2 * geometry.h) / spacing)))
+    ? Math.max(8, Math.min(24, Math.round((2 * geometry.w + 2 * geometry.h) / spacing)))
     : 0
 
   const items = useMemo(() => {
@@ -129,12 +107,10 @@ export default function DoodleBorder({
       if (i > 0 && name === out[i - 1].name) {
         name = POOL[(POOL.indexOf(name) + 1) % POOL.length]
       }
-      const confetti = CONFETTI_SHAPES.includes(name)
       out.push({
         name,
         flavour: FLAVOURS[i % FLAVOURS.length],
-        // Confetti is punctuation between the pack shapes, so it runs smaller.
-        size: confetti ? 16 + rnd() * 7 : 27 + rnd() * 14,
+        size: 27 + rnd() * 14,
         // Barely off the edge's own line, so the procession reads as placed by
         // hand rather than stamped along a rail.
         rotate: -4 + rnd() * 8,
@@ -143,16 +119,36 @@ export default function DoodleBorder({
     return out
   }, [count, seed])
 
+  // Off screen the procession is taken out of rendering altogether -- a paused
+  // animation still keeps its compositor layer, and every doodle's costs each
+  // frame everywhere else on the page. It comes back a little before
+  // the panel does; the loop has no start to see, so it restarts unnoticed.
+  // The panel is watched rather than this box, which vanishes with it.
+  const rootRef = useRef(null)
+  useEffect(() => {
+    const root = rootRef.current
+    const panel = root?.parentElement
+    if (!panel || reduce) return undefined
+    const io = new IntersectionObserver(
+      ([e]) => {
+        root.style.display = e.isIntersecting ? '' : 'none'
+      },
+      { rootMargin: '240px 0px' }
+    )
+    io.observe(panel)
+    return () => io.disconnect()
+  }, [reduce, geometry])
+
   if (!geometry) return null
   const path = `path("${geometry.d}")`
 
   return (
-    <div aria-hidden="true" className={`pointer-events-none absolute inset-0 ${className}`}>
+    <div key={geoKey} ref={rootRef} aria-hidden="true" className={`pointer-events-none absolute inset-0 ${className}`}>
       {!reduce && <style>{rideKeyframes(name, geometry)}</style>}
       {items.map((it, i) => {
-        const Art = doodleComponents[it.name] || EXTRA_COMPONENTS[it.name]
+        const Art = doodleComponents[it.name]
         if (!Art) return null
-        const aspect = ASPECT[it.name] || CONFETTI_ASPECT[it.name] || 1
+        const aspect = ASPECT[it.name] || 1
         const share = i / items.length
         // Held still, each doodle is placed where the ride would have it at its
         // own share of the loop, lying along the edge there.

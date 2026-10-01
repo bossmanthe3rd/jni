@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import { deliveredTotal } from '../../data/products'
 import { useCart } from '../../store/cartStore'
+import { useCrateSubtotal } from '../checkout/cartTotals'
 import { DeliveryAnswer, FaqChat } from '../product/PdpFaq'
 import { boxFlavours, pouchCutout, toCartBundle } from './boxContents'
 
@@ -109,6 +110,7 @@ function faqsFor(bundle) {
 export default function BundleFaq({ bundle }) {
   const navigate = useNavigate()
   const { addItem } = useCart()
+  const crateSubtotal = useCrateSubtotal()
   const faqs = faqsFor(bundle)
   return (
     <FaqChat
@@ -118,8 +120,8 @@ export default function BundleFaq({ bundle }) {
       // the site's CTA is yellow, so a yellow sticker would swallow its button.
       accent="#4db8ae"
       avatar={faqs[0].avatar}
-      buyName={`One ${bundle.name}`}
-      payable={deliveredTotal(Number(bundle.price))}
+      buyName={`One ${bundle.name}${crateSubtotal ? ' with your crate' : ''}`}
+      payable={deliveredTotal(crateSubtotal + Number(bundle.price))}
       onBuy={() => {
         addItem(toCartBundle(bundle), 1)
         navigate('/checkout')

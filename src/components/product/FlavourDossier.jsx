@@ -12,6 +12,7 @@ import {
   toCartProduct,
 } from '../../data/products'
 import { useCart } from '../../store/cartStore'
+import { useCrateSubtotal } from '../checkout/cartTotals'
 import HeatMeter from './HeatMeter'
 import DoodleField from '../ui/DoodleField'
 
@@ -90,12 +91,19 @@ const bigWord = (product) =>
   (product.shortName || product.name).split(' ').slice(0, -1).join(' ').toUpperCase() ||
   (product.shortName || product.name).toUpperCase()
 
-export default function FlavourDossier({ product, ctaRef }) {
+export default function FlavourDossier({ product, ctaRef, onQtyChange }) {
   const navigate = useNavigate()
   const { addItem } = useCart()
+  const crateSubtotal = useCrateSubtotal()
   const reduce = useReducedMotion()
   const svgRef = useRef(null)
   const stripRef = useRef(null)
+  const switchRef = useRef(null)
+  const markSwitchEnd = () => {
+    const row = switchRef.current
+    if (!row) return
+    row.toggleAttribute('data-end', row.scrollLeft + row.clientWidth >= row.scrollWidth - 2)
+  }
 
   const [qty, setQty] = useState(1)
   const [shot, setShot] = useState(0)
@@ -104,7 +112,8 @@ export default function FlavourDossier({ product, ctaRef }) {
   const [burst, setBurst] = useState(0)
   const priceControls = useAnimationControls()
   const lastQty = useRef(qty)
-  const wasFree = useRef(false)
+  // null until first paint, so a crate already past the line doesn't burst on arrival.
+  const wasFree = useRef(null)
 
   const palette = packPalettes[product.slug]
   const ground = palette?.ground || product.theme?.ink
@@ -120,11 +129,12 @@ export default function FlavourDossier({ product, ctaRef }) {
      flat-lay they would be pointing at nothing. */
   const onPackShot = shot === 0
 
-  const subtotal = Number(product.price) * qty
-  const freeShipping = subtotal >= FREE_SHIPPING_THRESHOLD
-  const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal)
-  const progress = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100)
-  const payable = deliveredTotal(subtotal)
+  // The order Buy now places: what is in the crate already, plus this.
+  const order = crateSubtotal + Number(product.price) * qty
+  const freeShipping = order >= FREE_SHIPPING_THRESHOLD
+  const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - order)
+  const progress = Math.min(100, (order / FREE_SHIPPING_THRESHOLD) * 100)
+  const payable = deliveredTotal(order)
 
   /* The price sticker wobbles when the quantity changes -- a small "noted" --
      and crossing the free-shipping line fires a burst of chillies off the end
@@ -140,8 +150,14 @@ export default function FlavourDossier({ product, ctaRef }) {
     })
   }, [qty, reduce, priceControls])
 
+  /* The page's sticky mobile bar lives outside the dossier, so it is told
+     which chip is lit -- its buy has to add what the reader chose. */
   useEffect(() => {
-    if (freeShipping && !wasFree.current && !reduce) setBurst(Date.now())
+    onQtyChange?.(qty)
+  }, [qty, onQtyChange])
+
+  useEffect(() => {
+    if (freeShipping && wasFree.current === false && !reduce) setBurst(Date.now())
     wasFree.current = freeShipping
   }, [freeShipping, reduce])
 
@@ -150,6 +166,16 @@ export default function FlavourDossier({ product, ctaRef }) {
     setShot(0)
     setAdded(false)
     if (stripRef.current) stripRef.current.scrollLeft = 0
+    // On a phone the chips scroll, and the current flavour could start out of
+    // view -- the one chip that says where you are. Centre it.
+    const row = switchRef.current
+    const chip = row?.querySelector('[aria-current="page"]')
+    if (row && chip && row.scrollWidth > row.clientWidth) {
+      const r = row.getBoundingClientRect()
+      const c = chip.getBoundingClientRect()
+      row.scrollLeft += c.left - r.left - (r.width - c.width) / 2
+    }
+    markSwitchEnd()
   }, [product.slug])
 
   /*
@@ -420,7 +446,7 @@ export default function FlavourDossier({ product, ctaRef }) {
           {/* The other two flavours, one tap away, each with its heat. */}
           <div className="jni-dossier-switch">
             <p className="jni-dossier-k">Pick your heat</p>
-            <div className="jni-dossier-switch-row">
+            <div className="jni-dossier-switch-row" ref={switchRef} onScroll={markSwitchEnd}>
               {products.map((p) => {
                 const on = p.slug === product.slug
                 const pal = packPalettes[p.slug]

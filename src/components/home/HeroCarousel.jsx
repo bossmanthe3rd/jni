@@ -6,6 +6,7 @@ import {
   useAnimationControls,
   useAnimationFrame,
   useMotionValue,
+  useInView,
   useMotionValueEvent,
   useScroll,
   useSpring,
@@ -118,7 +119,8 @@ function ArrowDoodle({ className = '' }) {
 export default function HeroCarousel() {
   const [index, setIndex] = useState(0)
   const [paused, setPaused] = useState(false)
-  const [touchStart, setTouchStart] = useState(null)
+  // A ref, not state: every touch on the hero used to re-render it twice.
+  const touchStart = useRef(null)
   const resumeRef = useRef(0)
   // Gates the drop-onto-the-desk entrance to the very first mount only -- the
   // packs stay mounted across flavour changes and just change places.
@@ -173,9 +175,15 @@ export default function HeroCarousel() {
   // by this about the same point on the ceiling; the packs' shadow slides the
   // other way under it.
   const wideScreen = useMediaQuery('(min-width: 768px)')
+  const laptop = useMediaQuery('(min-width: 1024px)')
+  // Everything that runs on its own clock -- the swing, the flavour rotation --
+  // stops once the hero is off screen. The swing repaints a rotating subtree
+  // with two blurs in it every frame, and it used to do that for as long as
+  // the tab was open.
+  const heroInView = useInView(sectionRef)
   const swing = useMotionValue(0)
   useAnimationFrame((t) => {
-    if (reduceMotion) return
+    if (reduceMotion || !heroInView) return
     swing.set((wideScreen ? 2.2 : 4.5) * Math.sin((t / 6500) * Math.PI * 2))
   })
   const shadowSwing = useTransform(swing, (v) => v * (wideScreen ? 7 : 3))
@@ -188,13 +196,13 @@ export default function HeroCarousel() {
   const palette = packPalettes[slide.product.slug]
 
   useEffect(() => {
-    if (paused || reduceMotion || zoomHold) return
+    if (paused || reduceMotion || zoomHold || !heroInView) return
     const id = window.setInterval(
       () => setIndex((i) => (i + 1) % heroSlides.length),
       HERO_INTERVAL
     )
     return () => window.clearInterval(id)
-  }, [paused, reduceMotion, zoomHold])
+  }, [paused, reduceMotion, zoomHold, heroInView])
 
   useEffect(
     () => () => {
@@ -204,9 +212,24 @@ export default function HeroCarousel() {
     []
   )
 
+  // The hero's box, read once and kept until a scroll or resize moves it: a
+  // read on every pointer move forced a layout on every pointer move.
+  const leanBox = useRef(null)
+  useEffect(() => {
+    const drop = () => {
+      leanBox.current = null
+    }
+    window.addEventListener('scroll', drop, { passive: true })
+    window.addEventListener('resize', drop)
+    return () => {
+      window.removeEventListener('scroll', drop)
+      window.removeEventListener('resize', drop)
+    }
+  }, [])
+
   const onLean = (e) => {
     if (!depthOn || !sectionRef.current) return
-    const r = sectionRef.current.getBoundingClientRect()
+    const r = leanBox.current || (leanBox.current = sectionRef.current.getBoundingClientRect())
     leanRawX.set(((e.clientX - r.left) / r.width) * 2 - 1)
     leanRawY.set(((e.clientY - r.top) / r.height) * 2 - 1)
   }
@@ -359,14 +382,21 @@ export default function HeroCarousel() {
         leanRawY.set(0)
       }}
       onPointerMove={onLean}
-      onTouchStart={(e) => setTouchStart(e.changedTouches[0]?.clientX ?? null)}
+      onTouchStart={(e) => {
+        const t = e.changedTouches[0]
+        touchStart.current = t ? { x: t.clientX, y: t.clientY } : null
+      }}
       onTouchEnd={(e) => {
-        const start = touchStart
-        const end = e.changedTouches[0]?.clientX
-        setTouchStart(null)
-        if (start == null || end == null) return
-        if (Math.abs(end - start) < 48) return
-        goTo(index + (end - start < 0 ? 1 : -1))
+        const start = touchStart.current
+        const t = e.changedTouches[0]
+        touchStart.current = null
+        if (!start || !t) return
+        const dx = t.clientX - start.x
+        const dy = t.clientY - start.y
+        // Mostly sideways only: a diagonal flick is someone scrolling past the
+        // hero, and it used to change the flavour under their thumb.
+        if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.5) return
+        goTo(index + (dx < 0 ? 1 : -1))
       }}
     >
       {/* THE WALL -------------------------------------------------------- */}
@@ -402,33 +432,42 @@ export default function HeroCarousel() {
           at nearly the pack's own strength. It ramps up from its inner edge so
           nothing is sliced at the seam, and is loudest round the lamp and the
           packs, gone by the copy. */}
-      <div
-        className="pointer-events-none absolute right-0 isolate hidden w-[46%] md:block [mask-image:linear-gradient(to_right,transparent_0,#000_26%)]"
-        style={{ top: 'var(--site-ticker-height, 0px)', bottom: 'var(--desk)' }}
-      >
-        <DoodleField
-          flavour={slide.product.slug}
-          ground={HERO_GROUND}
-          intensity="bold"
-          count={18}
-          seed={202}
-          fadeEdges={{ top: 6, bottom: 10 }}
-        />
-      </div>
+      {/* Mounted only where it shows. `hidden md:block` alone kept this and
+          the other tablet/laptop-only pieces below alive on phones, animating
+          and repainting behind display: none. */}
+      {wideScreen && (
+        <div
+          className="pointer-events-none absolute right-0 isolate w-[46%] [mask-image:linear-gradient(to_right,transparent_0,#000_26%)]"
+          style={{ top: 'var(--site-ticker-height, 0px)', bottom: 'var(--desk)' }}
+        >
+          <DoodleField
+            flavour={slide.product.slug}
+            ground={HERO_GROUND}
+            intensity="bold"
+            count={18}
+            seed={202}
+            fadeEdges={{ top: 6, bottom: 10 }}
+          />
+        </div>
+      )}
 
       {/* The banners' confetti. Its chillies are off: the two fields above
           already carry the flavour's characters on this side of the wall. */}
-      <div
-        className="pointer-events-none absolute inset-x-0 z-[2] hidden md:block"
-        style={{ top: 'var(--site-ticker-height, 0px)', bottom: 'var(--desk)' }}
-      >
-        <HeroSpice slug={slide.product.slug} chillies={false} />
-      </div>
+      {wideScreen && (
+        <div
+          className="pointer-events-none absolute inset-x-0 z-[2]"
+          style={{ top: 'var(--site-ticker-height, 0px)', bottom: 'var(--desk)' }}
+        >
+          <HeroSpice slug={slide.product.slug} chillies={false} />
+        </div>
+      )}
 
-      <WallClock
-        now={now}
-        className="absolute left-[89vw] top-[calc(var(--site-header-offset)+7rem)] z-[2] hidden w-[clamp(52px,5vw,78px)] -rotate-3 md:block"
-      />
+      {wideScreen && (
+        <WallClock
+          now={now}
+          className="absolute left-[89vw] top-[calc(var(--site-header-offset)+7rem)] z-[2] w-[clamp(52px,5vw,78px)] -rotate-3"
+        />
+      )}
       </motion.div>
 
       {/* THE DESK -------------------------------------------------------- */}
@@ -507,14 +546,16 @@ export default function HeroCarousel() {
 
       {/* The monitor, with the copy on its screen (laptops). Above the room's
           light, since a lit screen is not dimmed by the evening. */}
-      <div className="pointer-events-none absolute inset-0 z-[7] hidden lg:block">
-        <HeroMonitor
-          screen={<HeroCopy slide={slide} stage={stage} palette={palette} reduceMotion={reduceMotion} onScreen />}
-          note={<PriceNote product={slide.product} />}
-          fore={fore}
-          staged={zoom.staged}
-        />
-      </div>
+      {laptop && (
+        <div className="pointer-events-none absolute inset-0 z-[7]">
+          <HeroMonitor
+            screen={<HeroCopy slide={slide} stage={stage} palette={palette} reduceMotion={reduceMotion} onScreen />}
+            note={<PriceNote product={slide.product} />}
+            fore={fore}
+            staged={zoom.staged}
+          />
+        </div>
+      )}
 
       {/* The stationery, in front of the monitor -- it is nearer the chair.
           Above the room's light with it, so it takes the evening's dimming
@@ -617,7 +658,7 @@ export default function HeroCarousel() {
         aria-label="Choose a flavour"
         className="absolute inset-x-0 bottom-0 z-[9] flex h-[calc(var(--lip)*0.72)] items-center justify-center"
       >
-        <ol className="flex items-center gap-1 sm:gap-3">
+        <ol className="flex items-center gap-0 xs:gap-1 sm:gap-3">
           {heroSlides.map((s, i) => {
             const on = i === index
             const p = packPalettes[s.product.slug]
@@ -627,7 +668,7 @@ export default function HeroCarousel() {
                   type="button"
                   onClick={() => goTo(i)}
                   aria-current={on ? 'true' : undefined}
-                  className="flex items-center gap-2 rounded-pill px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#fbf6d0] sm:text-xs"
+                  className="flex min-h-[44px] items-center gap-1.5 whitespace-nowrap rounded-pill px-2 text-[11px] font-black uppercase tracking-[0.1em] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#fbf6d0] xs:gap-2 xs:px-3 xs:tracking-[0.18em] sm:text-xs"
                   style={{ color: on ? '#fbf6d0' : 'rgba(251,246,208,0.55)' }}
                 >
                   <span

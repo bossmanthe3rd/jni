@@ -79,11 +79,11 @@ export function ProductCard({ product, index = 0 }) {
       </Link>
 
       <div className="flex flex-1 flex-col px-2 pb-2.5 pt-2 text-ink sm:px-6 sm:pb-6 sm:pt-4">
-        <h3 className="text-[13px] font-black leading-tight sm:text-2xl">
+        <h3 className="text-sm font-black leading-tight sm:text-2xl">
           {product.shortName || product.name}
         </h3>
         {(product.tagline || product.subtitle) && (
-          <p className="mt-0.5 line-clamp-2 text-[11px] font-medium leading-snug text-ink/70 sm:mt-1.5 sm:text-base">
+          <p className="mt-0.5 line-clamp-2 text-xs font-medium leading-snug text-ink/70 sm:mt-1.5 sm:text-base">
             {product.tagline || product.subtitle}
           </p>
         )}
@@ -136,7 +136,7 @@ export function ProductCard({ product, index = 0 }) {
           type="button"
           onClick={handleAdd}
           disabled={soldOut}
-          className="jni-btn mt-3 h-9 min-h-0 self-center px-6 text-[11px] sm:mt-5 sm:h-[3.25rem] sm:px-14 sm:text-base"
+          className="jni-btn mt-3 h-11 min-h-0 w-full self-center px-1 text-[13px] sm:mt-5 sm:h-[3.25rem] sm:w-auto sm:px-14 sm:text-base"
         >
           {soldOut ? 'Sold out' : 'Nibble Now'}
         </button>
@@ -206,7 +206,7 @@ export function BundleCard({ bundle, index = 0 }) {
         <button
           type="button"
           onClick={handleAdd}
-          className="jni-btn mt-3 h-9 min-h-0 self-center px-6 text-[11px] sm:mt-5 sm:h-[3.25rem] sm:px-14 sm:text-base"
+          className="jni-btn mt-3 h-11 min-h-0 w-full self-center px-1 text-[13px] sm:mt-5 sm:h-[3.25rem] sm:w-auto sm:px-14 sm:text-base"
         >
           Nibble Now
         </button>

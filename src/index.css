@@ -77,6 +77,14 @@
   }
   html {
     scroll-behavior: smooth;
+    /* The body clip above does not reach the viewport on mobile browsers:
+       they size the layout viewport to the widest content before clipping,
+       so any stray mark still zoomed the page out and dragged the fixed
+       header wider than the screen. Clipping here stops that at the root. */
+    overflow-x: clip;
+    /* Anchor jumps (/#products, #reviews) land below the fixed header rather
+       than under it. */
+    scroll-padding-top: var(--site-header-offset);
   }
 
   /* One focus ring for the whole site.
@@ -140,9 +148,15 @@
     text-transform: none;
     transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.16s ease;
   }
-  .jni-btn:hover {
-    transform: scale(1.05);
-    filter: brightness(1.06);
+  /* Hover lifts live behind (hover: hover) across the site: on a phone a tap
+     fires :hover and it sticks until the next tap elsewhere, so a pressed
+     button stayed scaled up. Tailwind's own hover: utilities get the same
+     treatment from `hoverOnlyWhenSupported` in tailwind.config.js. */
+  @media (hover: hover) {
+    .jni-btn:hover {
+      transform: scale(1.05);
+      filter: brightness(1.06);
+    }
   }
   .jni-btn:active {
     transform: scale(0.95);
@@ -152,9 +166,24 @@
     opacity: 0.55;
     cursor: not-allowed;
   }
+  /* The same traced shape, filled dark. The shorthand `background` this used
+     to set wiped out .jni-btn's shape image and left a plain rectangle; here
+     the shape masks a dark layer behind the label instead. On a pseudo-element
+     so the mask cannot clip the focus ring. */
   .jni-btn-dark {
-    background: var(--color-bg-dark);
+    position: relative;
+    isolation: isolate;
+    background-image: none;
     color: var(--color-text-light);
+  }
+  .jni-btn-dark::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-color: var(--color-bg-dark);
+    -webkit-mask: var(--jni-cta-shape) 0 0 / 100% 100% no-repeat;
+    mask: var(--jni-cta-shape) 0 0 / 100% 100% no-repeat;
   }
 
   .jni-section-cream {
@@ -743,8 +772,10 @@
   background: #f7f1c8;
   transition: border-color 0.16s ease, transform 0.16s cubic-bezier(0.34, 1.4, 0.64, 1);
 }
-.jni-dossier-thumbs button:hover {
-  transform: translateY(-2px);
+@media (hover: hover) {
+  .jni-dossier-thumbs button:hover {
+    transform: translateY(-2px);
+  }
 }
 .jni-dossier-thumbs button[aria-current='true'] {
   border-color: var(--color-bg-cream);
@@ -877,8 +908,10 @@
   line-height: 1.15;
   transition: transform 0.16s cubic-bezier(0.34, 1.4, 0.64, 1);
 }
-.jni-dossier-chip:hover {
-  transform: translateY(-2px);
+@media (hover: hover) {
+  .jni-dossier-chip:hover {
+    transform: translateY(-2px);
+  }
 }
 .jni-dossier-chip[aria-pressed='true'] {
   transform: translateY(-3px);
@@ -1005,8 +1038,10 @@
   color: var(--color-text-dark);
   transition: transform 0.16s cubic-bezier(0.34, 1.4, 0.64, 1);
 }
-.jni-dossier-flav:hover {
-  transform: translateY(-3px);
+@media (hover: hover) {
+  .jni-dossier-flav:hover {
+    transform: translateY(-3px);
+  }
 }
 .jni-dossier-flav[aria-current='page'] {
   transform: translateY(-3px) rotate(-1deg);
@@ -1310,6 +1345,18 @@
   }
   .jni-dossier-flav {
     flex: 0 0 auto;
+    scroll-snap-align: center;
+  }
+  /* Snap, and fade the far edge so the third chip reads as "more this way"
+     rather than a row that simply ends at the second. */
+  .jni-dossier-switch-row {
+    scroll-snap-type: x mandatory;
+  }
+  /* Dropped once the row is scrolled to its end (data-end, set by the
+     dossier), or the fade sat over the last chip with nothing after it. */
+  .jni-dossier-switch-row:not([data-end]) {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
   }
 }
 
