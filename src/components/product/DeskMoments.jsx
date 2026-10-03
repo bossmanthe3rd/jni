@@ -1,19 +1,35 @@
 import { useRef } from 'react'
+import { Link } from 'react-router-dom'
 import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useMediaQuery } from '../ui/Primitives'
+import { getBundleBySlug } from '../../data/products'
+import { responsiveImage } from '../../lib/responsiveImage'
 
 /**
- * The flavour's lifestyle shots as a strip of prints.
+ * The two combos as a strip of prints, on every flavour page.
  *
- * Every flavour already had three or four desk photographs, but the page only
- * ever showed them as 58px thumbnails under the pack. Here they get a caption
- * and room to be looked at. The strip scrolls natively (swipe, trackpad,
- * shift-wheel); the arrows are a convenience on top of that.
+ * This strip used to hold the flavour's own desk photos. It now sells the
+ * bundles instead: pack-of-3 and pack-of-6 shots in turn, each print a link to
+ * its combo page. The strip scrolls natively (swipe, trackpad, shift-wheel);
+ * the arrows are a convenience on top of that.
  *
  * The prints are taped up, drift sideways a little as the section scrolls
  * past, and straighten when you point at one.
  */
+
+// Which gallery shots each combo puts up, alternated pack of 3, pack of 6.
+const PRINTS = [
+  ['flipos-flavour-trio', 0, 'Pack of 3'],
+  ['flipos-party-six', 1, 'Pack of 6'],
+  ['flipos-flavour-trio', 2, 'Pack of 3'],
+  ['flipos-party-six', 0, 'Pack of 6'],
+]
+const shots = PRINTS.map(([slug, i, label]) => {
+  const bundle = getBundleBySlug(slug)
+  const shot = bundle?.gallery?.[i]
+  return shot && { ...shot, label, price: bundle.price, to: `/combos/${slug}` }
+}).filter(Boolean)
 export default function DeskMoments({ product }) {
   const railRef = useRef(null)
   const sectionRef = useRef(null)
@@ -24,7 +40,6 @@ export default function DeskMoments({ product }) {
   // and a row drifting up to 40px under it landed every snapped print off
   // its mark, cropping the first or last one.
   const wide = useMediaQuery('(min-width: 1024px)')
-  const shots = (product.gallery || []).slice(1)
   if (!shots.length) return null
 
   const step = (dir) => {
@@ -49,10 +64,10 @@ export default function DeskMoments({ product }) {
           <h2 id="jni-desks-title">Between meetings. During the 4 PM slump.</h2>
         </div>
         <div className="jni-desks-nav">
-          <button type="button" aria-label="Previous photo" onClick={() => step(-1)}>
+          <button type="button" aria-label="Previous combo" onClick={() => step(-1)}>
             <ChevronLeft size={22} strokeWidth={3} />
           </button>
-          <button type="button" aria-label="Next photo" onClick={() => step(1)}>
+          <button type="button" aria-label="Next combo" onClick={() => step(1)}>
             <ChevronRight size={22} strokeWidth={3} />
           </button>
         </div>
@@ -62,15 +77,20 @@ export default function DeskMoments({ product }) {
         <motion.div className="jni-desks-row" style={{ x: reduce || !wide ? 0 : drift }}>
           {shots.map((s, i) => (
             <figure
-              key={s.src}
+              key={`${s.src}-${i}`}
               style={{
                 '--turn': `${[-2, 1.5, -1, 2][i % 4]}deg`,
                 '--drop': i % 2 ? '18px' : '0px',
                 '--tape': `${[-5, 4, -2, 6][i % 4]}deg`,
               }}
             >
-              <img src={s.src} alt={s.alt} loading="lazy" decoding="async" />
-              {s.caption && <figcaption>{s.caption}</figcaption>}
+              <Link to={s.to} className="jni-desks-link">
+                <img {...responsiveImage(s.src, 'min(78vw, 380px)')} alt={s.alt} loading="lazy" decoding="async" />
+                <figcaption>
+                  {s.label}
+                  <span>&#8377;{s.price}</span>
+                </figcaption>
+              </Link>
             </figure>
           ))}
         </motion.div>

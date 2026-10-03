@@ -17,6 +17,7 @@ import HeatMeter from '../product/HeatMeter'
 import DoodleField from '../ui/DoodleField'
 import LaunchBanner from '../promo/LaunchBanner'
 import { boxFlavours, pouchCutout, toCartBundle } from './boxContents'
+import { responsiveImage } from '../../lib/responsiveImage'
 
 /**
  * The combo page's hero: the flavour dossier's spread, for a box.
@@ -118,7 +119,7 @@ function Stage({ bundle, flavours, reduce }) {
             {Array.from({ length: quantity }, (_, copy) => quantity - 1 - copy).map((copy) => (
               <motion.img
                 key={`${bundle.slug}-${product.slug}-${copy}`}
-                src={pouchCutout(product.slug)}
+                {...responsiveImage(pouchCutout(product.slug), '(min-width: 1024px) 200px, 140px')}
                 alt=""
                 className="jni-box-pouch"
                 data-back={copy > 0 ? '' : undefined}
@@ -283,7 +284,7 @@ export default function BundleDossier({ bundle, ctaRef, onQtyChange }) {
               {photo ? (
                 <motion.img
                   key={photo.src}
-                  src={photo.src}
+                  {...responsiveImage(photo.src, '(min-width: 1024px) 560px, calc(100vw - 40px)')}
                   alt={photo.alt}
                   className="jni-box-photo"
                   initial={reduce ? false : { opacity: 0, scale: 1.02 }}

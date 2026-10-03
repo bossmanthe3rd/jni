@@ -12,6 +12,8 @@ import BoxFacts from '../components/bundle/BoxFacts'
 import BoxCompare from '../components/bundle/BoxCompare'
 import BundleFaq from '../components/bundle/BundleFaq'
 import { boxFlavours, toCartBundle } from '../components/bundle/boxContents'
+import '../styles/pdp.css'
+import '../styles/bundle.css'
 
 const CREAM = '#fbf6d0'
 const SUNSHINE = '#f3c63b'

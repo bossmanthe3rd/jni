@@ -104,20 +104,44 @@
   display: flex;
   gap: 7px;
 }
+/* Each bulb is its unlit glass, with the lit glass and its glow laid over it
+   and blinked by opacity. Blinking background and box-shadow directly could
+   not run on the compositor, so eight 10px bulbs repainted the whole page
+   every frame -- even paused, even with the machine far off screen. */
 .vm-bulbs i {
+  position: relative;
   display: block;
   width: 10px;
   height: 10px;
   border: 2px solid var(--vm-ink);
   border-radius: 50%;
+  background: #7a6a2a;
+}
+.vm-bulbs i::after {
+  content: '';
+  position: absolute;
+  /* The whole bulb again, border and all, so the glow starts outside the
+     border exactly as it did on the bulb itself. */
+  inset: -2px;
+  border: 2px solid var(--vm-ink);
+  border-radius: 50%;
   background: var(--vm-cream);
   box-shadow: 0 0 8px 1px rgb(251 246 208 / 0.8);
-  animation: vm-bulb 1s steps(1) infinite;
+  /* A chase: the eight bulbs across both sides of the sign take turns, one
+     lit at a time. Each is lit for an eighth of the loop; its delay, set per
+     bulb, is negative so the loop is already running on the first frame
+     instead of every bulb showing lit until its turn comes round. */
+  animation: vm-bulb 1.6s linear infinite;
+  animation-delay: inherit;
 }
 @keyframes vm-bulb {
-  50% {
-    background: #7a6a2a;
-    box-shadow: none;
+  0%,
+  12.4% {
+    opacity: 1;
+  }
+  12.5%,
+  100% {
+    opacity: 0;
   }
 }
 
@@ -331,12 +355,12 @@
   display: flex;
   width: 100%;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
   line-height: 1.2;
 }
 .vm-tag-name {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
   line-height: 1.15;
 }
@@ -353,7 +377,7 @@
   background: rgb(13 40 24 / 0.12);
 }
 .vm-tag-packs {
-  font-size: 9.5px;
+  font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -423,17 +447,41 @@
   height: 36%;
   place-items: center;
   border-top: 4px solid var(--vm-ink);
-  background: rgb(214 220 212 / 0.3);
+  /* The machine's teal, so the flap reads as the thing to push. Yellow would
+     sink into the body around it. */
+  background: rgb(77 184 174 / 0.88);
   backdrop-filter: blur(1.5px);
   pointer-events: none;
 }
 .vm-flap span {
-  color: var(--vm-cream);
-  font-size: 11px;
+  color: var(--vm-ink);
+  font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  opacity: 0.8;
+}
+/* A pack is waiting behind it: the flap glows until it is collected. The
+   glow is its own layer, pulsed by opacity alone -- pulsing the flap's
+   background and shadow repainted it, and the blur behind it, every frame. */
+.vm-flap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgb(120 214 205 / 0.95);
+  box-shadow: 0 0 18px 2px rgb(77 184 174 / 0.7);
+  opacity: 0;
+  /* Its own layer up front. Without it the glow's shadow was re-rastered on
+     every frame of the pulse -- measured at about twice the machine's paint. */
+  will-change: opacity;
+}
+.vm-flap.is-loaded::after {
+  animation: vm-flap-glow 1.4s ease-in-out infinite;
+}
+@keyframes vm-flap-glow {
+  50% {
+    opacity: 1;
+  }
 }
 
 /* ---------- the control panel ---------- */
@@ -475,7 +523,7 @@
   text-transform: uppercase;
 }
 .vm-screen-small {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -532,7 +580,9 @@
   background: var(--vm-cream);
   box-shadow: 0 4px 0 var(--vm-ink);
   color: var(--vm-ink);
-  font-family: var(--font-brand);
+  /* The same bold Comic Sans as the codes on the shelf tags. */
+  font-family: var(--font-body);
+  font-weight: 900;
   font-size: 17px;
   transition: transform 0.08s ease, box-shadow 0.08s ease;
 }
@@ -599,7 +649,7 @@
 }
 .vm-printer-box span {
   color: var(--vm-ink);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.32em;
   text-transform: uppercase;
@@ -665,7 +715,7 @@
 }
 .vm-rc-meta,
 .vm-rc-label {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -762,7 +812,7 @@
   margin-top: 0;
 }
 .vm-rc-lines li > span:first-child {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.08em;
   line-height: 1.7;
@@ -814,7 +864,7 @@
 }
 .vm-rc-heat b {
   margin-left: 6px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -975,7 +1025,7 @@
   border-radius: 999px;
   background: #0d2818;
   color: #fffbea;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1117,7 +1167,7 @@
     font-size: 12px;
   }
   .vm-tag-name {
-    font-size: 11px;
+    font-size: 12px;
   }
   .vm-panel {
     gap: 12px;
@@ -1266,7 +1316,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .vm-bulbs i,
+  .vm-flap.is-loaded::after,
+  .vm-bulbs i::after,
   .vm-blink,
   .vm-room-sec,
   .vm-slot.is-spinning .vm-coil-turn {

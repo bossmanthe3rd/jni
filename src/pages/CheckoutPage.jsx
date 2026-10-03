@@ -151,7 +151,7 @@ function PayBar({ watchRef, packs, total, onPay }) {
           transition={{ type: 'spring', stiffness: 320, damping: 30 }}
           className="ck-paybar lg:hidden"
         >
-          <p className="shrink-0 text-[11px] font-black uppercase leading-tight tracking-wider opacity-75">
+          <p className="shrink-0 text-xs font-black uppercase leading-tight tracking-wider opacity-75">
             {itemCount(packs)}
             <span className="block">incl. delivery</span>
           </p>

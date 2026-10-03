@@ -1,10 +1,9 @@
-import { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { memo, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   AnimatePresence,
   motion,
   useAnimationControls,
-  useAnimationFrame,
   useMotionValue,
   useInView,
   useMotionValueEvent,
@@ -22,6 +21,8 @@ import HeroSpice from './HeroSpice'
 import { DeskChip, LampBeam, LampPool, PendantShade, SHADE_RIM, deskLight, useDeskClock } from './HeroDeskLife'
 import { MAX_FIT, Monitor } from './WhyFlipos'
 import { HeroZoomContext } from './heroZoomContext'
+import { aspectOf, responsiveImage } from '../../lib/responsiveImage'
+import { setBadgeFlavour } from '../../lib/badgeFlavour'
 
 const INK = '#0D2818'
 
@@ -48,6 +49,29 @@ const CHIP_FALL = [
 
 // How long the chips get before the page actually changes.
 const GRAB_TO_NAV_MS = 950
+
+/*
+ * The packs' slots as transforms. Each pack is laid out in the front slot's
+ * box and moved from there, so the numbers below are that box's own: x as a
+ * share of its width, y of its height (the pouch's own, from its aspect), and
+ * the scale that makes it the slot's width. About its foot, so the foot lands
+ * where the slot puts it. The cluster box is 1 : 0.86 (its aspect class).
+ */
+const FRONT = DESK_SLOTS[0]
+const CLUSTER_ASPECT = 0.86
+function slotTransform(slot, aspect) {
+  return {
+    x: `${((slot.cx - FRONT.cx) / FRONT.width) * 100}%`,
+    y: `${(-(slot.bottom - FRONT.bottom) * CLUSTER_ASPECT * 100) / (FRONT.width * aspect)}%`,
+    scale: slot.width / FRONT.width,
+    rotate: slot.rotate,
+  }
+}
+
+// How wide a pack is drawn: the front slot's share of the cluster, whose
+// width is set on the cluster box below (a phone's min(84vw, 24rem), from md
+// clamp(320px, min(40vw, 62vh), 620px) -- capped here at its widest).
+const PACK_SIZES = '(min-width: 768px) 290px, 39vw'
 
 /** Hand-drawn arrow aiming the eye at the hero CTA, the way the brand's own
  * banners annotate their button rather than leaving it to be found. */
@@ -116,7 +140,11 @@ function ArrowDoodle({ className = '' }) {
  * and the screensaver takes over, and the flavours stop turning. Below
  * laptop width the copy stands on the wall above the packs, as before.
  */
-export default function HeroCarousel() {
+// Memoised: it takes no props, and the camera move's flags (HeroWhyZoom)
+// used to re-render the whole hero each time one flipped mid-scroll.
+export default memo(HeroCarousel)
+
+function HeroCarousel() {
   const [index, setIndex] = useState(0)
   const [paused, setPaused] = useState(false)
   // A ref, not state: every touch on the hero used to re-render it twice.
@@ -170,23 +198,17 @@ export default function HeroCarousel() {
   const packY = useTransform(leanY, (v) => v * -4)
   const deskRise = useTransform(scrollYProgress, [0, 1], [1, 1.22])
 
-  // The pendant's swing, in degrees: a slow pendulum, a little wider on a
-  // phone where its cord is short. The lamp, its beam and its pool all rotate
-  // by this about the same point on the ceiling; the packs' shadow slides the
-  // other way under it.
+  // The pendant's swing is a CSS animation (.hero-swing in index.css): the
+  // lamp, its beam and its pool all rotate about the same point on the
+  // ceiling, and the packs' shadow slides the other way under them
+  // (.hero-shadow-swing). Run from a per-frame callback it cost a style
+  // recalc and a layer update on the main thread every frame the hero was on
+  // screen; as CSS it runs on the compositor.
   const wideScreen = useMediaQuery('(min-width: 768px)')
   const laptop = useMediaQuery('(min-width: 1024px)')
   // Everything that runs on its own clock -- the swing, the flavour rotation --
-  // stops once the hero is off screen. The swing repaints a rotating subtree
-  // with two blurs in it every frame, and it used to do that for as long as
-  // the tab was open.
+  // stops once the hero is off screen.
   const heroInView = useInView(sectionRef)
-  const swing = useMotionValue(0)
-  useAnimationFrame((t) => {
-    if (reduceMotion || !heroInView) return
-    swing.set((wideScreen ? 2.2 : 4.5) * Math.sin((t / 6500) * Math.PI * 2))
-  })
-  const shadowSwing = useTransform(swing, (v) => v * (wideScreen ? 7 : 3))
   // By day the sun competes and the beam is soft; after dark it is the
   // brightest thing in the room.
   const beamStrength = 0.45 + 0.55 * light.lamp
@@ -195,14 +217,49 @@ export default function HeroCarousel() {
   const stage = stageBySlug[slide.product.slug]
   const palette = packPalettes[slide.product.slug]
 
+  // The header badge wears the flavour on screen.
+  useEffect(() => setBadgeFlavour(slide.product.slug), [slide.product.slug])
+
+  // A backgrounded tab keeps no rotation going: browsers only throttle the
+  // interval there, so the hero would still re-render on its own, unseen.
+  const [tabShown, setTabShown] = useState(() => document.visibilityState !== 'hidden')
   useEffect(() => {
-    if (paused || reduceMotion || zoomHold || !heroInView) return
-    const id = window.setInterval(
-      () => setIndex((i) => (i + 1) % heroSlides.length),
-      HERO_INTERVAL
-    )
-    return () => window.clearInterval(id)
-  }, [paused, reduceMotion, zoomHold, heroInView])
+    const sync = () => setTabShown(document.visibilityState !== 'hidden')
+    document.addEventListener('visibilitychange', sync)
+    return () => document.removeEventListener('visibilitychange', sync)
+  }, [])
+
+  // A flavour change re-tints the whole wall: ~50-80ms of render and paint on
+  // a mid-range phone. Landing mid-scroll, that read as a stutter, so a tick
+  // that falls inside a scroll waits for it to settle and turns then instead.
+  const lastScroll = useRef(0)
+  useEffect(() => {
+    const mark = () => {
+      lastScroll.current = performance.now()
+    }
+    window.addEventListener('scroll', mark, { passive: true })
+    return () => window.removeEventListener('scroll', mark)
+  }, [])
+
+  useEffect(() => {
+    if (paused || lifted || reduceMotion || zoomHold || !heroInView || !tabShown) return
+    const SETTLE = 250
+    let retry = 0
+    const advance = () => {
+      const quietFor = performance.now() - lastScroll.current
+      if (quietFor < SETTLE) {
+        window.clearTimeout(retry)
+        retry = window.setTimeout(advance, SETTLE - quietFor)
+        return
+      }
+      setIndex((i) => (i + 1) % heroSlides.length)
+    }
+    const id = window.setInterval(advance, HERO_INTERVAL)
+    return () => {
+      window.clearInterval(id)
+      window.clearTimeout(retry)
+    }
+  }, [paused, lifted, reduceMotion, zoomHold, heroInView, tabShown])
 
   useEffect(
     () => () => {
@@ -278,9 +335,10 @@ export default function HeroCarousel() {
   const renderPack = (s, i, offset) => {
     const slot = DESK_SLOTS[offset]
     const isFront = offset === 0
+    const src = `/assets/hero/pouch-${s.product.slug}.webp`
     const img = (
       <img
-        src={`/assets/hero/pouch-${s.product.slug}.webp`}
+        {...responsiveImage(src, PACK_SIZES)}
         alt={`${s.product.name} pack`}
         loading={i === 0 ? 'eager' : 'lazy'}
         fetchpriority={i === 0 ? 'high' : 'auto'}
@@ -291,32 +349,34 @@ export default function HeroCarousel() {
     return (
       <motion.div
         key={s.product.slug}
-        className="pointer-events-auto absolute origin-bottom"
-        style={{ zIndex: slot.z }}
+        className="pointer-events-auto absolute"
+        style={{ zIndex: slot.z, left: `${FRONT.cx}%`, bottom: `${FRONT.bottom}%`, width: `${FRONT.width}%` }}
         initial={firstLoad.current ? { opacity: 0, y: -60, x: '-50%' } : false}
-        animate={{
-          opacity: 1,
-          x: '-50%',
-          y: 0,
-          left: `${slot.cx}%`,
-          bottom: `${slot.bottom}%`,
-          width: `${slot.width}%`,
-          rotate: slot.rotate,
-          filter: slot.dim ? 'brightness(0.93) saturate(0.9)' : 'brightness(1) saturate(1)',
-        }}
+        animate={{ opacity: 1, x: '-50%', y: 0 }}
         transition={
           firstLoad.current
             ? reduceMotion
               ? { duration: 0.2 }
               : { type: 'spring', stiffness: 220, damping: 18, delay: 0.3 + offset * 0.09 }
-            : reduceMotion
-              ? { duration: 0 }
-              : { type: 'spring', stiffness: 140, damping: 20 }
+            : { duration: 0 }
         }
         onAnimationComplete={() => {
           firstLoad.current = false
         }}
       >
+        {/* Every pack is laid out in the front slot's box and carried to its
+            own slot by transform alone. Moving left, bottom and width moved
+            the layout under the reader on every flavour change -- layout
+            work each frame of the spring, and a layout shift each time. */}
+        <motion.div
+          style={{ originX: 0.5, originY: 1 }}
+          initial={false}
+          animate={{
+            ...slotTransform(slot, aspectOf(src) ?? 1.6),
+            filter: slot.dim ? 'brightness(0.93) saturate(0.9)' : 'brightness(1) saturate(1)',
+          }}
+          transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 140, damping: 20 }}
+        >
         {/* Landing squash: a pack called forward lands on the desk rather
             than simply arriving. */}
         <motion.div
@@ -361,6 +421,7 @@ export default function HeroCarousel() {
             </button>
           )}
         </motion.div>
+        </motion.div>
       </motion.div>
     )
   }
@@ -368,6 +429,7 @@ export default function HeroCarousel() {
   return (
     <section
       ref={sectionRef}
+      data-asleep={heroInView ? undefined : ''}
       className="relative isolate flex w-full flex-col overflow-hidden pt-[var(--site-header-offset)] [--desk:176px] [--lip:44px] md:min-h-[max(640px,min(100svh,900px))] md:[--desk:clamp(220px,31vh,300px)] md:[--lip:clamp(52px,7vh,70px)]"
       style={{
         backgroundColor: HERO_GROUND,
@@ -375,9 +437,10 @@ export default function HeroCarousel() {
         '--hero-h': zoom.staged ? '100vh' : 'max(640px, min(100svh, 900px))',
         ...(zoom.staged ? { height: '100vh', minHeight: 0 } : {}),
       }}
-      onMouseEnter={() => setPaused(true)}
+      // No hover pause on the section itself: staged, it is the whole screen,
+      // so a resting mouse anywhere held the first flavour forever. The
+      // rotation holds while a pack is in hand (`lifted`) instead.
       onMouseLeave={() => {
-        setPaused(false)
         leanRawX.set(0)
         leanRawY.set(0)
       }}
@@ -491,7 +554,7 @@ export default function HeroCarousel() {
           cord, shade and beam (over the wall and desk, under the packs). The
           packs sit above all of it, so the room takes the flavour's colour
           and the packaging keeps its own. Positions live in index.css. */}
-      <motion.div className="hero-lamp-rig hidden md:block z-[4]" style={{ rotate: swing, ...foreStyle }} aria-hidden="true">
+      <motion.div className="hero-lamp-rig hero-swing hidden md:block z-[4]" style={foreStyle} aria-hidden="true">
         <LampPool tint={palette.fill} strength={beamStrength} className="hero-lamp-pool block" />
       </motion.div>
 
@@ -507,7 +570,7 @@ export default function HeroCarousel() {
           ...foreStyle,
         }}
       >
-        <motion.div className="h-full w-full" style={{ x: shadowSwing }}>
+        <div className="hero-shadow-swing h-full w-full">
         <motion.div
           className="h-full w-full rounded-[50%] bg-[rgb(13,40,24)] blur-[2px]"
           initial={false}
@@ -519,7 +582,7 @@ export default function HeroCarousel() {
           }}
           transition={{ type: 'spring', stiffness: 180, damping: 22 }}
         />
-        </motion.div>
+        </div>
       </motion.div>
 
       {/* The stationery stays put under the pointer: sliding against the
@@ -567,7 +630,7 @@ export default function HeroCarousel() {
         <HeroDeskProps />
       </motion.div>
 
-      <motion.div className="hero-lamp-rig hidden md:block z-[7]" style={{ rotate: swing, ...foreStyle }} aria-hidden="true">
+      <motion.div className="hero-lamp-rig hero-swing hidden md:block z-[7]" style={foreStyle} aria-hidden="true">
         <span className="hero-lamp-cord" />
         <LampBeam
           tint={palette.fill}
@@ -600,7 +663,7 @@ export default function HeroCarousel() {
           {/* Phones: the lamp on a short cord just above the packs, its light
               behind them in this box. From md up the lamp hangs from the
               ceiling instead -- see THE LAMP above. */}
-          <motion.div className="hero-pendant-light absolute inset-0 z-[1] md:hidden" style={{ rotate: swing }}>
+          <div className="hero-pendant-light hero-swing absolute inset-0 z-[1] md:hidden">
             <LampBeam
               tint={palette.fill}
               strength={beamStrength}
@@ -608,11 +671,11 @@ export default function HeroCarousel() {
               className="absolute inset-x-0 top-[-4%] block h-[100%] w-full"
             />
             <LampPool tint={palette.fill} strength={beamStrength} className="absolute -bottom-[6%] left-[-6%] block h-[16%] w-[112%]" />
-          </motion.div>
-          <motion.div className="hero-pendant absolute z-[2] md:hidden" style={{ rotate: swing }}>
+          </div>
+          <div className="hero-pendant hero-swing absolute z-[2] md:hidden">
             <span className="hero-lamp-cord" />
             <PendantShade tint={palette.fill} glow={light.lamp} className="hero-pendant-shade block" />
-          </motion.div>
+          </div>
 
           {heroSlides.map((s, i) =>
             renderPack(s, i, (i - index + heroSlides.length) % heroSlides.length)
@@ -668,7 +731,7 @@ export default function HeroCarousel() {
                   type="button"
                   onClick={() => goTo(i)}
                   aria-current={on ? 'true' : undefined}
-                  className="flex min-h-[44px] items-center gap-1.5 whitespace-nowrap rounded-pill px-2 text-[11px] font-black uppercase tracking-[0.1em] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#fbf6d0] xs:gap-2 xs:px-3 xs:tracking-[0.18em] sm:text-xs"
+                  className="flex min-h-[44px] items-center gap-1.5 whitespace-nowrap rounded-pill px-2 text-xs font-black uppercase tracking-[0.1em] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#fbf6d0] xs:gap-2 xs:px-3 xs:tracking-[0.18em] sm:text-xs"
                   style={{ color: on ? '#fbf6d0' : 'rgba(251,246,208,0.55)' }}
                 >
                   <span
@@ -729,7 +792,7 @@ function HeroCopy({ slide, stage, palette, reduceMotion, onScreen = false }) {
         }
       >
         <p
-          className={onScreen ? 'hero-screen-kicker' : 'mb-3 text-[11px] font-black uppercase tracking-[0.32em] sm:text-xs'}
+          className={onScreen ? 'hero-screen-kicker' : 'mb-3 text-xs font-black uppercase tracking-[0.32em] sm:text-xs'}
           style={onScreen ? undefined : { color: palette.line }}
         >
           {slide.kicker} &middot; {stage.heat}
@@ -773,7 +836,7 @@ function HeroCopy({ slide, stage, palette, reduceMotion, onScreen = false }) {
             </span>
             <p className="text-sm font-black" style={{ color: INK }}>
               &#8377;{slide.product.price}
-              <span className="ml-2 text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: palette.line }}>
+              <span className="ml-2 text-xs font-bold uppercase tracking-[0.14em]" style={{ color: palette.line }}>
                 {slide.product.weight}
               </span>
             </p>
@@ -784,7 +847,7 @@ function HeroCopy({ slide, stage, palette, reduceMotion, onScreen = false }) {
               </span>
               <span aria-hidden="true">
                 {slide.product.rating.value}
-                <span className="ml-1.5 text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: palette.line }}>
+                <span className="ml-1.5 text-xs font-bold uppercase tracking-[0.14em]" style={{ color: palette.line }}>
                   ({slide.product.rating.count})
                 </span>
               </span>

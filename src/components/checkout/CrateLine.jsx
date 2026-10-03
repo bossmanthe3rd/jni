@@ -2,6 +2,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { Trash2 } from 'lucide-react'
 import { QtyStepper } from '../ui/Primitives'
 import { Tick, lineInk } from './CheckoutReceipt'
+import { responsiveImage } from '../../lib/responsiveImage'
 
 /**
  * One line of the crate: the pack, how many, what it costs. Shared by the
@@ -26,7 +27,11 @@ export default function CrateLine({ item, onQty, onRemove, compact = false }) {
         }`}
         style={{ background: item.theme?.soft || '#F7F1C8' }}
       >
-        <img src={item.imageUrl || item.images?.plp} alt="" className="h-full w-full object-contain" />
+        <img
+          {...responsiveImage(item.imageUrl || item.images?.plp, compact ? '64px' : '(min-width: 640px) 96px, 80px')}
+          alt=""
+          className="h-full w-full object-contain"
+        />
       </div>
 
       <div className="min-w-0 flex-1">
@@ -42,7 +47,7 @@ export default function CrateLine({ item, onQty, onRemove, compact = false }) {
           />
           <span className="truncate">{name}</span>
         </p>
-        <p className={`mt-0.5 truncate font-bold text-ink/55 ${compact ? 'text-[11px]' : 'text-xs'}`}>
+        <p className={`mt-0.5 truncate font-bold text-ink/55 ${compact ? 'text-xs' : 'text-xs'}`}>
           {item.selectedWeight || item.weight}
           {item.flavor ? ` · ${item.flavor}` : ''}
         </p>

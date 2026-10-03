@@ -1,0 +1,19 @@
+/* Print grain over the flat grounds, so they read as a printed pouch rather
+   than a CSS fill. It sits between the ground and the content: the section
+   is its own stacking context, and the grain is layered just under zero. */
+.jni-grain {
+  position: relative;
+  isolation: isolate;
+}
+.jni-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  /* Grey noise centred on mid-grey under soft-light: it lightens as much as
+     it darkens, so the ground keeps its colour and only gains tooth. */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  mix-blend-mode: soft-light;
+  opacity: 0.55;
+  pointer-events: none;
+}

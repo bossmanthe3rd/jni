@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ShoppingCart, User, X } from 'lucide-react'
 import { useCart } from '../../store/cartStore'
-import { ticker, navLinks } from '../../data/site'
+import { HERO_INTERVAL, ticker, navLinks } from '../../data/site'
+import { BADGE_FILLS, getBadgeFlavour, setBadgeFlavour, useBadgeFlavour } from '../../lib/badgeFlavour'
 import { StarDoodle } from '../icons/WhyIcons'
 import { useScrollLock } from '../../lib/scrollLock'
 import { BadgeFace } from './BadgeFace'
@@ -118,43 +119,142 @@ function useBadgeDown(pathname) {
     if (never) return undefined
 
     let lastY = window.scrollY
+    let lastDy = 0
     let frame = 0
+    // The viewport height, for pages with no first section; kept current on
+    // resize rather than read on every scroll.
+    let vh = window.innerHeight
 
-    const update = () => {
-      frame = 0
-      const y = window.scrollY
-      const dy = y - lastY
-      if (Math.abs(dy) < SCROLL_SLOP && y > 0) return
-      lastY = y
-
-      if (y <= 0) return setDown(true)
-
-      // Measured live rather than once: the first section on most pages
-      // grows as its images load.
-      const header = document.querySelector('[data-intro-bar]')?.getBoundingClientRect().bottom ?? 0
+    // Whether the page's opening has scrolled out from under the header,
+    // kept by an IntersectionObserver whose top edge is the header's bottom.
+    // It used to be two getBoundingClientRect() reads on every scroll frame,
+    // each forcing a layout straight after the frame's own style writes. The
+    // observer still follows the section as it grows with its images.
+    let past = null
+    let io = null
+    let watched = null
+    const watch = () => {
       // A page can say where its opening ends when that is not simply its
       // first section -- the homepage's hero is pinned while the camera
       // walks into Why Flipo's, so it never scrolls out from under anything.
       const first = document.querySelector('[data-intro-end]') ?? document.querySelector('main section')
-      const past = first
-        ? first.getBoundingClientRect().bottom <= header
-        : y > window.innerHeight * 0.8
+      if (first === watched && io) return
+      io?.disconnect()
+      io = null
+      watched = first
+      past = null
+      if (!first) return
+      const header = document.querySelector('[data-intro-bar]')?.getBoundingClientRect().bottom ?? 0
+      io = new IntersectionObserver(
+        ([e]) => {
+          past = e.boundingClientRect.bottom <= e.rootBounds.top
+          if (!past) setDown(true)
+          else if (window.scrollY > 0) setDown(lastDy < 0)
+        },
+        { rootMargin: `${-Math.round(header)}px 0px 0px 0px` }
+      )
+      io.observe(first)
+    }
+    watch()
 
-      if (!past) setDown(true)
+    const update = () => {
+      frame = 0
+      // The opening may arrive after this effect, with its route's chunk, or
+      // be swapped out for another.
+      if (!watched || !watched.isConnected) watch()
+      const y = window.scrollY
+      const dy = y - lastY
+      if (Math.abs(dy) < SCROLL_SLOP && y > 0) return
+      lastY = y
+      lastDy = dy
+
+      if (y <= 0) return setDown(true)
+
+      const isPast = past ?? (watched ? false : y > vh * 0.8)
+      if (!isPast) setDown(true)
       else setDown(dy < 0)
     }
 
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(update)
     }
+    // The header's height moves with the breakpoints, and the observer's edge
+    // with it.
+    const onResize = () => {
+      vh = window.innerHeight
+      watched = null
+      watch()
+    }
     window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onResize)
     return () => {
       window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onResize)
+      io?.disconnect()
       if (frame) cancelAnimationFrame(frame)
     }
   }, [pathname, never])
 
   return !never && down
+}
+
+const BADGE_ORDER = Object.keys(BADGE_FILLS)
+
+/**
+ * The badge, in the flavour of the moment.
+ *
+ * On the homepage the hero sets the flavour; elsewhere this turns it on the
+ * hero's clock -- held in a backgrounded tab and under reduced motion, like
+ * every other loop on the site. It subscribes on its own, so a colour change
+ * re-renders this and not the whole header; `children` arrive already built,
+ * so the face inside is not re-rendered either.
+ *
+ * One blob per colour, stacked, cross-faded by opacity: that runs on the
+ * compositor, where easing the SVG's fill would repaint it for the length of
+ * the fade. The top blob is unfilled and carries the keyline and the face.
+ */
+function BadgeBlob({ follow, className, style, children }) {
+  const flavour = useBadgeFlavour()
+
+  useEffect(() => {
+    if (!follow) return undefined
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined
+    let id = 0
+    const sync = () => {
+      window.clearInterval(id)
+      if (document.visibilityState !== 'visible') return
+      id = window.setInterval(() => {
+        const at = BADGE_ORDER.indexOf(getBadgeFlavour())
+        setBadgeFlavour(BADGE_ORDER[(at + 1) % BADGE_ORDER.length])
+      }, HERO_INTERVAL)
+    }
+    sync()
+    document.addEventListener('visibilitychange', sync)
+    return () => {
+      window.clearInterval(id)
+      document.removeEventListener('visibilitychange', sync)
+    }
+  }, [follow])
+
+  return (
+    <span className={`relative block ${className}`} style={style}>
+      {BADGE_ORDER.map((slug) => (
+        <span
+          key={slug}
+          aria-hidden="true"
+          className="absolute inset-0 transition-opacity duration-[600ms] motion-reduce:transition-none"
+          // Layers up front: promoted only for the fade, each was re-rastered
+          // as it started -- a paint per frame of it, measured.
+          style={{ opacity: slug === flavour ? 1 : 0, willChange: 'opacity' }}
+        >
+          <NibbleBlob fill={BADGE_FILLS[slug]} />
+        </span>
+      ))}
+      <NibbleBlob fill="none" stroke={PLATE_KEYLINE}>
+        {children}
+      </NibbleBlob>
+    </span>
+  )
 }
 
 export default function SiteHeader() {
@@ -244,7 +344,7 @@ export default function SiteHeader() {
           aria-label={ticker.text}
           // Above the row, so the badge retracts up behind it -- into the seal,
           // the way it drops out of one on the pack.
-          className="pointer-events-auto relative z-10 block h-7 overflow-hidden text-[10px] font-black uppercase sm:text-xs"
+          className="pointer-events-auto relative z-10 block h-7 overflow-hidden text-xs font-black uppercase sm:text-xs"
           style={{ backgroundColor: ticker.backgroundColor, color: ticker.textColor }}
         >
           {/* Two identical runs, translated by exactly half the track. At -50%
@@ -308,17 +408,15 @@ export default function SiteHeader() {
 
                 The slide is on this inner box, not the link, because the link
                 already spends its transform on centring. */}
-            <NibbleBlob
-              fill="var(--color-bg-dark, #071a16)"
-              stroke={PLATE_KEYLINE}
-              className="transition-transform duration-[420ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
+            <BadgeBlob
+              follow={pathname !== '/'}
+              className="jni-header-badge transition-transform duration-[420ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
               style={{
-                width: 'clamp(6.25rem, 26vw, 8.75rem)',
                 transform: badgeShown ? 'none' : 'translateY(calc(-100% - 4px))',
               }}
             >
               <BadgeFace fill="var(--color-text-light, #fbf6d0)" />
-            </NibbleBlob>
+            </BadgeBlob>
           </Link>
         )}
 
@@ -345,7 +443,7 @@ export default function SiteHeader() {
           >
             <ShoppingCart size={22} strokeWidth={1.8} />
             {qty > 0 && (
-              <span className="absolute right-0.5 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-sunshine px-1 text-[10px] font-black text-ink">
+              <span className="absolute right-0.5 top-1 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-sunshine px-1 text-[11px] leading-none font-black text-ink">
                 {qty}
               </span>
             )}

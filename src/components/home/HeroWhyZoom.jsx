@@ -75,6 +75,8 @@ function CameraMove() {
   const camera = useMotionValue(1)
   const [revealed, setRevealed] = useState(false)
   const [heroLive, setHeroLive] = useState(true)
+  // Until the hero starts to fade, Why Flipo's underneath cannot be seen.
+  const [covered, setCovered] = useState(true)
   // The two monitors' rects in the stage's own coordinates, the hero's with
   // the camera taken back out.
   const geo = useRef(null)
@@ -118,6 +120,7 @@ function CameraMove() {
       layer.style.visibility = fade >= 1 ? 'hidden' : ''
       setRevealed(q >= FADE_TO - 0.005)
       setHeroLive(q < ZOOM_FROM + 0.01)
+      setCovered(fade <= 0)
     },
     [camera, fore],
   )
@@ -209,7 +212,7 @@ function CameraMove() {
       />
       <div ref={stageRef} className="sticky top-0 h-screen overflow-hidden">
         <div className="absolute inset-0">
-          <WhyFlipos staged revealed={revealed} monitorRef={whyMonitorRef} />
+          <WhyFlipos staged revealed={revealed} covered={covered} monitorRef={whyMonitorRef} />
         </div>
         <div
           ref={heroLayerRef}

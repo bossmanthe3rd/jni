@@ -139,9 +139,6 @@
   z-index: 5;
   pointer-events: none;
 }
-.jni-box-note {
-  width: 9.6rem;
-}
 .jni-box-note.n-a {
   left: -11%;
   top: 46%;
@@ -157,7 +154,12 @@
    strip to replace them. */
 .jni-box .jni-box-thumbs {
   display: flex;
-  margin-top: 34px;
+}
+/* Laptops take the dossier's own one-screen spacing (index.css). */
+@media (max-width: 1023px) {
+  .jni-box .jni-box-thumbs {
+    margin-top: 34px;
+  }
 }
 .jni-box-swatch {
   display: flex;
@@ -174,7 +176,7 @@
   gap: 10px;
 }
 .jni-box-switch-meta {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.25;
   opacity: 0.72;
 }
@@ -191,7 +193,7 @@
 }
 .jni-box-single {
   display: inline-flex;
-  min-height: 32px;
+  min-height: 44px;
   align-items: center;
   gap: 6px;
   font-size: 13.5px;
@@ -281,8 +283,11 @@
   object-fit: cover;
   transition: scale 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.jni-compare-photo:hover img {
-  scale: 1.04;
+@media (hover: hover) {
+  /* Pointer hover only: a tap fires :hover on touch and it sticks until the next tap elsewhere. */
+  .jni-compare-photo:hover img {
+    scale: 1.04;
+  }
 }
 .jni-compare-photo:focus-visible {
   outline: 3px solid var(--color-accent-yellow);
@@ -323,7 +328,7 @@
 }
 .jni-compare-body dt {
   flex: 0 0 auto;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -343,11 +348,6 @@
 .jni-compare-buy .jni-flight-price {
   margin-right: auto;
   text-align: left;
-}
-.jni-compare-cta {
-  min-height: 3.2rem;
-  padding: 0.7rem 1.6rem;
-  font-size: 1.1rem;
 }
 .jni-compare-see {
   display: inline-flex;
@@ -388,8 +388,11 @@
   filter: drop-shadow(6px 8px 0 rgba(0, 0, 0, 0.45));
   transition: translate 0.2s cubic-bezier(0.34, 1.4, 0.64, 1);
 }
-.jni-compare-singles a:hover img {
-  translate: 0 -8px;
+@media (hover: hover) {
+  /* Pointer hover only: a tap fires :hover on touch and it sticks until the next tap elsewhere. */
+  .jni-compare-singles a:hover img {
+    translate: 0 -8px;
+  }
 }
 .jni-compare-singles b {
   margin-top: 8px;

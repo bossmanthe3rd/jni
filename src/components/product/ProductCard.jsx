@@ -6,6 +6,7 @@ import { useCart } from '../../store/cartStore'
 import { savingsPercent, toCartProduct } from '../../data/products'
 import { packPalettes } from '../icons/PackDoodles'
 import { SmartImage } from '../ui/Primitives'
+import { responsiveImage } from '../../lib/responsiveImage'
 import HeatMeter from './HeatMeter'
 
 /** Single-flavour card used in the homepage "Our flavours" grid.
@@ -44,7 +45,9 @@ export function ProductCard({ product, index = 0 }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.18 }}
       transition={{ duration: 0.35, delay: index * 0.05 }}
-      className="flex h-full flex-col overflow-hidden rounded-2xl border-[3px] bg-cream sm:rounded-[22px]"
+      // Phones get one card per row, photo beside the copy: three across left
+      // each card ~100px wide, with the heat label wrapping and the tagline cut.
+      className="flex h-full flex-row overflow-hidden rounded-2xl border-[3px] bg-cream sm:flex-col sm:rounded-[22px]"
       style={{ borderColor: palette?.line || 'var(--color-border)' }}
       data-slug={product.slug}
     >
@@ -56,21 +59,19 @@ export function ProductCard({ product, index = 0 }) {
       <Link
         to={to}
         aria-label={`View ${product.name}`}
-        className={`jni-card-media relative mx-2 mt-2 block shrink-0 overflow-hidden border-2 bg-[#F7F1C8] text-left sm:mx-6 sm:mt-6 ${
+        className={`jni-card-media relative my-2 ml-2 block w-[38%] shrink-0 self-start overflow-hidden border-2 bg-[#F7F1C8] text-left sm:mx-6 sm:mb-0 sm:mt-6 sm:w-auto sm:self-auto ${
           product.isBundle ? 'aspect-[16/10] min-h-[180px]' : 'aspect-square'
         }`}
         style={{ borderColor: palette?.line || 'var(--color-border)' }}
       >
         <SmartImage
-          src={image}
+          {...responsiveImage(image, '(min-width: 1200px) 330px, (min-width: 640px) 28vw, 36vw')}
           alt={`${product.name} pack`}
-          width="1200"
-          height="1200"
           className="h-full w-full object-contain"
         />
         {palette && product.flavor && (
           <span
-            className="absolute left-2 top-2 rounded-pill border-[2px] px-2 py-1 text-[9px] font-black uppercase text-ink sm:left-3 sm:top-3 sm:border-[3px] sm:px-3 sm:py-1.5 sm:text-[10px]"
+            className="absolute left-2 top-2 rounded-pill border-[2px] px-2 py-1 text-xs font-black uppercase text-ink sm:left-3 sm:top-3 sm:border-[3px] sm:px-3 sm:py-1.5 sm:text-xs"
             style={{ backgroundColor: palette.fill, borderColor: palette.line }}
           >
             {product.flavor}
@@ -78,12 +79,12 @@ export function ProductCard({ product, index = 0 }) {
         )}
       </Link>
 
-      <div className="flex flex-1 flex-col px-2 pb-2.5 pt-2 text-ink sm:px-6 sm:pb-6 sm:pt-4">
-        <h3 className="text-sm font-black leading-tight sm:text-2xl">
+      <div className="flex min-w-0 flex-1 flex-col px-3 pb-3 pt-2.5 text-ink sm:px-6 sm:pb-6 sm:pt-4">
+        <h3 className="text-lg font-black leading-tight sm:text-2xl">
           {product.shortName || product.name}
         </h3>
         {(product.tagline || product.subtitle) && (
-          <p className="mt-0.5 line-clamp-2 text-xs font-medium leading-snug text-ink/70 sm:mt-1.5 sm:text-base">
+          <p className="mt-0.5 line-clamp-2 text-sm font-medium leading-snug text-ink/70 sm:mt-1.5 sm:text-base">
             {product.tagline || product.subtitle}
           </p>
         )}
@@ -96,7 +97,7 @@ export function ProductCard({ product, index = 0 }) {
           />
         )}
 
-        <div className="mt-auto flex flex-col gap-2 pt-3 sm:flex-row sm:items-end sm:justify-between sm:gap-3 sm:pt-4">
+        <div className="mt-auto flex flex-col gap-2 pt-2 sm:flex-row sm:items-end sm:justify-between sm:gap-3 sm:pt-4">
           <div className="flex items-baseline gap-1.5 sm:gap-2">
             <span
               className="text-lg font-black sm:text-2xl"
@@ -105,7 +106,7 @@ export function ProductCard({ product, index = 0 }) {
               ₹{price}
             </span>
             {original > price && (
-              <span className="text-[11px] font-semibold text-ink/40 line-through sm:text-sm">
+              <span className="text-xs font-semibold text-ink/40 line-through sm:text-sm">
                 ₹{original}
               </span>
             )}
@@ -136,7 +137,7 @@ export function ProductCard({ product, index = 0 }) {
           type="button"
           onClick={handleAdd}
           disabled={soldOut}
-          className="jni-btn mt-3 h-11 min-h-0 w-full self-center px-1 text-[13px] sm:mt-5 sm:h-[3.25rem] sm:w-auto sm:px-14 sm:text-base"
+          className="jni-btn mt-2 h-11 min-h-0 w-full self-center px-1 text-sm sm:mt-5 sm:h-[3.25rem] sm:w-auto sm:px-14 sm:text-base"
         >
           {soldOut ? 'Sold out' : 'Nibble Now'}
         </button>
@@ -169,13 +170,11 @@ export function BundleCard({ bundle, index = 0 }) {
         className="relative block aspect-[16/10] shrink-0 overflow-hidden bg-[#F7F1C8] sm:aspect-[16/9]"
       >
         <SmartImage
-          src={bundle.imageUrl}
+          {...responsiveImage(bundle.imageUrl, '(min-width: 1200px) 560px, (min-width: 640px) 46vw, calc(100vw - 40px)')}
           alt={`${bundle.name} party snack combo`}
-          width="1200"
-          height="675"
           className="h-full w-full object-cover"
         />
-        <span className="absolute left-2 top-2 rounded-pill border-[2px] border-ink bg-sunshine px-2 py-1 text-[9px] font-black uppercase text-ink sm:left-3 sm:top-3 sm:border-[3px] sm:px-3 sm:py-1.5 sm:text-[10px]">
+        <span className="absolute left-2 top-2 rounded-pill border-[2px] border-ink bg-sunshine px-2 py-1 text-xs font-black uppercase text-ink sm:left-3 sm:top-3 sm:border-[3px] sm:px-3 sm:py-1.5 sm:text-xs">
           {bundle.badge}
         </span>
       </Link>
@@ -183,22 +182,24 @@ export function BundleCard({ bundle, index = 0 }) {
       <div className="flex flex-1 flex-col px-2.5 pb-2.5 pt-2 text-ink sm:px-4 sm:pb-4 sm:pt-3">
         <Link
           to={`/combos/${bundle.slug}`}
-          className="font-brand text-base leading-tight text-ink hover:underline sm:text-2xl"
+          // 44px to tap; the padding is taken back by the margin, so the
+          // title sits where it did.
+          className="-my-3 block py-3 font-brand text-base leading-tight text-ink hover:underline sm:text-2xl"
         >
           {bundle.shortName || bundle.name}
         </Link>
-        <p className="mt-1.5 line-clamp-2 text-[11px] font-medium leading-4 text-ink/70 sm:min-h-10 sm:text-base sm:leading-6">
+        <p className="mt-1.5 line-clamp-2 text-xs font-medium leading-4 text-ink/70 sm:min-h-10 sm:text-base sm:leading-6">
           {bundle.description}
         </p>
 
         <div className="mt-auto flex flex-col gap-1.5 pt-3 sm:flex-row sm:items-end sm:justify-between sm:gap-3 sm:pt-4">
           <div className="flex items-baseline gap-1.5 sm:gap-2">
             <span className="font-brand text-xl text-ink sm:text-3xl">₹{bundle.price}</span>
-            <span className="text-[11px] font-semibold text-ink/40 line-through sm:text-sm">
+            <span className="text-xs font-semibold text-ink/40 line-through sm:text-sm">
               ₹{bundle.originalPrice}
             </span>
           </div>
-          <span className="w-fit rounded-pill border-[2px] border-ink bg-teal px-2 py-0.5 text-[9px] font-black uppercase text-ink sm:px-2.5 sm:py-1 sm:text-[10px]">
+          <span className="w-fit rounded-pill border-[2px] border-ink bg-teal px-2 py-0.5 text-xs font-black uppercase text-ink sm:px-2.5 sm:py-1 sm:text-xs">
             Save {save}%
           </span>
         </div>

@@ -8,24 +8,43 @@ const SHOW_AFTER = 4000
 const VISIBLE_FOR = 6500
 const GAP = 9000
 
+const DETAIL_PAGE = /^\/(flavours|snacks|combos)\/[^/]+/
+
 /*
  * True while the homepage's opening screen or the vending machine is in view,
  * on phones only. Those are the two places the toast would sit on something
  * the reader is about to tap: the hero's packs and CTA, and the machine's
  * keypad and receipt.
+ *
+ * Also true for the whole of a flavour or box page on phones: the buy bar owns
+ * the bottom of the screen there, and the toast stacked on top of it took a
+ * quarter of a 740px screen.
  */
 function useQuietZone(pathname) {
   const [quiet, setQuiet] = useState(false)
 
   useEffect(() => {
     setQuiet(false)
-    if (pathname !== '/') return
     const phone = window.matchMedia('(max-width: 1023px)')
+    if (DETAIL_PAGE.test(pathname)) {
+      const syncDetail = () => setQuiet(phone.matches)
+      syncDetail()
+      phone.addEventListener('change', syncDetail)
+      return () => phone.removeEventListener('change', syncDetail)
+    }
+    if (pathname !== '/') return
     const state = { top: true, machine: false }
     const sync = () => setQuiet(phone.matches && (state.top || state.machine))
 
+    // Cached and refreshed on resize: read on every scroll event, the
+    // viewport height could force a layout each time.
+    let vh = window.innerHeight
+    const onResize = () => {
+      vh = window.innerHeight
+      onScroll()
+    }
     const onScroll = () => {
-      const top = window.scrollY < window.innerHeight * 0.8
+      const top = window.scrollY < vh * 0.8
       if (top === state.top) return
       state.top = top
       sync()
@@ -45,11 +64,13 @@ function useQuietZone(pathname) {
     onScroll()
     sync()
     window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onResize)
     phone.addEventListener('change', sync)
     return () => {
       window.cancelAnimationFrame(raf)
       io?.disconnect()
       window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onResize)
       phone.removeEventListener('change', sync)
     }
   }, [pathname])
@@ -86,10 +107,6 @@ export default function RecentPurchaseToast() {
   // popup over it -- on a phone it landed right on the delivery nudge.
   const { pathname } = useLocation()
   const atCheckout = pathname.startsWith('/checkout')
-  // Only the two detail pages carry the mobile buy bar, so only they need the
-  // toast lifted above it. Everywhere else the lift parked it mid-screen, on
-  // top of the hero packs and the vending keypad.
-  const overBuyBar = /^\/(flavours|snacks|combos)\/[^/]+/.test(pathname)
   const quiet = useQuietZone(pathname)
 
   const purchase = recentPurchases[index]
@@ -103,13 +120,7 @@ export default function RecentPurchaseToast() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 24 }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
-          /* Lifted clear of the mobile buy bar on the detail pages, which is
-             fixed to the same corner below lg. */
-          className={`fixed left-[calc(0.75rem+env(safe-area-inset-left))] z-40 flex max-w-[16rem] items-start gap-2 rounded-2xl border-[2px] border-teal bg-cream py-2.5 pl-3 pr-1 shadow-lg md:left-4 lg:bottom-4 ${
-            overBuyBar
-              ? 'bottom-[calc(6.75rem+env(safe-area-inset-bottom))]'
-              : 'bottom-[calc(1rem+env(safe-area-inset-bottom))]'
-          }`}
+          className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-[calc(0.75rem+env(safe-area-inset-left))] z-40 flex max-w-[16rem] items-start gap-2 rounded-2xl border-[2px] border-teal bg-cream py-2.5 pl-3 pr-1 shadow-lg md:left-4 lg:bottom-4"
           role="status"
         >
           <ShoppingBag size={14} className="mt-0.5 shrink-0 text-teal" />
@@ -117,7 +128,7 @@ export default function RecentPurchaseToast() {
             <p className="text-xs font-bold leading-snug text-ink">
               {purchase.name} from {purchase.city} just bought {purchase.product}
             </p>
-            <p className="mt-1 text-[11px] text-ink/60">{minutesAgo} mins ago</p>
+            <p className="mt-1 text-xs text-ink/60">{minutesAgo} mins ago</p>
           </div>
           <button
             type="button"

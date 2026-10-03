@@ -14,7 +14,23 @@
          Rush (heroSlides[0]). This used to point at sweet-chilli-rush-pack.webp,
          which only the flavour stage further down uses, lazily -- so the high-
          priority fetch went to an image nobody sees on first paint. -->
-    <link rel="preload" as="image" href="/assets/hero/pouch-sweet-chilli-rush.webp" fetchpriority="high" />
+    <!-- imagesrcset/imagesizes mirror the <img> in HeroCarousel (PACK_SIZES),
+         so the preload fetches the same copy the page then asks for. -->
+    <!-- Homepage only: every route is served this same shell, and on the
+         others the preload fetched a pouch nothing there shows (Chrome flagged
+         it as unused). A script-added preload still starts before the bundle. -->
+    <script>
+      if (location.pathname === '/') {
+        var hero = document.createElement('link')
+        hero.rel = 'preload'
+        hero.as = 'image'
+        hero.href = '/assets/hero/pouch-sweet-chilli-rush.webp'
+        hero.setAttribute('imagesrcset', '/assets/hero/pouch-sweet-chilli-rush-320w.webp 320w, /assets/hero/pouch-sweet-chilli-rush-640w.webp 640w, /assets/hero/pouch-sweet-chilli-rush.webp 820w')
+        hero.setAttribute('imagesizes', '(min-width: 768px) 290px, 39vw')
+        hero.setAttribute('fetchpriority', 'high')
+        document.head.appendChild(hero)
+      }
+    </script>
 
     <!-- Both brand faces are self-hosted (see @font-face in src/index.css), so
          the render-blocking Google Fonts stylesheet is gone: it was fetching

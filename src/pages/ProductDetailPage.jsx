@@ -14,6 +14,7 @@ import PdpFaq from '../components/product/PdpFaq'
 import SectionEdge from '../components/product/SectionEdge'
 import TypeBands from '../components/product/TypeBands'
 import { packPalettes } from '../components/icons/PackDoodles'
+import '../styles/pdp.css'
 
 const CREAM = '#fbf6d0'
 const FOREST = '#071a16'
@@ -25,10 +26,10 @@ const SUNSHINE = '#f3c63b'
  *   dossier       the pouch, the flavour switcher and the buy block
  *   heat climb    "flavour first, heat second", five bites deep
  *   pouch facts   weight, shelf life, zip, ingredients -- all on show
- *   desk moments  the flavour's lifestyle shots, captioned
+ *   faq           the three questions people ask
+ *   desk moments  the two combos, each print linking to its pack page
  *   reviews       quotes about this flavour, beside its own rating
  *   flight        this pack plus the other two, then the bundles
- *   faq           the three questions people ask
  *
  * Every section after the hero takes its colour or its words from the
  * flavour, so no two product pages read as the same template with a new
@@ -95,19 +96,19 @@ export default function ProductDetailPage() {
         <HeatClimb product={product} />
       </SectionEdge>
       <PouchFacts product={product} />
+      {/* Straight on from the pouch facts: the two share the dotted board, so
+          the questions read as more of the same wall. */}
+      <PdpFaq product={product} />
       <TypeBands product={product} from={CREAM} to={FOREST} />
       <SectionEdge variant="wave" layer={4}>
         <DeskMoments product={product} />
       </SectionEdge>
       <FlavourReviews product={product} />
       <TypeBands product={product} from={SUNSHINE} to={ground} />
-      <SectionEdge variant="torn" layer={3}>
-        <FlavourFlight product={product} />
-      </SectionEdge>
       {/* The last section cuts its own edge into the site footer, which then
           drops its painted lip (see .jni-edge-last in pdp.css). */}
-      <SectionEdge variant="wave" layer={2} className="jni-edge-last">
-        <PdpFaq product={product} />
+      <SectionEdge variant="torn" layer={3} className="jni-edge-last">
+        <FlavourFlight product={product} />
       </SectionEdge>
 
       <StickyAtcBar

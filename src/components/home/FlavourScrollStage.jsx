@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   AnimatePresence,
@@ -8,11 +8,11 @@ import {
   useScroll,
   useTransform,
 } from 'framer-motion'
-import { flavourStages } from '../../data/site'
-import { getProductBySlug } from '../../data/products'
+import { comboStage, flavourStages } from '../../data/site'
+import { getBundleBySlug, getProductBySlug } from '../../data/products'
 import { ASPECT, doodleComponents, packPalettes } from '../icons/PackDoodles'
 import { BrandHeading, useMediaQuery } from '../ui/Primitives'
-import FlipSpot from '../mascot/FlipSpot'
+import { responsiveImage } from '../../lib/responsiveImage'
 
 /*
  * The flavour stage: a pinned, scroll-driven introduction to the three FLIPO's
@@ -31,7 +31,14 @@ import FlipSpot from '../mascot/FlipSpot'
  * Colour comes straight from `packPalettes` (the pouch print colours), type from
  * the site's existing bubble display face and Inter utility caps. Order is the
  * heat ramp — sweet, fresh, big — which is what the rail's rising bars measure.
+ *
+ * The launch combo opens the stage, ahead of the ramp: it is the offer, and the
+ * three flavours after it are what is in it. Its rail mark is a dot rather than
+ * a bar, because it has no place on the heat ramp.
  */
+
+const CHAPTERS = [comboStage, ...flavourStages]
+const FLAVOUR_PALETTES = flavourStages.map((s) => packPalettes[s.slug])
 
 const FOAM = '#f5f0dc'
 
@@ -175,6 +182,12 @@ function StageDoodle({ shape, palette, slot, order, count, index, progress, redu
         marginTop: -height / 2,
         y,
         rotate,
+        // Its own layer, so the parallax drift and turn -- which change on
+        // every scroll frame -- move a finished bitmap instead of repainting
+        // the doodle and its drop shadow each time. The chapter pop's scale
+        // stays on the inner node, which repaints only while it is popping,
+        // so the doodle is drawn at its real size and stays crisp.
+        willChange: reduce ? undefined : 'transform',
       }}
     >
       <motion.div
@@ -187,19 +200,35 @@ function StageDoodle({ shape, palette, slot, order, count, index, progress, redu
   )
 }
 
-/** The doodle set for one flavour, faded in across its chapter. */
-function DoodleLayer({ stage, slots, index, count, progress, reduce }) {
+/**
+ * The doodle set for one flavour, faded in across its chapter. Memoised:
+ * none of its props change when the chapter does, and without it every
+ * chapter change re-rendered all three sets, every doodle in each.
+ */
+const DoodleLayer = memo(function DoodleLayer({ stage, slots, index, count, progress, reduce }) {
   const [stops, values] = bandRamp(index, count, 0, 1)
   const opacity = useTransform(progress, stops, values)
-  const palette = packPalettes[stage.slug]
+  // The combo deals its doodles out across all three flavours' colours.
+  const paletteFor = (order) =>
+    stage.mixed ? FLAVOUR_PALETTES[order % FLAVOUR_PALETTES.length] : packPalettes[stage.slug]
+
+  // A set faded all the way out is taken out of rendering, so the two
+  // flavours not on screen cost nothing per frame. Written straight to the
+  // node: a re-render here would re-render every doodle in the set.
+  const layerRef = useRef(null)
+  const hideWhenClear = useCallback((v) => {
+    if (layerRef.current) layerRef.current.style.visibility = v <= 0 ? 'hidden' : ''
+  }, [])
+  useMotionValueEvent(opacity, 'change', hideWhenClear)
+  useLayoutEffect(() => hideWhenClear(opacity.get()), [hideWhenClear, opacity])
 
   return (
-    <motion.div className="absolute inset-0" style={{ opacity }} aria-hidden="true">
+    <motion.div ref={layerRef} className="absolute inset-0" style={{ opacity }} aria-hidden="true">
       {slots.map((slot) => (
         <StageDoodle
           key={slot.id}
           shape={stage.shapes[slot.order]}
-          palette={palette}
+          palette={paletteFor(slot.order)}
           slot={slot}
           order={slot.order}
           index={index}
@@ -210,7 +239,7 @@ function DoodleLayer({ stage, slots, index, count, progress, reduce }) {
       ))}
     </motion.div>
   )
-}
+})
 
 // Transparent through the ticker, full strength a little below it.
 const DOODLE_MASK =
@@ -223,7 +252,7 @@ export default function FlavourScrollStage() {
   const isDesktop = useMediaQuery('(min-width: 768px)')
   const [active, setActive] = useState(0)
 
-  const count = flavourStages.length
+  const count = CHAPTERS.length
   const { scrollYProgress } = useScroll({
     target: trackRef,
     offset: ['start start', 'end end'],
@@ -234,10 +263,10 @@ export default function FlavourScrollStage() {
     setActive((current) => (current === next ? current : next))
   })
 
-  const palettes = useMemo(() => flavourStages.map((s) => packPalettes[s.slug]), [])
+  const palettes = useMemo(() => CHAPTERS.map((s) => s.palette ?? packPalettes[s.slug]), [])
 
   const [groundStops, groundValues] = useMemo(
-    () => colourRamp(flavourStages.map((s) => s.ground)),
+    () => colourRamp(CHAPTERS.map((s) => s.ground)),
     []
   )
   const [crimpFillStops, crimpFillValues] = useMemo(
@@ -280,9 +309,10 @@ export default function FlavourScrollStage() {
     [count, reduce]
   )
 
-  const stage = flavourStages[active]
-  const product = getProductBySlug(stage.slug)
+  const stage = CHAPTERS[active]
+  const product = stage.bundle ? getBundleBySlug(stage.slug) : getProductBySlug(stage.slug)
   const palette = palettes[active]
+  const href = stage.bundle ? `/combos/${stage.slug}` : `/flavours/${stage.slug}`
 
   return (
     // The track's own ground rides the same ramp as the panel's. It used to be
@@ -300,9 +330,9 @@ export default function FlavourScrollStage() {
       // visible only in the moments before the panel pins, which is the worst
       // kind of bug to find later. Padded, the reach lands on the track's own
       // top edge and can never escape it.
-      className="relative h-[320vh] pt-[var(--site-header-offset)] md:h-[380vh]"
+      className="relative h-[420vh] pt-[var(--site-header-offset)] md:h-[500vh]"
       style={{ backgroundColor: ground }}
-      aria-label="The three flavours"
+      aria-label="The launch combo and the three flavours"
     >
       <div className="sticky top-[var(--site-header-offset)] h-[calc(100vh-var(--site-header-offset))]">
         {/* The ground and its doodles run up behind the header; everything else
@@ -342,7 +372,7 @@ export default function FlavourScrollStage() {
               WebkitMaskImage: DOODLE_MASK,
             }}
           >
-            {flavourStages.map((item, i) => (
+            {CHAPTERS.map((item, i) => (
               <DoodleLayer
                 key={item.slug}
                 stage={item}
@@ -370,7 +400,7 @@ export default function FlavourScrollStage() {
                 transition={{ duration: reduce ? 0.15 : 0.34, ease: [0.22, 1, 0.36, 1] }}
               >
                 <p
-                  className="mb-3 text-[11px] font-black uppercase tracking-[0.32em] sm:text-xs"
+                  className="mb-3 text-xs font-black uppercase tracking-[0.32em] sm:text-xs"
                   style={{ color: palette.seed }}
                 >
                   {stage.heat}
@@ -379,10 +409,12 @@ export default function FlavourScrollStage() {
                 <BrandHeading
                   as="h2"
                   fill="#f3c63b"
-                  stroke={palette.line}
+                  // The outline takes the chapter's own pouch colour, so the
+                  // name sits in the same set as the crimp and doodles.
+                  stroke={stage.outline ?? palette.outline ?? palette.fill}
                   className="text-[clamp(1.95rem,8.4vw,2.8rem)] leading-[0.88] sm:text-6xl lg:text-[5.2rem]"
                 >
-                  {product.shortName}
+                  {stage.title ?? product.shortName}
                 </BrandHeading>
 
                 <p
@@ -393,16 +425,19 @@ export default function FlavourScrollStage() {
                 </p>
 
                 <div className="mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:mt-6 md:justify-start">
-                  <Link to={`/flavours/${stage.slug}`} className="jni-btn">
-                    Shop {product.shortName}
+                  <Link to={href} className="jni-btn" aria-label={`Nibble now: ${product.name}`}>
+                    Nibble now
                   </Link>
                   <p className="text-sm font-black" style={{ color: FOAM }}>
+                    {stage.bundle && product.originalPrice && (
+                      <s className="mr-2 font-bold opacity-60">&#8377;{product.originalPrice}</s>
+                    )}
                     &#8377;{product.price}
                     <span
-                      className="ml-2 text-[11px] font-bold uppercase tracking-[0.14em]"
+                      className="ml-1.5 text-xs font-bold uppercase tracking-[0.14em]"
                       style={{ color: palette.seed }}
                     >
-                      {product.weight}
+                      / {product.weight}
                     </span>
                   </p>
                 </div>
@@ -410,8 +445,14 @@ export default function FlavourScrollStage() {
             </AnimatePresence>
           </div>
 
+          {/* The combo's shot is a landscape spread of all six packs, so its
+              frame is wider rather than cropping packs off the ends. */}
           <motion.div
-            className="mt-6 w-[40vw] max-w-[10.5rem] shrink-0 sm:w-[46vw] sm:max-w-[15rem] md:mt-0 md:w-[32vw] md:max-w-[22rem]"
+            className={`mt-6 shrink-0 md:mt-0 ${
+              stage.bundle
+                ? 'w-[72vw] max-w-[17rem] sm:max-w-[24rem] md:w-[40vw] md:max-w-[32rem]'
+                : 'w-[40vw] max-w-[10.5rem] sm:w-[46vw] sm:max-w-[15rem] md:w-[32vw] md:max-w-[22rem]'
+            }`}
             style={{ y: packY }}
           >
             <AnimatePresence mode="wait" initial={false}>
@@ -427,34 +468,24 @@ export default function FlavourScrollStage() {
                   boxShadow: `9px 10px 0 ${palette.line}`,
                 }}
               >
-                <Link
-                  to={`/flavours/${stage.slug}`}
-                  aria-label={`Shop ${product.name}`}
-                  className="block"
-                >
+                <Link to={href} aria-label={`Nibble now: ${product.name}`} className="block">
                   <img
-                    src={stage.pack}
+                    {...responsiveImage(
+                      stage.pack,
+                      stage.bundle
+                        ? '(min-width: 768px) 512px, (min-width: 640px) 384px, 272px'
+                        : '(min-width: 768px) 352px, (min-width: 640px) 240px, 168px'
+                    )}
                     alt={stage.packAlt}
                     loading="lazy"
                     decoding="async"
-                    className="block aspect-square w-full object-cover"
+                    className={`block w-full object-cover ${stage.bundle ? 'aspect-[3/2]' : 'aspect-square'}`}
                   />
                 </Link>
               </motion.div>
             </AnimatePresence>
           </motion.div>
         </div>
-
-        {/* A loose chip in the pouch, between the copy and the pack shot. He
-            re-seasons as the stage does, so he reads the heat with you. */}
-        <FlipSpot
-          mode="float"
-          tint={stage.slug}
-          progress={() => scrollYProgress.get()}
-          width="clamp(100px, 12vw, 172px)"
-          className="z-20"
-          style={{ left: '61%', top: '64%', display: isDesktop ? 'block' : 'none' }}
-        />
 
         {/* The crimped pouch seal, re-crimped in the live flavour's colours. */}
         <div className="pointer-events-none absolute inset-0 z-40" aria-hidden="true">
@@ -470,8 +501,10 @@ export default function FlavourScrollStage() {
           className="absolute inset-x-0 bottom-4 z-50 flex justify-center sm:bottom-6"
         >
           <ol className="flex items-center gap-1 sm:gap-5">
-            {flavourStages.map((item, i) => {
+            {CHAPTERS.map((item, i) => {
               const on = i === active
+              // Flavours climb the heat ramp; the combo sits before it as a dot.
+              const barWidth = item.bundle ? 9 : 18 + (i - 1) * 11
               return (
                 <li key={item.slug}>
                   <button
@@ -484,7 +517,7 @@ export default function FlavourScrollStage() {
                     <span
                       className="block rounded-pill border-2 transition-all duration-300"
                       style={{
-                        width: 18 + i * 11,
+                        width: barWidth,
                         height: on ? 9 : 6,
                         borderColor: on ? palette.line : 'transparent',
                         backgroundColor: on ? palette.fill : FOAM,
@@ -492,12 +525,12 @@ export default function FlavourScrollStage() {
                       }}
                     />
                     <span
-                      className="hidden text-[10px] font-black uppercase tracking-[0.24em] transition-opacity duration-300 sm:block"
+                      className="hidden text-xs font-black uppercase tracking-[0.24em] transition-opacity duration-300 sm:block"
                       style={{ color: FOAM, opacity: on ? 1 : 0.5 }}
                     >
-                      {item.heat}
+                      {item.rail ?? item.heat}
                     </span>
-                    <span className="sr-only sm:hidden">{item.heat}</span>
+                    <span className="sr-only sm:hidden">{item.rail ?? item.heat}</span>
                   </button>
                 </li>
               )

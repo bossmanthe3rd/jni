@@ -36,13 +36,13 @@ function ComboCard({ bundle, index }) {
             className="aspect-[16/10] h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
           />
         </div>
-        <span className="absolute left-3 top-3 z-[2] rounded-full border-[3px] border-outline bg-sunshine px-2.5 py-1 text-[10px] font-black uppercase text-ink">
+        <span className="absolute left-3 top-3 z-[2] rounded-full border-[3px] border-outline bg-sunshine px-2.5 py-1 text-xs font-black uppercase text-ink">
           {bundle.badge}
         </span>
       </div>
 
       <div className="flex flex-1 flex-col pt-5 text-ink">
-        <div className="mb-3 w-fit rounded-full border-[3px] border-outline bg-teal px-2 py-1 text-[10px] font-black uppercase text-ink">
+        <div className="mb-3 w-fit rounded-full border-[3px] border-outline bg-teal px-2 py-1 text-xs font-black uppercase text-ink">
           Save {save}%
         </div>
         <h3 className="font-display text-2xl leading-tight text-forest sm:text-3xl">
@@ -64,7 +64,7 @@ function ComboCard({ bundle, index }) {
             <span className="text-sm font-bold text-ink/45 line-through">
               ₹{bundle.originalPrice}
             </span>
-            <span className="rounded-full border-[3px] border-outline bg-jalapeno px-2.5 py-1 text-[11px] font-black uppercase text-ink">
+            <span className="rounded-full border-[3px] border-outline bg-jalapeno px-2.5 py-1 text-xs font-black uppercase text-ink">
               Just ₹{perPacket} / packet
             </span>
           </div>

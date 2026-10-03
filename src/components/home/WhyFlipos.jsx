@@ -1,10 +1,18 @@
 import { forwardRef, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { AnimatePresence, motion, useInView, useReducedMotion } from 'framer-motion'
+import {
+  AnimatePresence,
+  motion,
+  useInView,
+  useMotionValue,
+  useMotionValueEvent,
+  useReducedMotion,
+} from 'framer-motion'
 import { whyFeatures } from '../../data/site'
 import { WaveDivider, useMediaQuery } from '../ui/Primitives'
 import { FlipoMark } from '../icons/FlipoMark'
 import WhyWall from './WhyWall'
 import '../../styles/why-flipos.css'
+import { responsiveImage } from '../../lib/responsiveImage'
 
 /*
  * Why Flipo's, as the monitor on the hero's desk.
@@ -26,8 +34,8 @@ import '../../styles/why-flipos.css'
  *
  * On laptops the section is also the far end of the hero's camera move (see
  * HeroWhyZoom): `staged` fills the pinned screen, `revealed` says the camera
- * has arrived and the notes can go up, and `monitorRef` is where the move
- * has to land.
+ * has arrived and the notes can go up, `covered` that the hero still hides
+ * the section completely, and `monitorRef` is where the move has to land.
  */
 
 const PACKS = ['sweet-chilli-rush', 'jalapeno-kick', 'peri-peri-punch']
@@ -49,7 +57,7 @@ export const MAX_FIT = 1.3
 const SPEED = 78 // px per second, in screen units
 const CORNER = 14 // how close to square a corner counts as a corner hit
 
-export default function WhyFlipos({ staged = false, revealed = true, monitorRef }) {
+export default function WhyFlipos({ staged = false, revealed = true, covered = false, monitorRef }) {
   const rigRef = useRef(null)
 
   // Fit the artboard to the screen, as the vending machine does.
@@ -84,10 +92,10 @@ export default function WhyFlipos({ staged = false, revealed = true, monitorRef 
         <div ref={rigRef} className="wf-rig">
           <WhyWall />
           <div className="wf-props" aria-hidden="true">
-            <img src="/assets/hero/desk/peri-peri-punch--envelope.webp" alt="" loading="lazy" className="wf-prop wf-prop--envelope" />
-            <img src="/assets/hero/desk/peri-peri-punch--mug.webp" alt="" loading="lazy" className="wf-prop wf-prop--mug" />
+            <img {...responsiveImage('/assets/hero/desk/peri-peri-punch--envelope.webp', '200px')} alt="" loading="lazy" className="wf-prop wf-prop--envelope" />
+            <img {...responsiveImage('/assets/hero/desk/peri-peri-punch--mug.webp', '200px')} alt="" loading="lazy" className="wf-prop wf-prop--mug" />
           </div>
-          <Monitor ref={monitorRef} />
+          <Monitor ref={monitorRef} paused={covered} />
           <ul className="wf-notes">
             {whyFeatures.map((feature, i) => (
               <StickyNote key={feature.id} feature={feature} index={i} staged={staged} revealed={revealed} />
@@ -112,13 +120,13 @@ export default function WhyFlipos({ staged = false, revealed = true, monitorRef 
  * move starts (`saverOpacity`). `children` hang off the bezel.
  */
 export const Monitor = forwardRef(function Monitor(
-  { decorative = false, className = '', screen = null, saverOpacity, children },
+  { decorative = false, className = '', screen = null, saverOpacity, paused = false, children },
   ref,
 ) {
   return (
     <div ref={ref} className={`wf-monitor ${className}`}>
       <div className="wf-frame">
-        <Screensaver decorative={decorative} saverOpacity={saverOpacity}>
+        <Screensaver decorative={decorative} saverOpacity={saverOpacity} paused={paused}>
           {screen}
         </Screensaver>
         <div className="wf-chin" aria-hidden="true">
@@ -203,7 +211,7 @@ function tickBounce(t) {
 }
 
 /** The heading, with the shared pack bouncing round behind it. */
-function Screensaver({ decorative, saverOpacity, children }) {
+function Screensaver({ decorative, saverOpacity, paused, children }) {
   const reduceMotion = useReducedMotion()
   const screenRef = useRef(null)
   const packRef = useRef(null)
@@ -211,6 +219,13 @@ function Screensaver({ decorative, saverOpacity, children }) {
   const [flavour, setFlavour] = useState(bounce.flavour)
   const [bursts, setBursts] = useState([])
   const entry = useRef(null)
+  // The hero's copy of this screen sits at opacity 0 under the copy until
+  // the camera move starts. Bouncing there was a frame loop, and a React
+  // render at every wall, that no one could see.
+  const always = useMotionValue(1)
+  const opacity = saverOpacity ?? always
+  const [shown, setShown] = useState(() => opacity.get() > 0)
+  useMotionValueEvent(opacity, 'change', (v) => setShown(v > 0))
 
   useEffect(() => {
     const e = {
@@ -247,9 +262,11 @@ function Screensaver({ decorative, saverOpacity, children }) {
 
   useEffect(() => {
     if (!entry.current) return
-    entry.current.active = inView && !reduceMotion
+    // `paused`: on laptops this section sits under the hero, wholly hidden,
+    // until the camera move is nearly done -- in view, but not to be seen.
+    entry.current.active = inView && shown && !paused && !reduceMotion
     if (entry.current.active) runBounce()
-  }, [inView, reduceMotion])
+  }, [inView, shown, paused, reduceMotion])
 
   const Title = decorative ? 'p' : 'h2'
   return (
@@ -257,7 +274,8 @@ function Screensaver({ decorative, saverOpacity, children }) {
       <motion.div className="wf-saver" style={saverOpacity ? { opacity: saverOpacity } : undefined} aria-hidden={decorative || undefined}>
         <img
           ref={packRef}
-          src={`/assets/hero/pouch-${PACKS[flavour]}.webp`}
+          // Never more than ~70px wide on screen, even with the camera in.
+          {...responsiveImage(`/assets/hero/pouch-${PACKS[flavour]}.webp`, '160px')}
           alt=""
           aria-hidden="true"
           className="wf-bouncer"
@@ -357,7 +375,7 @@ function StickyNote({ feature, index, staged, revealed }) {
       onHoverEnd={() => setHot(false)}
     >
       <div className={`why-icon wf-note-art ${feature.loopClass} ${looping ? 'why-loop' : ''}`} aria-hidden="true">
-        <img src={feature.image} alt="" width="512" height="512" loading="lazy" decoding="async" />
+        <img {...responsiveImage(feature.image, '(min-width: 1024px) 136px, 88px')} alt="" loading="lazy" decoding="async" />
         {feature.overlay === 'keys' && (
           <span className="why-keys text-[#071A16]">
             <i />

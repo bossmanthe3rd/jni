@@ -60,13 +60,15 @@ export default function FlavoursPage() {
             </p>
 
             {/* Heat is the thing people are actually choosing between, so the
-                ramp goes up top rather than being buried on each product page. */}
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 rounded-[22px] border-[3px] border-ink bg-forest px-6 py-4 shadow-doodle">
+                ramp goes up top rather than being buried on each product page.
+                It is also where the page's opening ends: the header's badge
+                watches for it, since the section around it runs the whole page. */}
+            <div data-intro-end="" className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 rounded-[22px] border-[3px] border-ink bg-forest px-6 py-4 shadow-doodle">
               {products.map((product) => (
                 <Link
                   key={product.slug}
                   to={`/flavours/${product.slug}`}
-                  className="flex items-center gap-3 transition hover:-translate-y-0.5"
+                  className="flex min-h-11 items-center gap-3 transition hover:-translate-y-0.5"
                 >
                   <span className="font-brand text-sm text-sunshine sm:text-base">
                     {product.shortName}
@@ -79,8 +81,9 @@ export default function FlavoursPage() {
             {/* Three products in a two-column grid left the last card alone on
                 its own row, which reads as a missing fourth flavour. Three
                 across is also what the homepage grid does, so the two listings
-                now look like the same shop. */}
-            <div className="mt-10 grid grid-cols-3 gap-2 sm:gap-5">
+                now look like the same shop. Phones stack them instead: three
+                across a 375px screen is ~100px a card. */}
+            <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-5">
               {products.map((product, i) => (
                 <ProductCard key={product.slug} product={product} index={i} />
               ))}
@@ -98,7 +101,7 @@ export default function FlavoursPage() {
                 </BrandHeading>
                 <Link
                   to="/combos"
-                  className="inline-flex items-center gap-2 text-sm font-black uppercase tracking-wide text-ink underline-offset-4 hover:underline"
+                  className="-my-3 inline-flex items-center gap-2 py-3 text-sm font-black uppercase tracking-wide text-ink underline-offset-4 hover:underline"
                 >
                   All combos <ArrowRight size={16} />
                 </Link>

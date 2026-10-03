@@ -19,7 +19,9 @@ export default function BoxFacts({ bundle }) {
   const perPack = perPacketPrice(bundle)
   const facts = [
     {
-      big: bundle.weight?.replace(/\s*gms?$/i, ' g') || `${bundle.packetCount} × 100 g`,
+      // No-break space before the unit: in the narrow phone card the "g" was
+      // wrapping onto a line of its own.
+      big: bundle.weight?.replace(/\s*gms?$/i, ' g') || `${bundle.packetCount} × 100 g`,
       small: `${bundle.packetCount} stand-up pouches, ${flavours.length} flavours.`,
       bg: '#ffffff',
       turn: -2,

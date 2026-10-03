@@ -11,15 +11,19 @@ import { rideAt } from './jaggedEdge'
  * sends chillies around the panel's whole perimeter, in all three flavours'
  * colours, cycling so the range is always on show.
  *
- * The travel is CSS motion path, not JavaScript: every doodle shares one
- * `offset-path` and one keyframed ride round it, each started at a negative
- * delay of its own share of the duration. That spaces them round the loop for
- * free and loops without a seam -- the doodle leaving the end IS the doodle
- * arriving at the start. Nothing recalculates per frame.
+ * The travel is CSS, not JavaScript: every doodle shares one keyframed ride
+ * round the loop, each started at a negative delay of its own share of the
+ * duration. That spaces them round the loop for free and loops without a
+ * seam -- the doodle leaving the end IS the doodle arriving at the start.
+ * Nothing recalculates per frame.
  *
- * An `offset-distance` animation restyles on the main thread every frame, and
- * each doodle's turn holds a compositor layer, so the procession leaves the
- * page while the panel is off screen (see below) rather than running unseen.
+ * The ride is keyframed as `translate` through the edge's own points
+ * (geometry.track), not as `offset-distance` along its path: an offset
+ * animation restyles on the main thread every frame -- at the foot of the
+ * homepage it was most of what the page did while sitting still -- where a
+ * translate runs on the compositor. Each doodle's turn holds a compositor
+ * layer, so the procession still leaves the page while the panel is off
+ * screen (see below) rather than running unseen.
  *
  * The shape is not this component's to decide. The caller passes the
  * `geometry` from jaggedEdge() -- the same one its panel is clipped to -- so
@@ -62,7 +66,7 @@ const ALONG = -90
 /** The ride as two keyframe sets: along the path, and the heading that goes with it. */
 function rideKeyframes(name, geometry) {
   const at = (t) => `${(t * 100).toFixed(3)}%`
-  const ride = geometry.ride.map((s) => `${at(s.t)}{offset-distance:${(s.p * 100).toFixed(3)}%}`)
+  const ride = geometry.track.map((s) => `${at(s.t)}{translate:${s.x.toFixed(2)}px ${s.y.toFixed(2)}px}`)
   const turn = geometry.turn.map((s) => `${at(s.t)}{rotate:${(s.angle + ALONG).toFixed(2)}deg}`)
   return `@keyframes ${name}-ride{${ride.join('')}}@keyframes ${name}-turn{${turn.join('')}}`
 }
@@ -154,26 +158,31 @@ export default function DoodleBorder({
         // own share of the loop, lying along the edge there.
         const still = reduce ? rideAt(geometry, share) : null
         const timing = { animationDuration: `${duration}s`, animationDelay: `${-share * duration}s` }
+        const box = { width: `${it.size}px`, height: `${it.size / aspect}px` }
+        // Riding: a zero-size point carried round the edge, with the doodle
+        // centred on it. Held still: placed on the path itself, as before.
         return (
           <div
             key={i}
             className="absolute left-0 top-0"
-            style={{
-              width: `${it.size}px`,
-              height: `${it.size / aspect}px`,
-              offsetPath: path,
-              offsetRotate: '0deg',
-              ...(still
-                ? { offsetDistance: `${still.p * 100}%` }
+            style={
+              still
+                ? { ...box, offsetPath: path, offsetRotate: '0deg', offsetDistance: `${still.p * 100}%` }
                 : {
-                    willChange: 'offset-distance',
                     animationName: `${name}-ride`,
                     animationTimingFunction: 'linear',
                     animationIterationCount: 'infinite',
                     ...timing,
-                  }),
-            }}
+                  }
+            }
           >
+            <div
+              style={
+                still
+                  ? undefined
+                  : { position: 'absolute', ...box, left: `${-it.size / 2}px`, top: `${-it.size / aspect / 2}px` }
+              }
+            >
             <div
               style={{
                 transform: `rotate(${it.rotate}deg)`,
@@ -188,6 +197,7 @@ export default function DoodleBorder({
               }}
             >
               <Art palette={packPalettes[it.flavour]} className="jni-doodle-art" />
+            </div>
             </div>
           </div>
         )

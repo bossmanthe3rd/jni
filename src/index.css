@@ -1,6 +1,9 @@
 @import './styles/cta-shape.css';
-@import './styles/pdp.css';
-@import './styles/bundle.css';
+/* The grain is shared by the cart and checkout as well as the product pages,
+   so it stays global. pdp.css and bundle.css load with their own routes
+   (ProductDetailPage, BundleDetailPage) -- 40 KB no other page uses, which
+   every page used to block its first paint on. */
+@import './styles/grain.css';
 
 @tailwind base;
 @tailwind components;
@@ -272,19 +275,27 @@
 .why-icon-flame.is-seen {
   animation: flame-pulse 1.6s ease-in-out 3;
 }
-.why-icon-flame:hover,
-.why-icon-flame.why-loop {
-  animation: flame-pulse 1.2s ease-in-out infinite;
+@media (hover: hover) {
+  /* Pointer hover only: a tap fires :hover on touch and it sticks until the next tap elsewhere. */
+  .why-icon-flame:hover {
+    animation: flame-pulse 1.2s ease-in-out infinite;
+  }
 }
 
-.why-icon-keys:hover .why-keys i:nth-child(1) {
-  animation: key-press 0.28s ease 0s 1;
+@media (hover: hover) {
+  /* Pointer hover only: a tap fires :hover on touch and it sticks until the next tap elsewhere. */
+  .why-icon-keys:hover .why-keys i:nth-child(1) {
+    animation: key-press 0.28s ease 0s 1;
+  }
+  .why-icon-keys:hover .why-keys i:nth-child(2) {
+    animation: key-press 0.28s ease 0.08s 1;
+  }
+  .why-icon-keys:hover .why-keys i:nth-child(3) {
+    animation: key-press 0.28s ease 0.16s 1;
+  }
 }
-.why-icon-keys:hover .why-keys i:nth-child(2) {
-  animation: key-press 0.28s ease 0.08s 1;
-}
-.why-icon-keys:hover .why-keys i:nth-child(3) {
-  animation: key-press 0.28s ease 0.16s 1;
+.why-icon-flame.why-loop {
+  animation: flame-pulse 1.2s ease-in-out infinite;
 }
 .why-icon-keys.why-loop .why-keys i:nth-child(1) {
   animation: key-press 0.9s ease infinite;
@@ -299,15 +310,21 @@
   animation-delay: 0.3s;
 }
 
-.why-icon-pencils:hover {
-  animation: pencil-wiggle 0.45s ease;
+@media (hover: hover) {
+  /* Pointer hover only: a tap fires :hover on touch and it sticks until the next tap elsewhere. */
+  .why-icon-pencils:hover {
+    animation: pencil-wiggle 0.45s ease;
+  }
 }
 .why-icon-pencils.why-loop {
   animation: pencil-wiggle 1.8s ease-in-out infinite;
 }
 
-.why-icon-burst:hover .why-burst i {
-  animation: brain-burst 0.7s ease-out;
+@media (hover: hover) {
+  /* Pointer hover only: a tap fires :hover on touch and it sticks until the next tap elsewhere. */
+  .why-icon-burst:hover .why-burst i {
+    animation: brain-burst 0.7s ease-out;
+  }
 }
 .why-icon-burst.why-loop .why-burst i {
   animation: brain-burst 1.6s ease-out infinite;
@@ -613,6 +630,11 @@
 .jni-dossier-crumbs a:hover {
   text-decoration: underline;
 }
+/* 44px to tap without moving the line: the padding is taken back by the margin. */
+.jni-dossier-crumbs a {
+  padding-block: 12px;
+  margin-block: -12px;
+}
 
 /* The pouch and the doodles that scatter out from behind it on load. */
 .jni-dossier-stage {
@@ -808,7 +830,7 @@
   border-radius: 999px;
   box-shadow: 2px 3px 0 var(--color-border);
   color: var(--color-text-dark);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -882,7 +904,7 @@
 }
 .jni-dossier-price em {
   font-style: normal;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -926,7 +948,7 @@
 .jni-dossier-chip i {
   display: block;
   font-style: normal;
-  font-size: 10.5px;
+  font-size: 12px;
   opacity: 0.7;
 }
 
@@ -995,13 +1017,16 @@
   font-size: 14px;
   transition: border-color 0.16s ease, background-color 0.16s ease;
 }
-.jni-dossier-ghost:hover {
-  border-color: var(--color-text-light);
-  background: rgba(245, 240, 220, 0.1);
+@media (hover: hover) {
+  /* Pointer hover only: a tap fires :hover on touch and it sticks until the next tap elsewhere. */
+  .jni-dossier-ghost:hover {
+    border-color: var(--color-text-light);
+    background: rgba(245, 240, 220, 0.1);
+  }
 }
 .jni-dossier-trust {
   margin-top: 16px;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -1011,7 +1036,7 @@
 /* ---- flavour switcher ---------------------------------------------------- */
 .jni-dossier-k {
   margin-bottom: 8px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -1074,7 +1099,7 @@
   gap: 4px;
 }
 .jni-dossier-flav-heat > span {
-  font-size: 9.5px;
+  font-size: 12px;
   letter-spacing: 0.06em;
 }
 
@@ -1405,8 +1430,11 @@
   will-change: transform;
 }
 
-.jni-ticker:hover {
-  animation-play-state: paused;
+@media (hover: hover) {
+  /* Pointer hover only: a tap fires :hover on touch and it sticks until the next tap elsewhere. */
+  .jni-ticker:hover {
+    animation-play-state: paused;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1537,4 +1565,87 @@
 }
 .hero-pendant-light {
   transform-origin: 50% calc((var(--cord) + var(--shade-h) - 6px) * -1);
+}
+
+/* The swing: a slow pendulum, 6.5s there and back, a little wider on a phone
+   where the cord is short. Every rotating piece of the lamp and the packs'
+   shadow (which slides the other way under it) run the same timing from the
+   same start, so they stay in step. easeInOutSine between the two extremes,
+   alternating, is the sine the swing used to be computed as frame by frame;
+   the negative delay starts it at rest-centre heading right, as that did.
+   Individual `rotate`/`translate` rather than `transform`, which Framer owns
+   on some of these. Held where it is while the hero is off screen. */
+.hero-swing,
+.hero-shadow-swing {
+  animation: 3.25s cubic-bezier(0.37, 0, 0.63, 1) -1.625s infinite alternate;
+}
+.hero-swing {
+  animation-name: hero-swing;
+}
+.hero-shadow-swing {
+  animation-name: hero-shadow-swing;
+}
+@media (min-width: 768px) {
+  .hero-swing {
+    animation-name: hero-swing-md;
+  }
+  .hero-shadow-swing {
+    animation-name: hero-shadow-swing-md;
+  }
+}
+[data-asleep] .hero-swing,
+[data-asleep] .hero-shadow-swing,
+[data-asleep] .hero-drift {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-swing,
+  .hero-shadow-swing,
+  .hero-drift {
+    animation: none;
+  }
+}
+/* The banners' confetti bobbing on the wall (HeroSpice): up 7px and back,
+   each mark on its own duration and start, set inline. */
+.hero-drift {
+  animation: hero-drift 6s ease-in-out infinite;
+}
+@keyframes hero-drift {
+  50% { translate: 0 -7px; }
+}
+@keyframes hero-swing {
+  from { rotate: -4.5deg; }
+  to { rotate: 4.5deg; }
+}
+@keyframes hero-swing-md {
+  from { rotate: -2.2deg; }
+  to { rotate: 2.2deg; }
+}
+/* 3px of slide per degree of swing on a phone, 7px from md up. */
+@keyframes hero-shadow-swing {
+  from { translate: -13.5px 0; }
+  to { translate: 13.5px 0; }
+}
+@keyframes hero-shadow-swing-md {
+  from { translate: -15.4px 0; }
+  to { translate: 15.4px 0; }
+}
+
+/* The header's badge. Fluid rather than stepped: it shares one line with the
+   two clusters, and a stepped width collides with the cart on phones that sit
+   just under a breakpoint. */
+.jni-header-badge {
+  width: clamp(6.25rem, 26vw, 8.75rem);
+}
+
+/* A phone on its side has ~360px of height. The ticker, the full row and the
+   badge hanging under it took ~150px of that and pushed the hero's button
+   below the fold, so the row and the badge both come down a size there. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .jni-header-badge {
+    width: 5.25rem;
+  }
+  header [data-intro-bar] {
+    height: 3.75rem;
+  }
 }

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { bundles, deliveredTotal, perPacketPrice, products } from '../../data/products'
 import { useCart } from '../../store/cartStore'
 import { pouchCutout, toCartBundle } from './boxContents'
+import { responsiveImage } from '../../lib/responsiveImage'
 
 /**
  * The flavour page's "Make it a flight", turned round.
@@ -123,7 +124,7 @@ export default function BoxCompare({ bundle }) {
           {products.map((p, i) => (
             <li key={p.slug} style={{ '--turn': `${[-6, 2, 7][i % 3]}deg` }}>
               <Link to={`/flavours/${p.slug}`}>
-                <img src={pouchCutout(p.slug)} alt="" loading="lazy" decoding="async" />
+                <img {...responsiveImage(pouchCutout(p.slug), '(min-width: 1024px) 200px, 140px')} alt="" loading="lazy" decoding="async" />
                 <b>{p.shortName}</b>
                 <small>{rupee(p.price)} · one pack</small>
               </Link>

@@ -71,7 +71,7 @@ export const heroSlides = [
   },
 ]
 
-export const HERO_INTERVAL = 7000
+export const HERO_INTERVAL = 4500
 
 export const whyFeatures = [
   {
@@ -264,6 +264,10 @@ export const flavourStages = [
     slug: 'jalapeno-kick',
     heat: 'Fresh heat',
     ground: '#073d1f',
+    // The heading's outline. The pouch's own neon (#c3d92e) is as light as the
+    // yellow lettering it rings, and the name blurred into it; this is the
+    // same green a few shades down.
+    outline: '#6a9614',
     note: 'Green, grassy, sharp. Clean finish, so the hand keeps going back.',
     pack: '/assets/products/jalapeno-kick-pack.webp',
     packAlt: "FLIPO's Jalapeño Kick pack, propped upright",
@@ -305,3 +309,39 @@ export const flavourStages = [
     ],
   },
 ]
+
+/**
+ * The launch combo, which opens the flavour stage ahead of the three flavours.
+ * Kept out of `flavourStages` because the hero reads that list as flavours.
+ *
+ * Not a flavour, so it has no pack palette of its own: the crimp and heading
+ * take the brand's sunshine and teal, and `mixed` deals its doodles out in all
+ * three flavours' colours -- two of every mood, in the bag at once.
+ */
+export const comboStage = {
+  slug: 'flipos-party-six',
+  bundle: true,
+  heat: 'First 100 orders only',
+  rail: 'Pack of 6',
+  title: 'Pack of 6',
+  ground: '#0f201b',
+  palette: { fill: '#f3c63b', line: '#071a16', seed: '#f3c63b', outline: '#4db8ae' },
+  note: 'Two of every flavour, six packs in all. ₹299 for the first 100 orders.',
+  pack: '/assets/pick/flipos-party-six-1.webp',
+  packAlt: "Six FLIPO's packs on a desk, two of each flavour",
+  mixed: true,
+  shapes: [
+    'jalapeno',
+    'seed',
+    'chilli-half',
+    'chilli-slice',
+    'pepper-section',
+    'chilli-whole',
+    'chilli-half',
+    'chilli-slice',
+    'seed',
+    'jalapeno',
+    'pepper-section',
+    'chilli-whole',
+  ],
+}

@@ -22,6 +22,9 @@ function mulberry32(seed) {
 }
 
 const TOOTH_R = 4 // every peak and valley is filleted, so nothing riding it snaps
+// The wave's reach, and the shelf's own softer corners so it stays flat.
+const WAVE_REACH = 0.45
+const SHELF_R = 14
 /*
  * The panel's four corners are rounded generously, so the procession sweeps
  * round them instead of pivoting on a point. A corner may reach most of the
@@ -121,12 +124,18 @@ function quadLength(a, c, b) {
  *   tear   { step:[min,max], depth:[min,max] }  the torn bottom
  *   shelf  { x, width } | null      a flat run in the seal, for something to
  *                                   rest on (the mascot's hands)
+ *   wave   boolean                  round every tooth right out, so the crimp
+ *                                   and tear read as a soft wave, not points
  *   seed   number
- * @returns {{ w, h, d, ride, turn }} `d` is the closed loop, clockwise from
- *   the top left corner. `ride` times the travel along it: `p` is the share of
- *   the path's length reached at `t`, the share of the loop's time. `turn` is
- *   the heading along the edge at `t`, in degrees, unwrapped -- it climbs by a
- *   full 360 over the loop, so nothing ever spins the long way round.
+ * @returns {{ w, h, d, ride, turn, track }} `d` is the closed loop, clockwise
+ *   from the top left corner. `ride` times the travel along it: `p` is the
+ *   share of the path's length reached at `t`, the share of the loop's time.
+ *   `turn` is the heading along the edge at `t`, in degrees, unwrapped -- it
+ *   climbs by a full 360 over the loop, so nothing ever spins the long way
+ *   round. `track` is the same ride as points: where on the loop, in px, a
+ *   rider is at `t` -- every straight's two ends exactly and each fillet
+ *   sampled -- so it can be keyframed as a translate, which the compositor
+ *   can run, rather than as an offset-distance, which it cannot.
  */
 export function jaggedEdge(w, h, o) {
   const { seal, shelf = null, seed = 1 } = o
@@ -141,8 +150,8 @@ export function jaggedEdge(w, h, o) {
     const s1 = Math.min(w, shelf.x + shelf.width / 2)
     // The shelf is the straight run between its two ends, at valley level.
     top.push(...crimp(0, s0, 'peak', 'valley', seal.period, D))
-    top.push({ x: s0, y: D, r: TOOTH_R })
-    top.push({ x: s1, y: D, r: TOOTH_R })
+    top.push({ x: s0, y: D, r: TOOTH_R, flat: true })
+    top.push({ x: s1, y: D, r: TOOTH_R, flat: true })
     top.push(...crimp(s1, w, 'valley', 'peak', seal.period, D))
   } else {
     top.push(...crimp(0, w, 'peak', 'peak', seal.period, D))
@@ -169,7 +178,14 @@ export function jaggedEdge(w, h, o) {
       .reverse()
   }
 
-  const verts = [...top, ...right, ...bottom, ...left]
+  // A wave is the same outline with every vertex rounded across most of the
+  // stretch either side of it, so neighbouring curves meet tangent to tangent.
+  // WAVE_REACH stops short of half: the sliver of straight left between two
+  // curves is what carries the heading the doodles riding the edge turn to.
+  const outline = [...top, ...right, ...bottom, ...left]
+  const verts = o.wave
+    ? outline.map((v) => ({ ...v, r: v.flat ? SHELF_R : Infinity, reach: WAVE_REACH }))
+    : outline
   const n = verts.length
 
   // Which stretches run down or up a side. They ride at an even pace: the
@@ -206,11 +222,11 @@ export function jaggedEdge(w, h, o) {
     const l = len(v)
     const side = sideFrom.has(k - 1)
     const speed = side || l === 0 ? 1 : Math.min(1.4, Math.max(0.6, 1 + (GRAVITY * v.y) / l))
-    pieces.push({ line: true, len: l, heading: (Math.atan2(v.y, v.x) * 180) / Math.PI, speed })
+    pieces.push({ line: true, len: l, heading: (Math.atan2(v.y, v.x) * 180) / Math.PI, speed, a: from, b: to })
     d.push(`L ${f(to.x)} ${f(to.y)}`)
 
     const c = cut[i]
-    pieces.push({ line: false, len: quadLength(c.in, c.P, c.out) })
+    pieces.push({ line: false, len: quadLength(c.in, c.P, c.out), a: c.in, c: c.P, b: c.out })
     d.push(`Q ${f(c.P.x)} ${f(c.P.y)} ${f(c.out.x)} ${f(c.out.y)}`)
   }
   d.push('Z')
@@ -268,8 +284,44 @@ export function jaggedEdge(w, h, o) {
   turn.unshift({ t: 0, angle: seam })
   turn.push({ t: 1, angle: seam + lap })
 
-  return { w, h, d: d.join(' '), ride, turn }
+  // The ride as positions. `ride` is linear in distance between its stops,
+  // so a straight needs only its ends; a fillet is short and gets a few
+  // points along its curve.
+  const track = []
+  const timeAt = (p) => {
+    for (let i = 1; i < ride.length; i += 1) {
+      const a = ride[i - 1]
+      const b = ride[i]
+      if (p <= b.p) return b.p === a.p ? a.t : a.t + ((b.t - a.t) * (p - a.p)) / (b.p - a.p)
+    }
+    return 1
+  }
+  const at = (p, x, y) => track.push({ t: timeAt(p), x, y })
+  s = 0
+  for (const pc of pieces) {
+    if (pc.line) {
+      at(s / total, pc.a.x, pc.a.y)
+    } else {
+      for (let k = 0; k < FILLET_SAMPLES; k += 1) {
+        const u = k / FILLET_SAMPLES
+        const v = 1 - u
+        at(
+          (s + pc.len * u) / total,
+          v * v * pc.a.x + 2 * v * u * pc.c.x + u * u * pc.b.x,
+          v * v * pc.a.y + 2 * v * u * pc.c.y + u * u * pc.b.y
+        )
+      }
+    }
+    s += pc.len
+  }
+  track.push({ t: 1, x: track[0].x, y: track[0].y })
+
+  return { w, h, d: d.join(' '), ride, turn, track }
 }
+
+// Points per fillet in `track`. Fillets are a few px across; four keeps the
+// rider on the curve to well under a pixel.
+const FILLET_SAMPLES = 4
 
 function interpolate(stops, t, key) {
   for (let i = 1; i < stops.length; i += 1) {

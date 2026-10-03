@@ -15,6 +15,7 @@ import { useCart } from '../../store/cartStore'
 import { useCrateSubtotal } from '../checkout/cartTotals'
 import HeatMeter from './HeatMeter'
 import DoodleField from '../ui/DoodleField'
+import { responsiveImage } from '../../lib/responsiveImage'
 
 /**
  * The flavour dossier: a product page's hero, built as one spread.
@@ -349,7 +350,10 @@ export default function FlavourDossier({ product, ctaRef, onQtyChange }) {
             >
               <motion.img
                 key={current?.src}
-                src={current?.src}
+                // Hidden below 1024px, where the swipe strip stands in for it --
+                // but an eager <img> fetches even when hidden, so `sizes` asks
+                // phones for the smallest copy rather than the 1254px original.
+                {...responsiveImage(current?.src, '(min-width: 1024px) min(42vw, 500px), 1px')}
                 alt={current?.alt || `${product.name} pack`}
                 className="jni-dossier-photo"
                 initial={reduce ? false : { opacity: 0, scale: 1.02 }}
@@ -396,9 +400,10 @@ export default function FlavourDossier({ product, ctaRef, onQtyChange }) {
             {gallery.map((img, i) => (
               <div key={img.src} className="jni-dossier-strip-card" style={{ '--tilt': i % 2 ? '2deg' : '-2deg' }}>
                 <img
-                  src={img.src}
+                  {...responsiveImage(img.src, 'min(78vw, 340px)')}
                   alt={img.alt}
                   loading={i === 0 ? 'eager' : 'lazy'}
+                  fetchpriority={i === 0 ? 'high' : undefined}
                   decoding="async"
                 />
               </div>

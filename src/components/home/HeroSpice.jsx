@@ -85,16 +85,24 @@ export default function HeroSpice({ slug, chillies = true, className = '' }) {
   return (
     <div className={`pointer-events-none absolute inset-0 ${className}`} aria-hidden="true">
       {CONFETTI.map((c, i) => (
-        <motion.img
+        // The drift is a CSS loop (.hero-drift in index.css) so it runs on the
+        // compositor; as a Framer repeat it kept the main thread's frame loop
+        // going for as long as the page was open.
+        <img
           key={`${c.src}-${i}`}
           src={`/assets/hero/confetti/${c.src}.webp`}
           alt=""
           loading="lazy"
           decoding="async"
-          className="absolute h-auto"
-          style={{ left: c.left, top: c.top, width: c.width, rotate: `${c.rotate}deg` }}
-          animate={reduce ? undefined : { y: [0, -7, 0] }}
-          transition={{ repeat: Infinity, duration: c.dur, delay: c.delay, ease: 'easeInOut' }}
+          className="hero-drift absolute h-auto"
+          style={{
+            left: c.left,
+            top: c.top,
+            width: c.width,
+            transform: `rotate(${c.rotate}deg)`,
+            animationDuration: `${c.dur}s`,
+            animationDelay: `${c.delay}s`,
+          }}
         />
       ))}
 

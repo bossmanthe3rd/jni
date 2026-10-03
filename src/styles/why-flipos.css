@@ -81,7 +81,9 @@
   top: 0;
   left: 0;
   z-index: 1;
-  height: 72px;
+  /* Kept small enough that a corner hit reads as the pack touching the
+     corner, not filling it. */
+  height: 58px;
   width: auto;
   filter: drop-shadow(0 6px 6px rgb(0 0 0 / 0.45));
   transform: translate(60px, 40px);
@@ -314,7 +316,7 @@
     stroke-width: calc(6px * var(--wf-stroke, 1));
   }
   .wf-bouncer {
-    height: 108px;
+    height: 86px;
   }
   .wf-title {
     font-size: 84px;
@@ -491,7 +493,7 @@
   font-weight: 900;
 }
 .hero-price-note-rating span span {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
 }
 

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { bundles, panelAccent, products } from '../../data/products'
 import { packPalettes } from '../icons/PackDoodles'
 import { useCart } from '../../store/cartStore'
+import { responsiveImage } from '../../lib/responsiveImage'
 
 /**
  * "Make it a flight": the bundle upsell, told from this pack's point of view.
@@ -48,7 +49,12 @@ export default function FlavourFlight({ product }) {
               aria-label={here ? `${p.shortName}, this page` : `See ${p.shortName}`}
               aria-current={here ? 'page' : undefined}
             >
-              <img src={p.gallery?.[0]?.src || p.images.pdp} alt="" loading="lazy" decoding="async" />
+              <img
+                {...responsiveImage(p.gallery?.[0]?.src || p.images.pdp, '(min-width: 1024px) 230px, min(42vw, 170px)')}
+                alt=""
+                loading="lazy"
+                decoding="async"
+              />
             </Link>
           )
         })}
@@ -65,7 +71,7 @@ export default function FlavourFlight({ product }) {
         {bundles.map((b) => (
           <div key={b.slug} className="jni-sticker jni-flight-row">
             <Link to={`/combos/${b.slug}`} className="jni-flight-link">
-              <img src={b.imageUrl} alt="" loading="lazy" decoding="async" />
+              <img {...responsiveImage(b.imageUrl, '(min-width: 1024px) 80px, 60px')} alt="" loading="lazy" decoding="async" />
               <span>
                 <b>{b.shortName}</b>
                 <small>{b.subtitle}</small>

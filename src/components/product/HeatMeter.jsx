@@ -79,7 +79,7 @@ export default function HeatMeter({
           </span>
         ))}
       </div>
-      <span className={`text-[11px] font-black uppercase tracking-[0.14em] ${labelClassName} sm:text-xs`}>
+      <span className={`text-xs font-black uppercase tracking-[0.14em] ${labelClassName} sm:text-xs`}>
         {label}
       </span>
     </div>

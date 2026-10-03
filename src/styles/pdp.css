@@ -24,26 +24,6 @@ body:has(.jni-edge-last) .jni-footer-lip {
   display: none;
 }
 
-/* Print grain over the flat grounds, so they read as a printed pouch rather
-   than a CSS fill. It sits between the ground and the content: the section
-   is its own stacking context, and the grain is layered just under zero. */
-.jni-grain {
-  position: relative;
-  isolation: isolate;
-}
-.jni-grain::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  /* Grey noise centred on mid-grey under soft-light: it lightens as much as
-     it darkens, so the ground keeps its colour and only gains tooth. */
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-  mix-blend-mode: soft-light;
-  opacity: 0.55;
-  pointer-events: none;
-}
-
 /* The strips are tilted, so across the width their ends rise and fall by
    about tan(3deg) of it. The box grows by that much above and below (--lift)
    and pulls itself back over its neighbours by the same, so the tilted ends
@@ -129,7 +109,7 @@ body:has(.jni-edge-last) .jni-footer-lip {
   color: var(--color-text-dark);
 }
 .jni-climb-k {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -402,7 +382,7 @@ body:has(.jni-edge-last) .jni-footer-lip {
   padding-inline: max(1.25rem, calc((100vw - 1200px) / 2));
 }
 .jni-desks-k {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -492,17 +472,38 @@ body:has(.jni-edge-last) .jni-footer-lip {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
   clip-path: polygon(3% 0, 97% 4%, 100% 50%, 96% 100%, 2% 96%, 0 50%);
 }
+.jni-desks-link {
+  display: block;
+  border-radius: 3px;
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+}
+.jni-desks-link:focus-visible {
+  box-shadow: 0 0 0 3px var(--color-bg-cream), 0 0 0 6px var(--color-text-dark);
+}
+/* The combo shots are landscape spreads, so the print keeps their shape
+   rather than cropping packs off the ends. */
 .jni-desks-rail img {
   display: block;
   width: 100%;
-  aspect-ratio: 5 / 4;
+  aspect-ratio: 3 / 2;
   border-radius: 3px;
   object-fit: cover;
 }
 .jni-desks-rail figcaption {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
   margin-top: 12px;
   font-family: var(--font-brand);
   font-size: 24px;
+}
+.jni-desks-rail figcaption span {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 900;
 }
 
 /* ---- reviews ------------------------------------------------------------- */
@@ -515,7 +516,7 @@ body:has(.jni-edge-last) .jni-footer-lip {
   color: var(--color-text-dark);
 }
 .jni-reviews-k {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -681,7 +682,7 @@ body:has(.jni-edge-last) .jni-footer-lip {
   gap: 18px;
 }
 .jni-flight-k {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -1011,10 +1012,13 @@ body:has(.jni-edge-last) .jni-footer-lip {
   font-size: 16px;
   transition: transform 0.16s cubic-bezier(0.34, 1.4, 0.64, 1), background-color 0.16s ease;
 }
-.jni-chat-quick button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  border-style: solid;
-  background: #ffffff;
+@media (hover: hover) {
+  /* Pointer hover only: a tap fires :hover on touch and it sticks until the next tap elsewhere. */
+  .jni-chat-quick button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    border-style: solid;
+    background: #ffffff;
+  }
 }
 .jni-chat-quick button:disabled {
   opacity: 0.5;
@@ -1048,15 +1052,10 @@ body:has(.jni-edge-last) .jni-footer-lip {
 .jni-chat-buy {
   background: var(--chat-accent, var(--color-accent-yellow));
 }
+/* Size, padding and the press come from .jni-btn, which outranks this sheet. */
 .jni-chat-buy-btn {
   align-self: flex-start;
-  min-height: 3.4rem;
   margin-top: 8px;
-  padding: 0.8rem 2.2rem;
-  font-size: 1.25rem;
-}
-.jni-chat-buy-btn:active {
-  transform: scale(1.03, 0.9);
 }
 .jni-chat-ask {
   background: #ffffff;
@@ -1098,6 +1097,13 @@ body:has(.jni-edge-last) .jni-footer-lip {
   border-radius: 22px;
   background: var(--color-text-dark);
   box-shadow: 0 6px 0 rgba(7, 26, 22, 0.35);
+}
+/* The markup also says lg:hidden; this sheet now loads with its route, after
+   the utilities, so its display: flex would otherwise win on laptops. */
+@media (min-width: 1024px) {
+  .jni-atc-float {
+    display: none;
+  }
 }
 .jni-atc-float img {
   width: 48px;

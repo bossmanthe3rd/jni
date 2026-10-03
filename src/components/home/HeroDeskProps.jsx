@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { useMediaQuery } from '../ui/Primitives'
 import { DESK_PROPS } from './HeroDesk'
+import { responsiveImage } from '../../lib/responsiveImage'
 
 /*
  * The desk's stationery, standing on the surface the host draws.
@@ -23,9 +24,14 @@ export default function HeroDeskProps({ className = '' }) {
       {DESK_PROPS.map((p, i) => (
         <motion.img
           key={p.src}
-          src={`/assets/hero/desk/${p.src}.webp`}
+          {...responsiveImage(
+            `/assets/hero/desk/${p.src}.webp`,
+            `(min-width: 768px) ${p.width}vw, ${(p.mobile || p).width}vw`
+          )}
           alt=""
-          loading="eager"
+          // Laptop-only props are display:none on a phone; lazy, a phone never
+          // fetches them (eager images download even when hidden).
+          loading={p.mobile ? 'eager' : 'lazy'}
           decoding="async"
           className={`absolute h-auto left-[var(--pl-m)] w-[var(--pw-m)] md:left-[var(--pl)] md:w-[var(--pw)] ${
             p.mobile ? '' : 'hidden md:block'

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import DoodleField from '../ui/DoodleField'
 import { DeskSurface, WallClock } from '../home/HeroDesk'
+import { responsiveImage } from '../../lib/responsiveImage'
 
 /*
  * Checkout, set at the same desk the homepage opens on.
@@ -65,16 +66,16 @@ export function DeskTop({ children }) {
           is something on it. */}
       {children && (
         <>
-          <img src={`${D}/peri-peri-punch--clips.webp`} alt="" aria-hidden="true" className="ck-flat left-[2.5%] top-[90px] w-[5.5vw] -rotate-12" />
-          <img src={`${D}/sweet-chilli-rush--clips.webp`} alt="" aria-hidden="true" className="ck-flat right-[2%] top-[46%] w-[6vw] rotate-[18deg]" />
+          <img {...responsiveImage(`${D}/peri-peri-punch--clips.webp`, '6vw')} alt="" aria-hidden="true" className="ck-flat left-[2.5%] top-[90px] w-[5.5vw] -rotate-12" />
+          <img {...responsiveImage(`${D}/sweet-chilli-rush--clips.webp`, '6vw')} alt="" aria-hidden="true" className="ck-flat right-[2%] top-[46%] w-[6vw] rotate-[18deg]" />
         </>
       )}
       <div className="ck-desk-body">{children}</div>
 
       <div className="ck-props" aria-hidden="true">
-        <img src={`${D}/peri-peri-punch--mug.webp`} alt="" className="ck-prop ck-prop--mug" />
-        <img src={`${D}/sweet-chilli-rush--pens.webp`} alt="" className="ck-prop ck-prop--pens" />
-        <img src={`${D}/sweet-chilli-rush--calculator.webp`} alt="" className="ck-prop ck-prop--calc" />
+        <img {...responsiveImage(`${D}/peri-peri-punch--mug.webp`, 'clamp(92px, 10vw, 150px)')} alt="" className="ck-prop ck-prop--mug" />
+        <img {...responsiveImage(`${D}/sweet-chilli-rush--pens.webp`, 'clamp(40px, 4.2vw, 64px)')} alt="" className="ck-prop ck-prop--pens" />
+        <img {...responsiveImage(`${D}/sweet-chilli-rush--calculator.webp`, 'clamp(80px, 9vw, 136px)')} alt="" className="ck-prop ck-prop--calc" />
       </div>
       <svg className="ck-lip" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true">
         <path d="M0 22 C 200 4 380 30 620 18 C 860 6 1080 34 1260 16 C 1340 8 1400 12 1440 18 L1440 80 L0 80 Z" />

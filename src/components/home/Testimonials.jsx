@@ -50,6 +50,8 @@ function usePanelEdge(ref) {
           // A flat run in the crimp where his hands grip it: on a peak he'd be
           // hanging off a point.
           shelf: { x: w * FLIP_AT, width: fw * 0.56 },
+          // Rounded right out: the brand asked for a wave, not sharp ridges.
+          wave: true,
           seed: EDGE_SEED,
         }),
       )
@@ -86,7 +88,7 @@ function ReviewCard({ review, index }) {
       <p className="flex-1 text-sm font-bold leading-6 text-ink">&ldquo;{review.text}&rdquo;</p>
       <footer className="mt-4 border-t-2 border-ink/10 pt-3 text-sm font-black uppercase tracking-wide text-ink">
         {review.name}
-        <span className="block text-[11px] font-bold normal-case tracking-normal text-ink/55">
+        <span className="block text-xs font-bold normal-case tracking-normal text-ink/55">
           {review.location}
         </span>
       </footer>
@@ -99,7 +101,14 @@ export default function Testimonials() {
   const isSmall = useMediaQuery('(min-width: 640px)')
   const perPage = isLarge ? 3 : isSmall ? 2 : 1
   const pages = Math.ceil(testimonials.length / perPage)
-  const [page, setPage] = useState(0)
+  // `page` is on screen, `leaving` is sliding out, `dir` which way they go:
+  // 1 is forward -- out to the left, in from the right.
+  const [{ page, leaving, dir }, setPaging] = useState({ page: 0, leaving: null, dir: 1 })
+  const setPage = (fn) =>
+    setPaging((s) => {
+      const next = typeof fn === 'function' ? fn(s.page) : fn
+      return next === s.page ? s : { page: next, leaving: s.page, dir: 1 }
+    })
   const [paused, setPaused] = useState(false)
   const frame = useRef(null)
   const edge = usePanelEdge(frame)
@@ -119,7 +128,11 @@ export default function Testimonials() {
     return () => window.clearInterval(id)
   }, [paused, pages, inView, reduce])
 
-  const go = (next) => setPage((next + pages) % pages)
+  const go = (next, d = next > page ? 1 : -1) =>
+    setPaging((s) => {
+      const to = (next + pages) % pages
+      return to === s.page ? s : { page: to, leaving: s.page, dir: d }
+    })
   const pageList = Array.from({ length: pages }, (_, i) =>
     testimonials.slice(i * perPage, i * perPage + perPage)
   )
@@ -140,7 +153,7 @@ export default function Testimonials() {
     const dx = t.clientX - start.x
     const dy = t.clientY - start.y
     if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return
-    go(page + (dx < 0 ? 1 : -1))
+    go(page + (dx < 0 ? 1 : -1), dx < 0 ? 1 : -1)
   }
 
   return (
@@ -186,6 +199,10 @@ export default function Testimonials() {
           style={edge ? { clipPath: `path("${edge.d}")` } : undefined}
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
+          // The whole panel takes the swipe, not just the card: on a phone the
+          // card is ~260px of a 375px panel, and a swipe on the yellow did nothing.
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
         >
           {/* Sunshine is a light ground, so the doodles tint toward it and stay
               subtle -- the review cards are the content here. Kept sparse: the
@@ -204,25 +221,33 @@ export default function Testimonials() {
               to re-cut its clip path and restart the doodle procession. */}
           <div
             className="relative grid [&>*]:col-start-1 [&>*]:row-start-1"
-            onTouchStart={onTouchStart}
-            onTouchEnd={onTouchEnd}
           >
-            {pageList.map((reviews, p) => (
+            {pageList.map((reviews, p) => {
+              // On screen, sliding out the way the pages are going, or waiting
+              // off the far side for its turn -- moved there instantly, unseen.
+              const shown = p === page
+              const out = p === leaving
+              const state = shown
+                ? { opacity: 1, x: '0%', transition: { duration: reduce ? 0 : 0.45, ease: [0.22, 1, 0.36, 1] } }
+                : out
+                  ? { opacity: 0, x: `${-dir * 60}%`, transition: { duration: reduce ? 0 : 0.4, ease: 'easeIn' } }
+                  : { opacity: 0, x: `${dir * 60}%`, transition: { duration: 0 } }
+              return (
               <motion.div
                 key={`${perPage}-${p}`}
                 initial={false}
-                animate={p === page ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
-                transition={{ duration: reduce ? 0 : 0.3, ease: 'easeOut' }}
-                aria-hidden={p !== page}
+                animate={state}
+                aria-hidden={!shown}
                 className={`grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 ${
-                  p === page ? '' : 'pointer-events-none invisible'
+                  shown ? '' : out ? 'pointer-events-none' : 'pointer-events-none invisible'
                 }`}
               >
                 {reviews.map((review, i) => (
                   <ReviewCard key={review.name} review={review} index={i} />
                 ))}
               </motion.div>
-            ))}
+              )
+            })}
           </div>
 
           <div className="mt-7 flex items-center justify-center gap-4">

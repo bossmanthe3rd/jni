@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { launchOffer } from '../../data/site'
 import { bundles, savingsPercent } from '../../data/products'
+import { responsiveImage } from '../../lib/responsiveImage'
 
 /**
  * The launch-offer banner.
@@ -59,12 +60,14 @@ export default function LaunchBanner({ tone = 'light', className = '' }) {
     <section className={`relative ${className}`} aria-labelledby="launch-offer-heading">
       <Link to={`/combos/${bundle.slug}`} className="block">
         <picture>
-          <source media="(min-width: 768px)" srcSet="/assets/promo/launch-offer-wide.webp" />
+          <source
+            media="(min-width: 768px)"
+            srcSet={responsiveImage('/assets/promo/launch-offer-wide.webp', '100vw').srcSet}
+            sizes="100vw"
+          />
           <img
-            src="/assets/promo/launch-offer.webp"
+            {...responsiveImage('/assets/promo/launch-offer.webp', '100vw')}
             alt={launchOffer.alt}
-            width="1600"
-            height="800"
             loading="eager"
             decoding="async"
             className="aspect-[4/3] w-full object-cover md:aspect-[2/1]"

@@ -120,13 +120,13 @@ export default function StickyAtcBar({
         >
           <div className="flex items-center gap-3">
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[11px] font-black uppercase tracking-wide text-ink/55">
+              <p className="truncate text-xs font-black uppercase tracking-wide text-ink/55">
                 {name}
               </p>
               <p className="flex items-baseline gap-2">
                 <span className="font-display text-2xl leading-none text-ink">₹{price}</span>
                 {originalPrice > price && (
-                  <span className="text-[11px] font-semibold text-ink/40 line-through">
+                  <span className="text-xs font-semibold text-ink/40 line-through">
                     ₹{originalPrice}
                   </span>
                 )}

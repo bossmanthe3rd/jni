@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { Plus } from 'lucide-react'
 import { FREE_SHIPPING_THRESHOLD, products } from '../../data/products'
+import { responsiveImage } from '../../lib/responsiveImage'
 
 /**
  * How far from free delivery, and the one pack that closes the gap.
@@ -51,7 +52,7 @@ export default function DeliveryNudge({ items, subtotal, onAdd, compact = false 
       {suggestion && (
         <div className="mt-3.5 flex items-center gap-3 border-t-2 border-dashed border-ink/20 pt-3.5">
           <img
-            src={suggestion.images?.thumb || suggestion.images?.plp}
+            {...responsiveImage(suggestion.images?.thumb || suggestion.images?.plp, '44px')}
             alt=""
             className="h-11 w-11 shrink-0 rounded-xl border-[2px] border-ink object-cover"
           />

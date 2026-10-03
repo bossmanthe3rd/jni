@@ -5,6 +5,7 @@ import { BrandHeading, Blob, Sparkle } from '../components/ui/Primitives'
 import { KeyboardIcon, Rosette, StarDoodle } from '../components/icons/WhyIcons'
 import DoodleField from '../components/ui/DoodleField'
 import BlobPanel from '../components/ui/BlobPanel'
+import { responsiveImage } from '../lib/responsiveImage'
 
 export default function AboutPage() {
   useEffect(() => {
@@ -63,10 +64,8 @@ export default function AboutPage() {
 
           <div className="mx-auto mt-10 max-w-4xl overflow-hidden rounded-[28px] border-[4px] border-ink bg-sunshine shadow-doodle-lg">
             <img
-              src="/assets/brand/desk-snacks-hero.jpeg"
+              {...responsiveImage('/assets/brand/desk-snacks-hero.jpeg', '(min-width: 960px) 896px, calc(100vw - 40px)')}
               alt="FLIPO's snack packs on a desk"
-              width="1600"
-              height="900"
               loading="lazy"
               decoding="async"
               className="aspect-[16/9] w-full object-cover"

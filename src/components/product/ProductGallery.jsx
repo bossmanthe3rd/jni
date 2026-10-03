@@ -81,7 +81,7 @@ export default function ProductGallery({ images, badge, alt }) {
           className="absolute inset-0 h-full w-full object-cover"
         />
         {badge && (
-          <span className="absolute left-3 top-3 z-[1] rounded-pill border-thick border-outline bg-sunshine px-3 py-1.5 text-[10px] font-black uppercase text-ink">
+          <span className="absolute left-3 top-3 z-[1] rounded-pill border-thick border-outline bg-sunshine px-3 py-1.5 text-xs font-black uppercase text-ink">
             {badge}
           </span>
         )}

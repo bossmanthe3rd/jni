@@ -1,45 +1,26 @@
 #!/usr/bin/env python3
-"""Trace the JUST NIBBLE IT badge blob straight off the pouch artwork.
+"""Trace the JUST NIBBLE IT badge blob off the owner's drawn shape.
 
 Every FLIPO's pack hangs its logo in a dark blob that drops from the top seal
 and ends in a row of fat rounded lobes. The header used to be a full-bleed
-strip, which is the one shape the packaging never uses. This lifts the real
+strip, which is the one shape the packaging never uses. This lifts the
 silhouette so the header can wear it.
 
-Source is the cut-out jalapeno pouch, public/assets/hero/pouch-jalapeno-kick.webp
--- the jalapeno pack is the one whose blob reads cleanly, because its dark green
-sits on a mid-green ground rather than the near-black the other two use. The
-first trace ran off the owner's full hero artboard and came out a smooth bowl:
-the artboard's pouch is small and photographed, and at that scale the neck,
-the shoulders and the scallops all fell below the smoothing. The cut-out pouch
-is the pack face-on, so the silhouette survives.
+Source is reference/drive/website/Nibble blob.png: the owner's own drawing of
+the badge, a single flat shape on a transparent ground. An earlier version of
+this script dug the blob out of the jalapeno pouch photo by hue; the drawing
+replaces that, so isolation is just the alpha channel.
 
-Isolation leans on hue, not darkness. The pack is full of dark greens: doodle
-strokes, the shaded right-hand curve of the pouch, the mascot outlines. What
-separates the blob is that it is a *teal*-leaning green, where every other dark
-green on the pack runs yellower. Threshold on that, bridge the pale zip line
-that cuts the blob in two, then erode to snap the hairline doodle strokes that
-touch it, keep the island under the wordmark, and dilate back.
-
-The blob has no top edge to trace: the pouch's seal already cuts it off. So
-the trace is of the sides and the lobes -- the part the pack actually draws --
-and the top is closed flat, which is what lets the header hang the badge off
-its own top edge the way the pouch hangs it off the seal.
-
-Where that flat cut lands is ours to pick, since the pack's own cut is just
-wherever the pouch ended. TOP_CUT runs the neck all the way up to just under
-the seal, as the pack does. Cutting it lower was tried: the badge then starts
-at its shoulders, and what hangs from the header stops reading as the pack's
-blob and turns into a generic cloud.
+The drawing is already cut flat along its top edge, where the header's top
+edge hangs it, so TOP_CUT is the first row -- the trace is of the sides and
+the lobes, and the top is closed flat.
 
 Also emitted, measured off the same artwork:
 
-  * the blob's own centre -- halfway down what shows below the header, midway
-    between the edges at that height -- the one point every face the badge
-    shows is centred on, so the logo and the words that replace it all land
-    on the same spot and nothing jumps on a swap. The pack sits its logo lower
-    than this, in the lobes; up here the blob is at its widest, which is what
-    lets the lockup read at seven tenths of the badge instead of half;
+  * the blob's own centre -- halfway down, midway between the edges at that
+    height -- the one point every face the badge shows is centred on, so the
+    logo and the words that replace it all land on the same spot and nothing
+    jumps on a swap;
   * the blob's width, row by row, so the page can fit each face to the
     largest box of its own proportions that the silhouette has room for.
 
@@ -54,39 +35,20 @@ from PIL import Image
 from scipy import ndimage as ndi
 from skimage import measure
 
-SOURCE = os.path.join("public", "assets", "hero", "pouch-jalapeno-kick.webp")
+SOURCE = os.path.join("reference", "drive", "website", "Nibble blob.png")
 
-# Window around the badge. Keeps the doodles either side and the Flipo's panel
-# below out of the isolation.
-WINDOW = (150, 0, 660, 470)
+# Alpha above this is shape. The edge is anti-aliased; the midpoint traces it.
+ALPHA_CUT = 127
 
-# Blob green is the teal-leaning one. See the docstring.
-MAX_RED = 40
-GREEN_RANGE = (50, 112)
-MIN_BLUE_OVER_GREEN = 0.66
-
-# The zip is a pale horizontal line straight through the blob. A tall, thin
-# closing knits the two halves back together without fattening the sides.
-ZIP_BRIDGE = 31
-
-# Radius that snaps the doodle strokes touching the blob, without eating a
-# lobe. The strokes are ~6px at this resolution; the lobes are ~90px across.
-BRIDGE = 14
-
-# A point inside the blob, in window coordinates -- under the wordmark, where
-# nothing else on the pack is that green.
-SEED = (230, 250)
-
-# Where to cut the flat top, in source rows. The pouch's heat seal and rounded
-# top corners run to about row 25; this is the first row clear of both.
-TOP_CUT = 30
+# Where to cut the flat top, in source rows. The drawing is flat from row 0.
+TOP_CUT = 0
 
 # Rows in the emitted width profile. One per ~1% of the badge's height is finer
 # than any lobe and still reads in a diff.
 PROFILE_ROWS = 100
 
-# Outline samples. The silhouette carries about a dozen lobes; this resolves
-# every one of them and still emits a path short enough to read in a diff.
+# Outline samples. Resolves every lobe and still emits a path short enough to
+# read in a diff.
 SAMPLES = 140
 
 # Arc-length smoothing window, in samples. Just enough to take the pixel steps
@@ -97,30 +59,14 @@ SMOOTH = 1
 VIEW_WIDTH = 1000
 
 
-def disk(r):
-    y, x = np.ogrid[-r:r + 1, -r:r + 1]
-    return x * x + y * y <= r * r
-
-
-def isolate(rgb, alpha):
-    """The blob, as a boolean mask in window coordinates."""
-    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
-    lo, hi = GREEN_RANGE
-    mask = (r < MAX_RED) & (g > lo) & (g < hi) & (alpha > 200)
-    mask &= b / np.maximum(g, 1) > MIN_BLUE_OVER_GREEN
-    mask = ndi.binary_closing(mask, disk(4))
-    mask = ndi.binary_closing(mask, np.ones((ZIP_BRIDGE, 1), bool))
-    # The wordmark punches holes in the blob; fill them before eroding or the
-    # letters' counters grow into it.
-    mask = ndi.binary_fill_holes(mask) | mask
-
-    core = ndi.binary_erosion(mask, disk(BRIDGE))
-    labels, _ = ndi.label(core)
-    seed = labels[SEED[1], SEED[0]]
-    if seed == 0:
-        raise SystemExit("SEED is not inside the blob -- check WINDOW / thresholds")
-    blob = ndi.binary_dilation(labels == seed, disk(BRIDGE))
-    return ndi.binary_fill_holes(blob)
+def isolate(alpha):
+    """The blob, as a boolean mask: the largest opaque island, holes filled."""
+    mask = alpha > ALPHA_CUT
+    labels, n = ndi.label(mask)
+    if n == 0:
+        raise SystemExit("no opaque pixels in SOURCE")
+    sizes = ndi.sum(mask, labels, range(1, n + 1))
+    return ndi.binary_fill_holes(labels == (int(np.argmax(sizes)) + 1))
 
 
 def outline(blob):
@@ -222,11 +168,9 @@ def profile(arc, height, rows):
 def main():
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     src = os.path.join(root, SOURCE)
-    x0, y0, x1, y1 = WINDOW
-    rgba = np.asarray(Image.open(src).convert("RGBA")).astype(int)[y0:y1, x0:x1]
-    rgb = rgba[..., :3]
+    alpha = np.asarray(Image.open(src).convert("RGBA"))[..., 3]
 
-    blob = isolate(rgb, rgba[..., 3])
+    blob = isolate(alpha)
     arc = smooth(resample(outline(blob), SAMPLES), SMOOTH)
 
     # Normalise: traced x/y -> viewBox, with the flat top at y = 0.
@@ -244,12 +188,12 @@ def main():
     rows_js = ",\n".join("  [%.1f, %.1f, %.1f]" % r for r in rows)
 
     view = "0 0 %d %.1f" % (VIEW_WIDTH, height)
-    body = f'''// The JUST NIBBLE IT badge blob, traced from the pouch artwork
+    body = f'''// The JUST NIBBLE IT badge blob, traced from the owner's drawing
 // ({SOURCE.replace(os.sep, "/")}) by tools/build-nibble-blob.py.
 // Regenerate with the script rather than editing the path.
 //
-// The shape is flat along the top because it is flat along the top on the
-// pack, where the pouch's seal cuts it off. Hang it from the header's top edge
+// The shape is flat along the top, the way the pack's blob is cut off by the
+// pouch's seal. Hang it from the header's top edge
 // and the cut disappears, leaving the lobes to break the header's lower edge --
 // which is the whole point of it: the header stops being a continuous strip.
 

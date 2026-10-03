@@ -27,6 +27,7 @@ import { useMediaQuery } from '../ui/Primitives'
 import { Barcode, MarkerRing } from '../ui/ReceiptMarks'
 import BreakRoom from './BreakRoom'
 import '../../styles/flavour-vending.css'
+import { responsiveImage } from '../../lib/responsiveImage'
 
 /*
  * Our flavours, as the office vending machine.
@@ -56,13 +57,15 @@ import '../../styles/flavour-vending.css'
 const ORDER = ['sweet-chilli-rush', 'jalapeno-kick', 'peri-peri-punch']
 const singles = ORDER.map((slug) => products.find((p) => p.slug === slug)).filter(Boolean)
 
-// Slot codes are the machine's own addressing: row letter, then position.
+// Slot codes are one letter each, A to E: the flavours, then the combos.
+const LETTERS = 'ABCDE'
 const SLOTS = [
-  ...singles.map((product, i) => ({ code: `A${i + 1}`, kind: 'single', item: product })),
-  ...bundles.map((bundle, i) => ({ code: `B${i + 1}`, kind: 'bundle', item: bundle })),
-]
+  ...singles.map((product) => ({ kind: 'single', item: product })),
+  ...bundles.map((bundle) => ({ kind: 'bundle', item: bundle })),
+].map((slot, i) => ({ ...slot, code: LETTERS[i] }))
 const BY_CODE = Object.fromEntries(SLOTS.map((s) => [s.code, s]))
-const KEYS = ['A', 'B', '1', '2', '3', 'C']
+const CLEAR = 'CLR'
+const KEYS = [...SLOTS.map((s) => s.code), CLEAR]
 
 
 // The laptop artboard: machine plus printer, at design size. `ROOM` is what
@@ -215,7 +218,7 @@ export default function FlavourVending() {
   useEffect(() => {
     if (!machineInView) return undefined
     const t = setTimeout(() => {
-      if (!touched.current) vend('A1')
+      if (!touched.current) vend(SLOTS[0].code)
     }, 650)
     return () => clearTimeout(t)
   }, [machineInView, vend])
@@ -238,16 +241,10 @@ export default function FlavourVending() {
     touched.current = true
     if (busy.current) return
     setError(null)
-    if (key === 'C') return setTyped('')
-    if (/[AB]/.test(key)) return setTyped(key)
-    if (!typed) return setError('Letter first')
-    const code = `${typed}${key}`
-    if (!BY_CODE[code]) {
-      setTyped('')
-      return setError(`${code}? No such slot`)
-    }
-    setTyped(code)
-    vend(code, { byUser: true })
+    if (key === CLEAR) return setTyped('')
+    // One letter is a whole code, so a key press drops the pack straight away.
+    setTyped(key)
+    vend(key, { byUser: true })
   }
 
   return (
@@ -263,7 +260,7 @@ export default function FlavourVending() {
             <div className="vm-sign">
               <Bulbs />
               <h2 className="vm-sign-word font-brand">Our flavours</h2>
-              <Bulbs />
+              <Bulbs from={4} />
             </div>
 
             <div className="vm-body">
@@ -291,7 +288,7 @@ export default function FlavourVending() {
                     className="vm-faller"
                     style={{ left: faller.left, top: faller.top, width: faller.width, height: faller.height }}
                     initial={{ y: 0, rotate: 0 }}
-                    animate={{ y: faller.drop, rotate: faller.code.startsWith('A') ? 22 : 8 }}
+                    animate={{ y: faller.drop, rotate: BY_CODE[faller.code].kind === 'single' ? 22 : 8 }}
                     transition={{ duration: FALL_MS / 1000, ease: [0.55, 0, 1, 0.45] }}
                     aria-hidden="true"
                   >
@@ -323,7 +320,7 @@ export default function FlavourVending() {
                       </motion.div>
                     )}
                   </AnimatePresence>
-                  <div className="vm-flap" aria-hidden="true">
+                  <div className={`vm-flap ${inTray ? 'is-loaded' : ''}`} aria-hidden="true">
                     <span>Push</span>
                   </div>
                 </div>
@@ -343,11 +340,11 @@ export default function FlavourVending() {
                     <button
                       key={k}
                       type="button"
-                      className={`vm-key ${k === 'C' ? 'vm-key--clear' : ''}`}
+                      className={`vm-key ${k === CLEAR ? 'vm-key--clear' : ''}`}
                       onClick={() => press(k)}
-                      aria-label={k === 'C' ? 'Clear code' : `Key ${k}`}
+                      aria-label={k === CLEAR ? 'Clear code' : `Key ${k}: ${BY_CODE[k].item.shortName}`}
                     >
-                      {k === 'C' ? 'Clr' : k}
+                      {k === CLEAR ? 'Clr' : k}
                     </button>
                   ))}
                 </div>
@@ -461,12 +458,15 @@ function Slot({ slot, artRef, spinning, empty, selected, onPick, onPreview }) {
   )
 }
 
+// The packs behind the glass are never much over 100px wide.
+const VM_PACK_SIZES = '120px'
+
 /** The snack as drawn behind the glass. Combos are built from the pack cut-outs. */
 function SnackArt({ slot, className = '' }) {
   if (slot.kind === 'single') {
     return (
       <img
-        src={`/assets/hero/pouch-${slot.item.slug}.webp`}
+        {...responsiveImage(`/assets/hero/pouch-${slot.item.slug}.webp`, VM_PACK_SIZES)}
         alt=""
         className={`vm-pack ${className}`}
         loading="lazy"
@@ -481,13 +481,13 @@ function SnackArt({ slot, className = '' }) {
       {six && (
         <div className="vm-combo-back">
           {ORDER.map((s) => (
-            <img key={s} src={`/assets/hero/pouch-${s}.webp`} alt="" loading="lazy" draggable="false" />
+            <img key={s} {...responsiveImage(`/assets/hero/pouch-${s}.webp`, VM_PACK_SIZES)} alt="" loading="lazy" draggable="false" />
           ))}
         </div>
       )}
       <div className="vm-combo-front">
         {ORDER.map((s) => (
-          <img key={s} src={`/assets/hero/pouch-${s}.webp`} alt="" loading="lazy" draggable="false" />
+          <img key={s} {...responsiveImage(`/assets/hero/pouch-${s}.webp`, VM_PACK_SIZES)} alt="" loading="lazy" draggable="false" />
         ))}
       </div>
     </div>
@@ -511,11 +511,16 @@ function Coil() {
   )
 }
 
-function Bulbs() {
+// One loop of the chase, and the bulbs it runs across: four a side.
+const CHASE_S = 1.6
+const CHASE_BULBS = 8
+
+/** Four bulbs; `from` is where they sit in the chase, 0 left, 4 right. */
+function Bulbs({ from = 0 }) {
   return (
     <span className="vm-bulbs" aria-hidden="true">
       {Array.from({ length: 4 }, (_, i) => (
-        <i key={i} style={{ animationDelay: `${i * 0.25}s` }} />
+        <i key={i} style={{ animationDelay: `${((from + i) / CHASE_BULBS - 1) * CHASE_S}s` }} />
       ))}
     </span>
   )

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ChevronDown, Facebook, Instagram, Mail, MapPin, Phone } from 'lucide-react'
 import { footerColumns, legalBusinessDetails } from '../../data/site'
 import DoodleField from '../ui/DoodleField'
+import { responsiveImage } from '../../lib/responsiveImage'
 
 const socialIcons = { Instagram, Facebook }
 const SOCIAL_BG = { Instagram: 'bg-[#E1306C]', Facebook: 'bg-[#1877F2]' }
@@ -108,7 +109,7 @@ function FooterContact() {
               <Icon size={15} />
             </span>
             <div className="min-w-0">
-              <p className="text-[11px] font-black uppercase tracking-[0.14em] text-teal">
+              <p className="text-xs font-black uppercase tracking-[0.14em] text-teal">
                 {label}
               </p>
               {items.map((item) => (
@@ -169,10 +170,8 @@ export default function SiteFooter() {
               header wears the stacked one; this is the wide cut, and the
               footer is the only place on the site with the width to carry it. */}
           <img
-            src="/assets/brand/wordmark-arched.webp"
+            {...responsiveImage('/assets/brand/wordmark-arched.webp', '(min-width: 1024px) 576px, min(448px, calc(100vw - 40px))')}
             alt="Just Nibble It"
-            width="1600"
-            height="207"
             loading="lazy"
             decoding="async"
             className="mx-auto mb-8 w-full max-w-md opacity-90 lg:mb-12 lg:max-w-xl"

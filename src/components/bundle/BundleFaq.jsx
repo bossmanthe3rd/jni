@@ -5,6 +5,7 @@ import { useCart } from '../../store/cartStore'
 import { useCrateSubtotal } from '../checkout/cartTotals'
 import { DeliveryAnswer, FaqChat } from '../product/PdpFaq'
 import { boxFlavours, pouchCutout, toCartBundle } from './boxContents'
+import { responsiveImage } from '../../lib/responsiveImage'
 
 /**
  * "Asked a lot" for a box: the flavour pages' chat, with the three things
@@ -29,7 +30,7 @@ function MixAnswer({ product: bundle }) {
           viewport={ONCE}
           transition={{ type: 'spring', stiffness: 420, damping: 16, delay: 0.15 + i * 0.12 }}
         >
-          <img src={pouchCutout(product.slug)} alt="" />
+          <img {...responsiveImage(pouchCutout(product.slug), '96px')} alt="" />
           {quantity > 1 && <b>×{quantity}</b>}
         </motion.span>
       ))}
