@@ -1,0 +1,280 @@
+/* ===========================================================================
+   About us (AboutPage.jsx)
+
+   The site's doodle language -- fat ink keylines, hard offset shadows, print
+   grain, the pack doodles -- on the owner's About artboard. One page-specific
+   prop set (the desk), everything else reused.
+   =========================================================================== */
+
+/* ---- the desk ------------------------------------------------------------ */
+
+/* Two short ink strokes either side of the motto, like the artboard's. */
+.about-motto > p:first-child {
+  position: relative;
+  display: inline-block;
+  padding: 0 2.6rem;
+}
+.about-motto > p:first-child::before,
+.about-motto > p:first-child::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 1.6rem;
+  height: 0.7rem;
+  translate: 0 -50%;
+  background:
+    linear-gradient(var(--color-accent-teal) 0 0) 0 0 / 100% 3px no-repeat,
+    linear-gradient(var(--color-accent-teal) 0 0) 0 100% / 70% 3px no-repeat;
+}
+.about-motto > p:first-child::before {
+  left: 0;
+  rotate: 14deg;
+}
+.about-motto > p:first-child::after {
+  right: 0;
+  rotate: -14deg;
+  scale: -1 1;
+}
+
+.about-desk {
+  /* The desktop runs out under the section's padding to the page edge. */
+  margin-bottom: 0;
+}
+.about-desk-top {
+  position: relative;
+  z-index: 1;
+  padding: clamp(28px, 5vw, 56px) clamp(18px, 5vw, 64px) clamp(36px, 6vw, 72px);
+  border: 4px solid var(--color-border);
+  border-bottom: 0;
+  border-radius: 30px 26px 0 0;
+  background: var(--color-accent-yellow);
+  box-shadow: inset 0 14px 0 rgb(255 255 255 / 0.18);
+}
+/* Stationery standing on the desk's back edge, its foot behind the lip. */
+.about-desk-prop {
+  position: absolute;
+  z-index: 0;
+  bottom: calc(100% - 14px);
+  height: auto;
+  pointer-events: none;
+}
+.about-desk-prop--pens {
+  left: 4%;
+  width: clamp(56px, 8vw, 96px);
+  rotate: -4deg;
+}
+.about-desk-prop--mug {
+  right: 3%;
+  width: clamp(84px, 13vw, 150px);
+  rotate: 3deg;
+}
+
+/* The brand photo, printed and taped to the desk. */
+.about-print {
+  position: relative;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: clamp(8px, 1.2vw, 14px);
+  border: 3px solid var(--color-border);
+  background: var(--color-bg-cream);
+  box-shadow: 8px 10px 0 rgb(13 40 24 / 0.85);
+  rotate: -1.5deg;
+}
+.about-print img {
+  border: 2px solid var(--color-border);
+}
+.about-print::before,
+.about-print::after {
+  content: '';
+  position: absolute;
+  top: -14px;
+  width: 92px;
+  height: 26px;
+  background: var(--color-accent-teal);
+  opacity: 0.88;
+  clip-path: polygon(
+    3% 0, 97% 0, 100% 17%, 96% 33%, 100% 50%, 96% 67%, 100% 83%, 97% 100%,
+    3% 100%, 0 83%, 4% 67%, 0 50%, 4% 33%, 0 17%
+  );
+}
+.about-print::before {
+  left: 8%;
+  rotate: -8deg;
+}
+.about-print::after {
+  right: 8%;
+  rotate: 6deg;
+}
+
+/* ---- why we made it ------------------------------------------------------ */
+
+.about-why-prop {
+  position: absolute;
+  z-index: 0;
+  height: auto;
+  opacity: 0.9;
+  pointer-events: none;
+}
+.about-why-prop--mouse {
+  left: -1.5%;
+  top: 48%;
+  width: clamp(70px, 10vw, 150px);
+  rotate: -12deg;
+}
+.about-why-prop--calc {
+  right: -1%;
+  top: 30%;
+  width: clamp(64px, 9vw, 140px);
+  rotate: 10deg;
+}
+
+/* The rulebook, as a sticky note with every rule struck through in marker. */
+.about-rules {
+  position: relative;
+  display: grid;
+  width: fit-content;
+  max-width: 100%;
+  gap: 6px;
+  padding: 18px 28px 20px;
+  border: 3px solid var(--color-border);
+  background: var(--color-bg-cream);
+  box-shadow: 6px 7px 0 rgb(0 0 0 / 0.45);
+  color: var(--color-text-dark);
+  font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+  font-weight: 900;
+  rotate: -1.5deg;
+}
+.about-rules s {
+  position: relative;
+  text-decoration: none;
+}
+.about-rules s::after {
+  content: '';
+  position: absolute;
+  left: -6px;
+  right: -6px;
+  top: 52%;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--color-flavor-sweetchilli);
+  rotate: -2deg;
+  opacity: 0.9;
+}
+.about-rules li:nth-child(even) s::after {
+  rotate: 1.5deg;
+}
+
+.about-why-question {
+  color: var(--color-accent-teal);
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  font-weight: 900;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+/* ---- the in-between moments ---------------------------------------------- */
+
+.about-pillar {
+  padding: 20px 20px 22px;
+  border: 3px solid var(--color-border);
+  border-radius: 18px 13px 19px 12px;
+  background: var(--color-bg-cream);
+  box-shadow: 4px 5px 0 var(--color-accent-teal);
+  color: var(--color-text-dark);
+  rotate: var(--turn, 0deg);
+}
+
+/* The four beats, with a pack chilli between each. */
+.about-steps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px 0;
+}
+.about-steps li {
+  display: flex;
+  align-items: center;
+}
+.about-steps span {
+  padding: 8px 18px 9px;
+  border: 3px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-accent-yellow);
+  box-shadow: 3px 4px 0 var(--color-border);
+  font-size: clamp(1.05rem, 2.2vw, 1.5rem);
+  font-weight: 900;
+  white-space: nowrap;
+}
+.about-steps li:last-child span {
+  background: var(--color-accent-teal);
+}
+.about-steps-chilli {
+  width: clamp(26px, 3.4vw, 40px);
+  margin: 0 clamp(6px, 1.2vw, 14px);
+  rotate: 24deg;
+}
+
+.about-nos li {
+  position: relative;
+  padding-left: 2.1rem;
+}
+/* A ticked box drawn in ink, the way you'd tick a to-do list. */
+.about-nos li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.2em;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 3px solid var(--color-border);
+  border-radius: 5px;
+  background:
+    linear-gradient(135deg, transparent 46%, var(--color-accent-teal) 46% 60%, transparent 60%) 0 0 / 100% 100%;
+}
+
+/* The three pouches the page is about, stood up in the teal puddle. */
+.about-pouches {
+  position: relative;
+  aspect-ratio: 1.45;
+}
+.about-pouch {
+  position: absolute;
+  bottom: 14%;
+  height: 70%;
+  width: auto;
+  filter: drop-shadow(5px 7px 0 rgb(7 26 22 / 0.45));
+}
+.about-pouch--0 {
+  left: 12%;
+  rotate: -9deg;
+}
+.about-pouch--1 {
+  left: 50%;
+  z-index: 1;
+  height: 76%;
+  translate: -50% 0;
+  rotate: 1deg;
+}
+.about-pouch--2 {
+  right: 12%;
+  rotate: 8deg;
+}
+
+@media (max-width: 639px) {
+  .about-why-prop {
+    opacity: 0.35;
+  }
+  .about-steps-chilli {
+    margin: 0 4px;
+  }
+}
+
+/* ---- the close ----------------------------------------------------------- */
+
+/* The page ends on the launch banner's dark strip, not on cream, so the
+   footer's painted cream lip takes the strip's colour instead (the checkout
+   and product pages hide theirs for the same reason). */
+body:has(.about-end) .jni-footer-lip path {
+  fill: var(--color-bg-dark);
+}
