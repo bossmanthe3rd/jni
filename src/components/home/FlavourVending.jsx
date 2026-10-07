@@ -50,8 +50,8 @@ import { responsiveImage } from '../../lib/responsiveImage'
  * a bottom sheet instead.
  *
  * Nobody has to play to shop: every shelf tag carries name, heat and price.
- * And the machine vends once on its own the first time it comes into view, so
- * there is always a receipt to read.
+ * The machine waits for a tap or a code before it vends anything -- until then
+ * the printer carries a plate saying how to work it, where the receipt will be.
  */
 
 const ORDER = ['sweet-chilli-rush', 'jalapeno-kick', 'peri-peri-punch']
@@ -77,6 +77,23 @@ const ROOM_WALL = 210
 
 const SPIN_MS = 750
 const FALL_MS = 520
+
+// The receipt feeds the way a thermal printer advances paper: in short bursts
+// with a beat between them, rather than one smooth slide.
+const PRINT_FEED = {
+  y: ['-100%', '-78%', '-78%', '-54%', '-54%', '-29%', '-29%', '0%'],
+  transition: {
+    duration: 2.2,
+    times: [0, 0.2, 0.27, 0.47, 0.54, 0.75, 0.82, 1],
+    ease: ['easeOut', 'linear', 'easeOut', 'linear', 'easeOut', 'linear', 'easeOut'],
+  },
+}
+
+// The keypad codes, as ranges per row, for the instruction plate.
+const codeRange = (kind) => {
+  const codes = SLOTS.filter((s) => s.kind === kind).map((s) => s.code)
+  return codes.length > 1 ? `${codes[0]}–${codes[codes.length - 1]}` : codes[0]
+}
 const wait = (ms) => new Promise((r) => setTimeout(r, ms))
 
 export default function FlavourVending() {
@@ -103,7 +120,6 @@ export default function FlavourVending() {
   const glassRef = useRef(null)
   const artRefs = useRef({})
   const busy = useRef(false)
-  const touched = useRef(false)
   const alive = useRef(true)
   // Whether the section is still on screen when a pack lands (see land()).
   const sectionShown = useRef(true)
@@ -200,10 +216,7 @@ export default function FlavourVending() {
     [reduceMotion],
   )
 
-  // One vend on its own, the first time the machine is properly in view.
   const sectionRef = useRef(null)
-  const machineRef = useRef(null)
-  const machineInView = useInView(machineRef, { once: true, amount: 0.45 })
   const sectionInView = useInView(sectionRef, { amount: 0.12 })
 
   // The bulbs, the coil and the clock run on CSS loops; with the machine
@@ -216,14 +229,6 @@ export default function FlavourVending() {
     return () => io.disconnect()
   }, [])
   useEffect(() => {
-    if (!machineInView) return undefined
-    const t = setTimeout(() => {
-      if (!touched.current) vend(SLOTS[0].code)
-    }, 650)
-    return () => clearTimeout(t)
-  }, [machineInView, vend])
-
-  useEffect(() => {
     sectionShown.current = sectionInView
     if (!sectionInView) setSheetOpen(false)
   }, [sectionInView])
@@ -233,12 +238,10 @@ export default function FlavourVending() {
   const closeSheet = useCallback(() => setSheetOpen(false), [])
 
   const pick = (code) => {
-    touched.current = true
     vend(code, { byUser: true })
   }
 
   const press = (key) => {
-    touched.current = true
     if (busy.current) return
     setError(null)
     if (key === CLEAR) return setTyped('')
@@ -255,7 +258,7 @@ export default function FlavourVending() {
 
         <div ref={rigRef} className="vm-rig">
           {isDesk && <BreakRoom />}
-          <div ref={machineRef} className="vm-machine">
+          <div className="vm-machine">
             {/* The machine's lit sign is the section heading. */}
             <div className="vm-sign">
               <Bulbs />
@@ -369,20 +372,30 @@ export default function FlavourVending() {
               </div>
               <div className="vm-paper-well">
                 <AnimatePresence mode="wait" initial={false}>
-                  {receipt && (
+                  {receipt ? (
                     <motion.div
                       key={receipt}
                       className="vm-paper-feed"
                       initial={reduceMotion ? { opacity: 0 } : { y: '-100%' }}
-                      animate={reduceMotion ? { opacity: 1 } : { y: '0%' }}
+                      animate={reduceMotion ? { opacity: 1 } : PRINT_FEED}
                       exit={
                         reduceMotion
                           ? { opacity: 0, transition: { duration: 0.1 } }
                           : { y: 90, rotate: 7, opacity: 0, transition: { duration: 0.32, ease: 'easeIn' } }
                       }
-                      transition={{ duration: 1.15, ease: [0.3, 0, 0.25, 1] }}
                     >
                       <Receipt slot={BY_CODE[receipt]} />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="guide"
+                      exit={
+                        reduceMotion
+                          ? { opacity: 0, transition: { duration: 0.1 } }
+                          : { y: 40, opacity: 0, transition: { duration: 0.26, ease: 'easeIn' } }
+                      }
+                    >
+                      <VendGuide />
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -407,6 +420,35 @@ export default function FlavourVending() {
 
 function pageFor(slot) {
   return slot.kind === 'bundle' ? `/combos/${slot.item.slug}` : `/flavours/${slot.item.slug}`
+}
+
+/**
+ * The instruction plate on the printer, shown until the first vend: the
+ * enamel "how to use" plate real machines carry, in the order you do it.
+ */
+function VendGuide() {
+  return (
+    <div className="vm-guide">
+      <span className="vm-guide-rivets" aria-hidden="true" />
+      <p className="vm-guide-title">How it works</p>
+      <ol className="vm-guide-steps">
+        <li>
+          <b>Pick a snack</b>
+          <span>Tap any pack behind the glass.</span>
+        </li>
+        <li>
+          <b>Or punch its code</b>
+          <span>
+            {codeRange('single')} for a flavour, {codeRange('bundle')} for a combo.
+          </span>
+        </li>
+        <li>
+          <b>Grab it</b>
+          <span>It drops in the tray, and your receipt prints right here.</span>
+        </li>
+      </ol>
+    </div>
+  )
 }
 
 /** One slot behind the glass: the snack, its coil, and its shelf tag. */

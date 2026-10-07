@@ -673,11 +673,90 @@
   margin: -14px 6px 0 30px;
   padding: 0 12px 14px 4px;
   overflow: hidden;
+  /* Holds the tallest receipt's room (artboard px) from the start, so the
+     first vend -- plate out, receipt in -- does not grow the section and
+     shove the page below it down. */
+  min-height: 646px;
 }
 .vm-paper-feed {
   filter: drop-shadow(0 2.5px 0 var(--vm-ink)) drop-shadow(2.5px 0 0 var(--vm-ink))
     drop-shadow(-2.5px 0 0 var(--vm-ink)) drop-shadow(5px 6px 0 rgb(13 40 24 / 0.85));
   transform-origin: 50% 0;
+  /* Its own layer: the filter is rasterised once and the slower, stepped
+     print only moves the finished bitmap. */
+  will-change: transform;
+}
+
+/* The enamel instruction plate, riveted below the slot until the first vend. */
+.vm-guide {
+  position: relative;
+  margin-top: 22px;
+  padding: 18px 20px 20px;
+  border: 4px solid var(--vm-ink);
+  border-radius: 12px;
+  background: var(--vm-cream);
+  box-shadow: 5px 6px 0 rgb(13 40 24 / 0.85);
+  color: var(--vm-ink);
+  font-family: var(--font-body);
+}
+.vm-guide-rivets {
+  position: absolute;
+  inset: 7px;
+  pointer-events: none;
+  --rivet: radial-gradient(circle, var(--vm-metal) 0 3px, var(--vm-ink) 3px 5px, transparent 5.5px);
+  background:
+    var(--rivet) left top / 12px 12px no-repeat,
+    var(--rivet) right top / 12px 12px no-repeat,
+    var(--rivet) left bottom / 12px 12px no-repeat,
+    var(--rivet) right bottom / 12px 12px no-repeat;
+}
+.vm-guide-title {
+  padding-bottom: 10px;
+  margin: 0 8px 14px;
+  border-bottom: 3px solid var(--vm-ink);
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.1;
+  text-align: center;
+}
+.vm-guide-steps {
+  display: grid;
+  gap: 14px;
+  counter-reset: vm-step;
+}
+.vm-guide-steps li {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  padding-left: 44px;
+  counter-increment: vm-step;
+}
+.vm-guide-steps li::before {
+  content: counter(vm-step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 3px solid var(--vm-ink);
+  border-radius: 50%;
+  background: var(--vm-teal);
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1;
+}
+.vm-guide-steps b {
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+.vm-guide-steps span {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: rgb(13 40 24 / 0.75);
 }
 
 /* ---------- the receipt ---------- */
