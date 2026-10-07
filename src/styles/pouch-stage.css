@@ -1,0 +1,119 @@
+/* ===========================================================================
+   The product-page stage (PouchStage.jsx)
+
+   Grounds torn into bands with pouches standing across the seams. Sized by
+   its host: it fills whatever box it is placed in, and sizes its type off
+   that box's container width, so the host frame must set
+   `container-type: inline-size` (both the combo frame and the flavour frame
+   do).
+   =========================================================================== */
+
+.jni-stage-bands {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+/* Each band runs a little wider than its third so the torn edge of the next
+   one can bite into it. Bands are not stacking contexts, so every pouch sits
+   above every band's colour and can lean across a seam. */
+.jni-stage-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--i) * (100% / var(--n)) - 4%);
+  width: calc(100% / var(--n) + 8%);
+}
+.jni-stage-band-fill.jni-grain {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.jni-stage-band-doodle {
+  position: absolute;
+  width: 24%;
+  opacity: 0.4;
+  pointer-events: none;
+}
+.jni-stage-band-doodle.d-a {
+  top: 16%;
+  left: 62%;
+  rotate: 32deg;
+}
+.jni-stage-band-doodle.d-b {
+  bottom: 22%;
+  left: 12%;
+  rotate: -48deg;
+}
+.jni-stage-band-heat {
+  position: absolute;
+  z-index: 1;
+  top: 6%;
+  left: 50%;
+  translate: -50% 0;
+  white-space: nowrap;
+}
+.jni-stage-pouch {
+  position: absolute;
+  z-index: 2;
+  bottom: 5%;
+  left: 50%;
+  height: 68%;
+  width: auto;
+  max-width: none;
+  translate: -50% 0;
+  filter: drop-shadow(6px 8px 0 rgba(7, 26, 22, 0.45));
+  pointer-events: none;
+}
+/* A narrow stage has no room beside the chillies for "SWEET HEAT"; the
+   chillies alone still read as the scale, and the meter keeps its label for
+   screen readers. */
+@container (max-width: 540px) {
+  .jni-stage-band-heat > span {
+    display: none;
+  }
+}
+
+/* Two of each: the pair stands a step apart in its band, the second pouch
+   behind and up to the right, so both are plainly there. */
+.jni-stage-band[data-pair] .jni-stage-pouch {
+  height: 60%;
+  translate: -74% 0;
+}
+.jni-stage-band[data-pair] .jni-stage-pouch[data-back] {
+  z-index: 1;
+  bottom: 17%;
+  height: 54%;
+  translate: -22% 0;
+  filter: drop-shadow(4px 6px 0 rgba(7, 26, 22, 0.4)) brightness(0.9);
+}
+
+/* One pouch: it is the whole subject, so it stands a little taller, and the
+   doodles -- which have the bands to themselves -- print a little stronger. */
+.jni-stage-bands[data-solo] .jni-stage-pouch {
+  bottom: 7%;
+  height: 66%;
+}
+.jni-stage-bands[data-solo] .jni-stage-band-doodle {
+  width: 30%;
+  opacity: 0.55;
+}
+
+/* The stage as a thumbnail: one stripe per band. */
+.jni-stage-swatch {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+.jni-stage-swatch i {
+  flex: 1 1 0;
+}
+
+@media (max-width: 639px) {
+  /* The chillies alone carry the heat on a narrow band; the meter keeps its
+     own aria-label. */
+  .jni-stage-band-heat > span {
+    display: none;
+  }
+}

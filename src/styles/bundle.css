@@ -44,14 +44,10 @@
   rotate: -1.5deg;
 }
 .jni-box-frame > [role='img'],
-.jni-box-bands,
 .jni-box-photo {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-}
-.jni-box-bands {
-  overflow: hidden;
 }
 .jni-box-photo {
   width: 100%;
@@ -59,79 +55,7 @@
   object-fit: cover;
 }
 
-/* Each band runs a little wider than its third so the torn edge of the next
-   one can bite into it. Bands are not stacking contexts, so every pouch sits
-   above every band's colour and can lean across a seam. */
-.jni-box-band {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: calc(var(--i) * (100% / var(--n)) - 4%);
-  width: calc(100% / var(--n) + 8%);
-}
-.jni-box-band-fill.jni-grain {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-}
-.jni-box-band-doodle {
-  position: absolute;
-  width: 24%;
-  opacity: 0.4;
-  pointer-events: none;
-}
-.jni-box-band-doodle.d-a {
-  top: 16%;
-  left: 62%;
-  rotate: 32deg;
-}
-.jni-box-band-doodle.d-b {
-  bottom: 22%;
-  left: 12%;
-  rotate: -48deg;
-}
-.jni-box-band-heat {
-  position: absolute;
-  z-index: 1;
-  top: 6%;
-  left: 50%;
-  translate: -50% 0;
-  white-space: nowrap;
-}
-.jni-box-pouch {
-  position: absolute;
-  z-index: 2;
-  bottom: 5%;
-  left: 50%;
-  height: 68%;
-  width: auto;
-  max-width: none;
-  translate: -50% 0;
-  filter: drop-shadow(6px 8px 0 rgba(7, 26, 22, 0.45));
-  pointer-events: none;
-}
-/* A narrow stage has no room beside the chillies for "SWEET HEAT"; the
-   chillies alone still read as the scale, and the meter keeps its label for
-   screen readers. */
-@container (max-width: 540px) {
-  .jni-box-band-heat > span {
-    display: none;
-  }
-}
-
-/* Two of each: the pair stands a step apart in its band, the second pouch
-   behind and up to the right, so both are plainly there. */
-.jni-box-band[data-pair] .jni-box-pouch {
-  height: 60%;
-  translate: -74% 0;
-}
-.jni-box-band[data-pair] .jni-box-pouch[data-back] {
-  z-index: 1;
-  bottom: 17%;
-  height: 54%;
-  translate: -22% 0;
-  filter: drop-shadow(4px 6px 0 rgba(7, 26, 22, 0.4)) brightness(0.9);
-}
+/* The bands and pouches themselves are PouchStage's (pouch-stage.css). */
 
 .jni-box-notes {
   position: absolute;
@@ -160,14 +84,6 @@
   .jni-box .jni-box-thumbs {
     margin-top: 34px;
   }
-}
-.jni-box-swatch {
-  display: flex;
-  width: 100%;
-  height: 100%;
-}
-.jni-box-swatch i {
-  flex: 1 1 0;
 }
 
 .jni-box-switch-row {
@@ -491,11 +407,6 @@
   .jni-box-frame {
     rotate: -1deg;
     box-shadow: 8px 10px 0 rgba(0, 0, 0, 0.45);
-  }
-  /* The chillies alone carry the heat on a narrow band; the meter keeps its
-     own aria-label. */
-  .jni-box-band-heat > span {
-    display: none;
   }
   .jni-box-ings > div {
     grid-template-columns: minmax(0, 1fr);

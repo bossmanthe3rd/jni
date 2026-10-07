@@ -16,6 +16,7 @@ import HeatMeter from './HeatMeter'
 import DoodleField from '../ui/DoodleField'
 import { Stars } from '../ui/Primitives'
 import { responsiveImage } from '../../lib/responsiveImage'
+import PouchStage, { StageSwatch, pouchCutout } from './PouchStage'
 
 /**
  * The flavour dossier: a product page's hero, built as one spread.
@@ -63,6 +64,36 @@ const DOODLES = [
   { left: '100%', top: '78%', w: 66, turn: -60 },
   { left: '46%', top: '-11%', w: 38, turn: 16 },
 ]
+
+/*
+ * The opening shot: the combo page's torn-band stage, in three tones of this
+ * one pouch -- a mid tone, the pouch's bright print colour, then a deep tone.
+ * None of the three is the page's own ground, so the frame never melts into
+ * the flood around it, and the pouch stands in the bright middle band.
+ */
+function flavourBands(product, palette) {
+  const doodle = (shape) => `/assets/doodles/pack/${product.slug}-${shape}.svg`
+  return [
+    {
+      key: 'mid',
+      ground: `color-mix(in oklab, ${palette.ground} 55%, ${palette.fill})`,
+      doodles: [doodle('chilli-half'), doodle('seed')],
+    },
+    {
+      key: 'bright',
+      ground: palette.fill,
+      doodles: [doodle('chilli-slice'), doodle('pepper-section')],
+      pouches: [{ key: product.slug, src: pouchCutout(product.slug) }],
+      tilt: -4,
+    },
+    {
+      key: 'deep',
+      ground: `color-mix(in oklab, ${palette.ground} 45%, ${palette.line})`,
+      doodles: [doodle('chilli-whole'), doodle('chilli-half')],
+      heat: product,
+    },
+  ]
+}
 
 /* Three tiers reach the free-shipping line in one click without turning the
    panel into a price list. Any other quantity is still available in the cart
@@ -125,10 +156,13 @@ export default function FlavourDossier({ product, ctaRef, onQtyChange }) {
   const chilli = `/assets/doodles/pack/${product.slug}-chilli-whole.svg`
 
   const gallery = product.gallery || []
-  const current = gallery[shot] || gallery[0]
-  /* The notes and arrows point at features of the POUCH. On a desk shot or a
-     flat-lay they would be pointing at nothing. */
-  const onPackShot = shot === 0
+  // Shot 0 is the stage; 1..n are the photographs.
+  const bands = palette ? flavourBands(product, palette) : null
+  const slides = gallery.length + (bands ? 1 : 0)
+  const photo = bands ? (shot > 0 ? gallery[shot - 1] : null) : gallery[shot] || gallery[0]
+  /* The notes and arrows point at features of the POUCH, which stands on the
+     stage. On a desk shot or a flat-lay they would be pointing at nothing. */
+  const onPackShot = !photo
 
   // The order Buy now places: what is in the crate already, plus this.
   const order = crateSubtotal + Number(product.price) * qty
@@ -281,7 +315,7 @@ export default function FlavourDossier({ product, ctaRef, onQtyChange }) {
     const card = el.firstElementChild
     if (!card) return
     const i = Math.round(el.scrollLeft / (card.offsetWidth + 14))
-    if (i !== shot) setShot(Math.max(0, Math.min(gallery.length - 1, i)))
+    if (i !== shot) setShot(Math.max(0, Math.min(slides - 1, i)))
   }
 
   const land = reduce
@@ -348,18 +382,31 @@ export default function FlavourDossier({ product, ctaRef, onQtyChange }) {
                 scaleY: { duration: 0.6, times: [0, 0.55, 0.72, 0.88, 1] },
               }}
             >
-              <motion.img
-                key={current?.src}
-                // Hidden below 1024px, where the swipe strip stands in for it --
-                // but an eager <img> fetches even when hidden, so `sizes` asks
-                // phones for the smallest copy rather than the 1254px original.
-                {...responsiveImage(current?.src, '(min-width: 1024px) min(42vw, 500px), 1px')}
-                alt={current?.alt || `${product.name} pack`}
-                className="jni-dossier-photo"
-                initial={reduce ? false : { opacity: 0, scale: 1.02 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              />
+              {photo ? (
+                <motion.img
+                  key={photo.src}
+                  // Hidden below 1024px, where the swipe strip stands in for it --
+                  // but an eager <img> fetches even when hidden, so `sizes` asks
+                  // phones for the smallest copy rather than the 1254px original.
+                  {...responsiveImage(photo.src, '(min-width: 1024px) min(42vw, 500px), 1px')}
+                  alt={photo.alt || `${product.name} pack`}
+                  className="jni-dossier-photo"
+                  initial={reduce ? false : { opacity: 0, scale: 1.02 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                />
+              ) : (
+                <div className="jni-dossier-stagebox" role="img" aria-label={`${product.name} pack`}>
+                  {/* The pouch drops once the frame has landed. */}
+                  <PouchStage
+                    bands={bands}
+                    solo
+                    delay={0.5}
+                    sizes="(min-width: 1024px) min(20vw, 260px), 1px"
+                    reduce={reduce}
+                  />
+                </div>
+              )}
 
               <div className="jni-dossier-annotations" data-off={onPackShot ? undefined : ''}>
                 <svg
@@ -378,41 +425,69 @@ export default function FlavourDossier({ product, ctaRef, onQtyChange }) {
             </motion.div>
           </div>
 
-          {gallery.length > 1 && (
+          {slides > 1 && (
             <div className="jni-dossier-thumbs">
-              {gallery.map((img, i) => (
+              {bands && (
                 <button
-                  key={img.thumb}
                   type="button"
-                  aria-label={`View image ${i + 1} of ${gallery.length}`}
-                  aria-current={i === shot}
-                  style={{ '--tilt': `${THUMB_TILTS[i % THUMB_TILTS.length]}deg` }}
-                  onClick={() => setShot(i)}
+                  aria-label={`View image 1 of ${slides}`}
+                  aria-current={shot === 0}
+                  style={{ '--tilt': `${THUMB_TILTS[0]}deg` }}
+                  onClick={() => setShot(0)}
                 >
-                  <img src={img.thumb} alt="" loading="lazy" decoding="async" />
+                  <StageSwatch grounds={bands.map((b) => b.ground)} />
                 </button>
-              ))}
+              )}
+              {gallery.map((img, i) => {
+                const n = i + (bands ? 1 : 0)
+                return (
+                  <button
+                    key={img.thumb}
+                    type="button"
+                    aria-label={`View image ${n + 1} of ${slides}`}
+                    aria-current={n === shot}
+                    style={{ '--tilt': `${THUMB_TILTS[n % THUMB_TILTS.length]}deg` }}
+                    onClick={() => setShot(n)}
+                  >
+                    <img src={img.thumb} alt="" loading="lazy" decoding="async" />
+                  </button>
+                )
+              })}
             </div>
           )}
 
           {/* Phones: the whole gallery as a swipe strip, next photo peeking. */}
           <div className="jni-dossier-strip" ref={stripRef} onScroll={onStripScroll}>
-            {gallery.map((img, i) => (
-              <div key={img.src} className="jni-dossier-strip-card" style={{ '--tilt': i % 2 ? '2deg' : '-2deg' }}>
-                <img
-                  {...responsiveImage(img.src, 'min(78vw, 340px)')}
-                  alt={img.alt}
-                  loading={i === 0 ? 'eager' : 'lazy'}
-                  fetchpriority={i === 0 ? 'high' : undefined}
-                  decoding="async"
-                />
+            {bands && (
+              <div
+                className="jni-dossier-strip-card jni-dossier-strip-stage"
+                style={{ '--tilt': '-2deg' }}
+                role="img"
+                aria-label={`${product.name} pack`}
+              >
+                {/* Below 1024px this is the shot on show, so the drop plays here. */}
+                <PouchStage bands={bands} solo delay={0.3} sizes="min(30vw, 160px)" reduce={reduce} />
               </div>
-            ))}
+            )}
+            {gallery.map((img, i) => {
+              const n = i + (bands ? 1 : 0)
+              return (
+                <div key={img.src} className="jni-dossier-strip-card" style={{ '--tilt': n % 2 ? '2deg' : '-2deg' }}>
+                  <img
+                    {...responsiveImage(img.src, 'min(78vw, 340px)')}
+                    alt={img.alt}
+                    loading={n === 0 ? 'eager' : 'lazy'}
+                    fetchpriority={n === 0 ? 'high' : undefined}
+                    decoding="async"
+                  />
+                </div>
+              )
+            })}
           </div>
-          {gallery.length > 1 && (
+          {slides > 1 && (
             <div className="jni-dossier-dots" aria-hidden="true">
-              {gallery.map((img, i) => (
-                <span key={img.src} data-on={i === shot ? '' : undefined} />
+              {Array.from({ length: slides }, (_, i) => (
+                <span key={i} data-on={i === shot ? '' : undefined} />
               ))}
             </div>
           )}

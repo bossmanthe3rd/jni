@@ -26,8 +26,8 @@ export function boxPouches(bundle) {
   )
 }
 
-/** The cut-out pouch, background removed, that the combo pages stand up. */
-export const pouchCutout = (slug) => `/assets/hero/pouch-${slug}.webp`
+/** The cut-out pouch, background removed. Lives with the stage that stands it up. */
+export { pouchCutout } from '../product/PouchStage'
 
 /** The cart line a bundle becomes, the same shape the combos index adds. */
 export const toCartBundle = (bundle) => ({ ...bundle, selectedWeight: bundle.includes.join(', ') })

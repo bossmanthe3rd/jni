@@ -777,6 +777,20 @@
   object-fit: cover;
   border-radius: inherit;
 }
+/* The opening stage (PouchStage) fills the frame the photographs sit in, and
+   sizes its heat meter off the frame's width. */
+.jni-dossier-frame,
+.jni-dossier-strip-stage {
+  container-type: inline-size;
+}
+.jni-dossier-stagebox {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.jni-dossier-strip-stage {
+  position: relative;
+}
 
 /* Sized to the square photograph, which is the box the arrow coordinates were
    drawn against. */

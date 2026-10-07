@@ -13,12 +13,12 @@ import {
 import { launchOffer } from '../../data/site'
 import { useCart } from '../../store/cartStore'
 import { useCrateSubtotal } from '../checkout/cartTotals'
-import HeatMeter from '../product/HeatMeter'
 import DoodleField from '../ui/DoodleField'
 import { Stars } from '../ui/Primitives'
 import LaunchBanner from '../promo/LaunchBanner'
 import { boxFlavours, pouchCutout, toCartBundle } from './boxContents'
 import { responsiveImage } from '../../lib/responsiveImage'
+import PouchStage, { StageSwatch } from '../product/PouchStage'
 
 /**
  * The combo page's hero: the flavour dossier's spread, for a box.
@@ -38,7 +38,6 @@ import { responsiveImage } from '../../lib/responsiveImage'
 
 const FOREST = '#071a16'
 const TIERS = [1, 2, 3]
-const TILTS = [-7, 1.5, 8]
 const THUMB_TILTS = [-5, 3, -2, 4]
 const BURST = [
   [-70, -64, -140],
@@ -51,24 +50,6 @@ const BURST = [
   [8, 56, 130],
 ]
 
-/* A torn left edge for the second and third bands, as a clip-path. Seeded, so
-   it never reshuffles between renders; x runs 0-7% of the band's width. */
-function tornEdge(seed) {
-  let s = seed
-  const rnd = () => {
-    s = (s * 16807) % 2147483647
-    return s / 2147483647
-  }
-  const pts = []
-  for (let y = 0; y <= 100; y += 3 + rnd() * 4) {
-    const deep = rnd() > 0.85
-    pts.push(`${(deep ? 6 + rnd() * 2 : 1 + rnd() * 3).toFixed(1)}% ${Math.min(100, y).toFixed(1)}%`)
-  }
-  pts.push('2% 100%')
-  return `polygon(100% 0, ${pts.join(', ')}, 100% 100%)`
-}
-const EDGES = [null, tornEdge(29), tornEdge(71)]
-
 const rupee = (n) => `₹${Number(n).toLocaleString('en-IN')}`
 
 /** "FLIPO's Flavour Trio" -> "TRIO": the box without the brand. */
@@ -78,73 +59,21 @@ const bigWord = (bundle) =>
     .replace(/^Flavour\s+/i, '')
     .toUpperCase()
 
-/* The stage in miniature, for the first thumbnail: three stripes. */
-function StageSwatch({ flavours }) {
-  return (
-    <span className="jni-box-swatch" aria-hidden="true">
-      {flavours.map(({ product }) => (
-        <i key={product.slug} style={{ backgroundColor: packPalettes[product.slug]?.ground }} />
-      ))}
-    </span>
-  )
-}
-
-function Stage({ bundle, flavours, reduce }) {
-  return (
-    <div className="jni-box-bands">
-      {flavours.map(({ product, quantity }, i) => {
-        const pal = packPalettes[product.slug] || {}
-        const chilli = `/assets/doodles/pack/${product.slug}-chilli-whole.svg`
-        return (
-          <div
-            key={product.slug}
-            className="jni-box-band"
-            data-pair={quantity > 1 ? '' : undefined}
-            style={{ '--i': i, '--n': flavours.length }}
-          >
-            <div
-              className="jni-box-band-fill jni-grain"
-              style={{ backgroundColor: pal.ground, clipPath: EDGES[i] || undefined }}
-            >
-              <img src={chilli} alt="" className="jni-box-band-doodle d-a" />
-              <img src={chilli} alt="" className="jni-box-band-doodle d-b" />
-              <HeatMeter
-                product={product}
-                flavour={product.slug}
-                className="jni-box-band-heat"
-                labelClassName="text-foam/80"
-              />
-            </div>
-
-            {/* Back to front: the second pouch of a pair stands behind. */}
-            {Array.from({ length: quantity }, (_, copy) => quantity - 1 - copy).map((copy) => (
-              <motion.img
-                key={`${bundle.slug}-${product.slug}-${copy}`}
-                {...responsiveImage(pouchCutout(product.slug), '(min-width: 1024px) 200px, 140px')}
-                alt=""
-                className="jni-box-pouch"
-                data-back={copy > 0 ? '' : undefined}
-                style={{ transformOrigin: '50% 100%' }}
-                initial={reduce ? false : { y: '70%', opacity: 0, rotate: 0, scaleY: 1 }}
-                animate={{
-                  y: 0,
-                  opacity: 1,
-                  rotate: TILTS[i % TILTS.length] + (copy ? 7 : 0),
-                  scaleY: reduce ? 1 : [1, 1, 0.94, 1.02, 1],
-                }}
-                transition={{
-                  delay: 0.18 + i * 0.12 + (copy ? 0 : 0.06),
-                  duration: 0.62,
-                  ease: [0.3, 0.9, 0.35, 1],
-                  scaleY: { duration: 0.62, times: [0, 0.55, 0.72, 0.88, 1] },
-                }}
-              />
-            ))}
-          </div>
-        )
-      })}
-    </div>
-  )
+/** The box's stage: one band per flavour, mildest first, each pouch in its own colour. */
+function boxBands(bundle, flavours) {
+  return flavours.map(({ product, quantity }) => {
+    const chilli = `/assets/doodles/pack/${product.slug}-chilli-whole.svg`
+    return {
+      key: product.slug,
+      ground: packPalettes[product.slug]?.ground,
+      doodles: [chilli, chilli],
+      heat: product,
+      pouches: Array.from({ length: quantity }, (_, copy) => ({
+        key: `${bundle.slug}-${product.slug}-${copy}`,
+        src: pouchCutout(product.slug),
+      })),
+    }
+  })
 }
 
 export default function BundleDossier({ bundle, ctaRef, onQtyChange }) {
@@ -164,6 +93,7 @@ export default function BundleDossier({ bundle, ctaRef, onQtyChange }) {
   const wasFree = useRef(null)
 
   const flavours = boxFlavours(bundle)
+  const bands = boxBands(bundle, flavours)
   const accent = bundle.theme?.accent || '#f3c63b'
   const gallery = bundle.gallery || []
   // Shot 0 is the stage; 1..n are the studio photographs.
@@ -294,7 +224,11 @@ export default function BundleDossier({ bundle, ctaRef, onQtyChange }) {
                 />
               ) : (
                 <div role="img" aria-label={`The ${flavours.length} flavours in ${bundle.name}, mildest first`}>
-                  <Stage bundle={bundle} flavours={flavours} reduce={reduce} />
+                  <PouchStage
+                    bands={bands}
+                    sizes="(min-width: 1024px) 200px, 140px"
+                    reduce={reduce}
+                  />
                 </div>
               )}
 
@@ -322,7 +256,7 @@ export default function BundleDossier({ bundle, ctaRef, onQtyChange }) {
                 style={{ '--tilt': `${THUMB_TILTS[0]}deg` }}
                 onClick={() => setShot(0)}
               >
-                <StageSwatch flavours={flavours} />
+                <StageSwatch grounds={bands.map((b) => b.ground)} />
               </button>
               {gallery.map((img, i) => (
                 <button
