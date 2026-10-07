@@ -210,9 +210,17 @@
     font-weight: 400;
     line-height: 0.92;
     letter-spacing: 0.01em;
-    -webkit-text-stroke: 0.075em var(--bubble-stroke, #071a16);
+    -webkit-text-stroke: var(--bubble-stroke-w, 0.075em) var(--bubble-stroke, #071a16);
     paint-order: stroke fill;
-    text-shadow: 0.055em 0.07em 0 var(--bubble-stroke, #071a16);
+    text-shadow: var(--bubble-shadow-x, 0.055em) var(--bubble-shadow-y, 0.07em) 0
+      var(--bubble-stroke, #071a16);
+  }
+  /* A lighter ring for headings set big on a busy ground (the flavour stage):
+     the same letters, about 40% less outline and drop. */
+  .bubble-title--slim {
+    --bubble-stroke-w: 0.045em;
+    --bubble-shadow-x: 0.032em;
+    --bubble-shadow-y: 0.042em;
   }
 
   .img-skeleton {
@@ -229,6 +237,37 @@
 @layer utilities {
   .rounded-pill {
     border-radius: 999px;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Flavour stage pack shot (FlavourScrollStage)
+
+   Sized off the screen's height as well as its width: the panel is pinned at
+   one screen tall and has to hold the copy, the shot and the CTA under it, so
+   on a short phone the shot gives way before anything is pushed out. The
+   subtracted rem is everything else in the stacked panel -- header, padding,
+   copy, CTA, rail -- measured at 360x640, the tightest screen in the matrix.
+   The combo shot is 3:2, so its width may run 1.5x the height it is given.
+   --------------------------------------------------------------------------- */
+.fs-media {
+  --fs-room: calc(100svh - 29rem);
+  width: max(7rem, min(62vw, var(--fs-room), 20rem));
+}
+.fs-media--combo {
+  width: max(10rem, min(86vw, var(--fs-room) * 1.5, 30rem));
+}
+@media (min-width: 768px) {
+  /* Side by side: the copy column takes 46%, so the shot gets what is left
+     beside it, and the CTA under it is all that shares its height. The room
+     also covers the column's parallax drift, so at the far end of the track
+     the CTA still clears the heat rail (checked at 1366x768). */
+  .fs-media {
+    --fs-room: calc(100vh - 24rem);
+    width: max(9rem, min(34vw, var(--fs-room), 32rem));
+  }
+  .fs-media--combo {
+    width: max(14rem, min(40vw, var(--fs-room) * 1.5, 42rem));
   }
 }
 

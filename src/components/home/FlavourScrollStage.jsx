@@ -284,9 +284,10 @@ export default function FlavourScrollStage() {
 
   // The cream page pours back in as the pin releases.
 
-  // Pack shot parallax, opposite the doodles so the two planes separate. Only
-  // at md and up: in the stacked layout the offset would ride over the CTA.
-  const packDrift = reduce || !isDesktop ? 0 : 42
+  // Pack shot parallax, opposite the doodles so the two planes separate. It
+  // moves the shot and the CTA under it together. Only at md and up: stacked,
+  // the drift would push the column into the copy above it.
+  const packDrift = reduce || !isDesktop ? 0 : 24
   const packY = useTransform(scrollYProgress, [0, 1], [-packDrift, packDrift])
 
   const slots = useMemo(() => {
@@ -412,7 +413,7 @@ export default function FlavourScrollStage() {
                   // The outline takes the chapter's own pouch colour, so the
                   // name sits in the same set as the crimp and doodles.
                   stroke={stage.outline ?? palette.outline ?? palette.fill}
-                  className="text-[clamp(1.95rem,8.4vw,2.8rem)] leading-[0.88] sm:text-6xl lg:text-[5.2rem]"
+                  className="bubble-title--slim text-[clamp(1.95rem,8.4vw,2.8rem)] leading-[0.88] sm:text-6xl lg:text-[5.2rem]"
                 >
                   {stage.title ?? product.shortName}
                 </BrandHeading>
@@ -423,65 +424,75 @@ export default function FlavourScrollStage() {
                 >
                   {stage.note}
                 </p>
-
-                <div className="mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:mt-6 md:justify-start">
-                  <Link to={href} className="jni-btn" aria-label={`Nibble now: ${product.name}`}>
-                    Nibble now
-                  </Link>
-                  <p className="text-sm font-black" style={{ color: FOAM }}>
-                    {stage.bundle && product.originalPrice && (
-                      <s className="mr-2 font-bold opacity-60">&#8377;{product.originalPrice}</s>
-                    )}
-                    &#8377;{product.price}
-                    <span
-                      className="ml-1.5 text-xs font-bold uppercase tracking-[0.14em]"
-                      style={{ color: palette.seed }}
-                    >
-                      / {product.weight}
-                    </span>
-                  </p>
-                </div>
               </motion.div>
             </AnimatePresence>
           </div>
 
-          {/* The combo's shot is a landscape spread of all six packs, so its
+          {/* The shot, with the CTA and price set under it. The column rides the
+              parallax as one, so the button never slides under the pack.
+
+              The combo's shot is a landscape spread of all six packs, so its
               frame is wider rather than cropping packs off the ends. */}
           <motion.div
-            className={`mt-6 shrink-0 md:mt-0 ${
-              stage.bundle
-                ? 'w-[72vw] max-w-[17rem] sm:max-w-[24rem] md:w-[40vw] md:max-w-[32rem]'
-                : 'w-[40vw] max-w-[10.5rem] sm:w-[46vw] sm:max-w-[15rem] md:w-[32vw] md:max-w-[22rem]'
-            }`}
+            className="mt-5 flex shrink-0 flex-col items-center md:mt-0"
             style={{ y: packY }}
           >
+            <div className={`fs-media ${stage.bundle ? 'fs-media--combo' : ''}`}>
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={stage.slug}
+                  initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.9, rotate: 6 }}
+                  animate={reduce ? { opacity: 1 } : { opacity: 1, scale: 1, rotate: -2.5 }}
+                  exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.92, rotate: -9 }}
+                  transition={{ duration: reduce ? 0.15 : 0.4, ease: [0.22, 1, 0.36, 1] }}
+                  className="overflow-hidden rounded-[26px] border-[4px] sm:rounded-[32px]"
+                  style={{
+                    borderColor: FOAM,
+                    boxShadow: `9px 10px 0 ${palette.line}`,
+                  }}
+                >
+                  <Link to={href} aria-label={`Nibble now: ${product.name}`} className="block">
+                    <img
+                      {...responsiveImage(
+                        stage.pack,
+                        stage.bundle
+                          ? '(min-width: 768px) min(40vw, 672px), min(86vw, 480px)'
+                          : '(min-width: 768px) min(34vw, 512px), min(62vw, 320px)'
+                      )}
+                      alt={stage.packAlt}
+                      loading="lazy"
+                      decoding="async"
+                      className={`block w-full object-cover ${stage.bundle ? 'aspect-[3/2]' : 'aspect-square'}`}
+                    />
+                  </Link>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={stage.slug}
-                initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.9, rotate: 6 }}
-                animate={reduce ? { opacity: 1 } : { opacity: 1, scale: 1, rotate: -2.5 }}
-                exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.92, rotate: -9 }}
-                transition={{ duration: reduce ? 0.15 : 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="overflow-hidden rounded-[26px] border-[4px] sm:rounded-[32px]"
-                style={{
-                  borderColor: FOAM,
-                  boxShadow: `9px 10px 0 ${palette.line}`,
-                }}
+                className="mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:mt-6"
+                initial={reduce ? { opacity: 0 } : { opacity: 0, y: 14 }}
+                animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0 }}
+                exit={reduce ? { opacity: 0 } : { opacity: 0, y: -10 }}
+                transition={{ duration: reduce ? 0.15 : 0.3, ease: [0.22, 1, 0.36, 1] }}
               >
-                <Link to={href} aria-label={`Nibble now: ${product.name}`} className="block">
-                  <img
-                    {...responsiveImage(
-                      stage.pack,
-                      stage.bundle
-                        ? '(min-width: 768px) 512px, (min-width: 640px) 384px, 272px'
-                        : '(min-width: 768px) 352px, (min-width: 640px) 240px, 168px'
-                    )}
-                    alt={stage.packAlt}
-                    loading="lazy"
-                    decoding="async"
-                    className={`block w-full object-cover ${stage.bundle ? 'aspect-[3/2]' : 'aspect-square'}`}
-                  />
+                <Link to={href} className="jni-btn" aria-label={`Nibble now: ${product.name}`}>
+                  Nibble now
                 </Link>
+                <p className="text-sm font-black" style={{ color: FOAM }}>
+                  {stage.bundle && product.originalPrice && (
+                    <s className="mr-2 font-bold opacity-60">&#8377;{product.originalPrice}</s>
+                  )}
+                  &#8377;{product.price}
+                  <span
+                    className="ml-1.5 text-xs font-bold uppercase tracking-[0.14em]"
+                    style={{ color: palette.seed }}
+                  >
+                    / {product.weight}
+                  </span>
+                </p>
               </motion.div>
             </AnimatePresence>
           </motion.div>
