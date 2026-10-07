@@ -75,14 +75,10 @@ function ReviewCard({ review, index }) {
       className="flex h-full flex-col rounded-[22px] border-[3px] border-ink bg-cream p-5 shadow-doodle"
       style={{ transform: `rotate(${CARD_TILT[index % CARD_TILT.length]}deg)` }}
     >
-      {/* The brand's own drawn star, in sunshine. This row used to render
-          lucide's geometric star in a blue that appears nowhere else on the
-          site, while the hand-drawn StarDoodle was used as heading ornament
-          either side of the title -- the drawn asset decorating and the stock
-          icon carrying the actual rating. */}
+      {/* The brand's own drawn star, in the site's star colour. */}
       <div className="mb-3 flex items-center gap-1">
         {[0, 1, 2, 3, 4].map((i) => (
-          <StarDoodle key={i} fill="#F3C63B" className="h-4 w-4" />
+          <StarDoodle key={i} className="h-4 w-4" />
         ))}
       </div>
       <p className="flex-1 text-sm font-bold leading-6 text-ink">&ldquo;{review.text}&rdquo;</p>

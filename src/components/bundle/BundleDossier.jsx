@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal, flushSync } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useAnimationControls, useReducedMotion } from 'framer-motion'
-import { ArrowRight, Star } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { packPalettes } from '../icons/PackDoodles'
 import {
   FREE_SHIPPING_THRESHOLD,
@@ -15,6 +15,7 @@ import { useCart } from '../../store/cartStore'
 import { useCrateSubtotal } from '../checkout/cartTotals'
 import HeatMeter from '../product/HeatMeter'
 import DoodleField from '../ui/DoodleField'
+import { Stars } from '../ui/Primitives'
 import LaunchBanner from '../promo/LaunchBanner'
 import { boxFlavours, pouchCutout, toCartBundle } from './boxContents'
 import { responsiveImage } from '../../lib/responsiveImage'
@@ -353,11 +354,7 @@ export default function BundleDossier({ bundle, ctaRef, onQtyChange }) {
               )}
               {bundle.rating && (
                 <span className="jni-dossier-rating">
-                  <span className="flex items-center gap-0.5" style={{ color: accent }}>
-                    {[0, 1, 2, 3, 4].map((i) => (
-                      <Star key={i} size={14} fill="currentColor" strokeWidth={0} />
-                    ))}
-                  </span>
+                  <Stars value={bundle.rating.value} size={14} />
                   {bundle.rating.value} <i>({bundle.rating.count} reviews)</i>
                 </span>
               )}

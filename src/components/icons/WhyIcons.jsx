@@ -100,13 +100,13 @@ export function BrainIcon({ className = '' }) {
   )
 }
 
-/** Outlined 5-point star (teal fill) used as a scattered accent. */
-export function StarDoodle({ className = '', fill = '#4DB8AE' }) {
+/** Outlined 5-point star, in the site's star colour unless told otherwise. */
+export function StarDoodle({ className = '', fill = 'var(--color-star)' }) {
   return (
     <svg className={className} viewBox="0 0 48 48" aria-hidden="true">
       <path
         d="M24 2 28.8 16.4 44 18.2 32.4 28 35.2 44 24 36.2 12.8 44 15.6 28 4 18.2 19.2 16.4Z"
-        fill={fill}
+        style={{ fill }}
         stroke={K}
         strokeWidth="2.8"
         strokeLinejoin="round"

@@ -558,8 +558,11 @@ body:has(.jni-edge-last) .jni-footer-lip {
 }
 .jni-reviews-stars {
   display: block;
-  color: #e85d4c;
+  color: var(--color-star);
   font-size: 20px;
+  /* The site's star keyline, on the glyph. */
+  -webkit-text-stroke: 1px var(--color-star-line);
+  paint-order: stroke fill;
 }
 .jni-reviews-stars > span {
   display: inline-block;

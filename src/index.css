@@ -49,6 +49,10 @@
   --color-flavor-jalapeno: #77d21c;
   --color-flavor-sweetchilli: #ef3f23;
   --color-flavor-peripiri: #9d1636;
+  /* Every star on the site -- ratings and decoration alike -- is brand teal,
+     always under an ink keyline so it holds on cream, yellow and the reds. */
+  --color-star: #4db8ae;
+  --color-star-line: #071a16;
   --color-text-dark: #0d2818;
   --color-text-light: #f5f0dc;
   --color-border: #0d2818;

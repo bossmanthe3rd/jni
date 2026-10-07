@@ -841,7 +841,7 @@ function HeroCopy({ slide, stage, palette, reduceMotion, onScreen = false }) {
               </span>
             </p>
             <p className="flex items-center gap-2 text-sm font-black" style={{ color: INK }}>
-              <Stars value={slide.product.rating.value} color={palette.line} size={13} />
+              <Stars value={slide.product.rating.value} size={13} />
               <span className="sr-only">
                 Rated {slide.product.rating.value} out of 5 from {slide.product.rating.count} reviews
               </span>
@@ -868,7 +868,7 @@ function PriceNote({ product }) {
         <span>{product.weight}</span>
       </p>
       <p className="hero-price-note-rating">
-        <Stars value={product.rating.value} color={INK} size={15} />
+        <Stars value={product.rating.value} size={15} />
         <span className="sr-only">
           Rated {product.rating.value} out of 5 from {product.rating.count} reviews
         </span>

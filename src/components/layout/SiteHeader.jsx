@@ -357,7 +357,7 @@ export default function SiteHeader() {
                 {Array.from({ length: TICKER_RUN }, (_, i) => (
                   <span key={i} className="flex items-center gap-3 whitespace-nowrap px-3">
                     {ticker.text}
-                    <StarDoodle className="h-2.5 w-2.5 shrink-0" fill={ticker.textColor} />
+                    <StarDoodle className="h-2.5 w-2.5 shrink-0" />
                   </span>
                 ))}
               </div>

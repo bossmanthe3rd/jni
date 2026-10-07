@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 
 // Resolved from the live bundle's minified constants
 const INK = '#071A16'
-const SUNSHINE = '#F3C63B'
 const TEAL = '#4DB8AE'
 export const CORAL = '#E85D4C'
 
@@ -24,10 +23,17 @@ export function BrandHeading({
   )
 }
 
-/** 8-point star used either side of section headings. */
-export function Sparkle({ className = '', color = SUNSHINE }) {
+/** 8-point star used either side of section headings. Star colour by default. */
+export function Sparkle({ className = '', color = 'var(--color-star)' }) {
   return (
-    <svg className={className} viewBox="0 0 48 48" fill={color} aria-hidden="true">
+    <svg
+      className={className}
+      viewBox="0 0 48 48"
+      style={{ fill: color, stroke: 'var(--color-star-line)' }}
+      strokeWidth="2.4"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d="M24 2l3.2 12.4L38 8.5 30.4 18 46 22 30.4 26 38 35.5 27.2 29.6 24 46 20.8 29.6 10 35.5 17.6 26 2 22 17.6 18 10 8.5 20.8 14.4Z" />
     </svg>
   )
@@ -145,12 +151,28 @@ export function QtyStepper({ qty, onChange, className = '', size = 'md' }) {
   )
 }
 
-/** Star rating row. */
-export function Stars({ value = 5, className = '', color = '#1D4ED8', size = 12 }) {
+/**
+ * Star rating row: the one rating star on the site. Filled stars take the star
+ * colour, and every star -- filled or not -- carries the ink keyline, so the
+ * row reads on the cream wall and on a flavour's red alike. Colour goes in as
+ * style, not as attributes: SVG presentation attributes do not resolve var().
+ */
+export function Stars({ value = 5, className = '', size = 12 }) {
   return (
     <span className={`inline-flex items-center gap-0.5 ${className}`} aria-hidden="true">
       {[0, 1, 2, 3, 4].map((i) => (
-        <svg key={i} width={size} height={size} viewBox="0 0 24 24" fill={i < Math.round(value) ? color : 'none'} stroke={color} strokeWidth="2">
+        <svg
+          key={i}
+          width={size}
+          height={size}
+          viewBox="0 0 24 24"
+          style={{
+            fill: i < Math.round(value) ? 'var(--color-star)' : 'none',
+            stroke: 'var(--color-star-line)',
+          }}
+          strokeWidth="1.8"
+          strokeLinejoin="round"
+        >
           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.77 5.82 22 7 14.14 2 9.27l6.91-1.01L12 2z" />
         </svg>
       ))}
