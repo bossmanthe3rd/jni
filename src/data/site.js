@@ -219,7 +219,6 @@ export const legalBusinessDetails = {
   address:
     '296, Lake Point Tower Ave, Block C, AECS Layout, Begur, Bangalore South, Bangalore – 560068, Karnataka, India',
   email: 'nibble@justnibbleit.in',
-  supportEmail: 'cravings@justnibbleit.in',
   phone: '+91 9652336777',
 }
 

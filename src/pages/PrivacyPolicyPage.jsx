@@ -1,4 +1,7 @@
 import LegalLayout, { LegalHeading, LegalList } from '../components/layout/LegalLayout'
+import { legalBusinessDetails } from '../data/site'
+
+const { email } = legalBusinessDetails
 
 const FAQ = [
   {
@@ -116,7 +119,7 @@ export default function PrivacyPolicyPage() {
           'Raise a complaint about how your information is handled',
         ]}
       />
-      <p>To make a request, contact us at cravings@justnibbleit.in.</p>
+      <p>To make a request, contact us at {email}.</p>
 
       <LegalHeading>7. How Long We Keep Your Information</LegalHeading>
       <p>
@@ -155,7 +158,7 @@ export default function PrivacyPolicyPage() {
             ) : (
               <p>
                 Absolutely. You can opt out of promotional communications or contact us at{' '}
-                <strong>cravings@justnibbleit.in</strong>.
+                <strong>{email}</strong>.
               </p>
             )}
           </div>
@@ -168,8 +171,8 @@ export default function PrivacyPolicyPage() {
         <p className="font-bold text-black">Saksham Srivastava</p>
         <p>
           Email:{' '}
-          <a href="mailto:cravings@justnibbleit.in" className="text-teal hover:underline">
-            cravings@justnibbleit.in
+          <a href={`mailto:${email}`} className="text-teal hover:underline">
+            {email}
           </a>
         </p>
         <p>Phone: +91 9652336777</p>

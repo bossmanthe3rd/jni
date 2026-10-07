@@ -82,14 +82,13 @@ function CrimpEdge({ className = '', fill = '#F3C63B' }) {
  * for first, so it sits with the columns rather than buried on /contact.
  */
 function FooterContact() {
-  const { entity, address, email, supportEmail, phone } = legalBusinessDetails
+  const { entity, address, email, phone } = legalBusinessDetails
   const rows = [
     {
       Icon: Mail,
       label: 'Write to us',
       items: [
         { text: email, href: `mailto:${email}` },
-        { text: supportEmail, href: `mailto:${supportEmail}` },
       ],
     },
     {

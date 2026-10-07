@@ -1,5 +1,8 @@
 import { Link } from 'react-router-dom'
 import LegalLayout, { LegalHeading, LegalList } from '../components/layout/LegalLayout'
+import { legalBusinessDetails } from '../data/site'
+
+const { email } = legalBusinessDetails
 
 export default function RefundPolicyPage() {
   return (
@@ -32,8 +35,8 @@ export default function RefundPolicyPage() {
       <LegalHeading>3. How to request a refund</LegalHeading>
       <p>
         Email{' '}
-        <a className="font-black text-ink hover:underline" href="mailto:cravings@justnibbleit.in">
-          cravings@justnibbleit.in
+        <a className="font-black text-ink hover:underline" href={`mailto:${email}`}>
+          {email}
         </a>{' '}
         with order ID, payment ID (if available), photos of the issue, and your registered phone
         number. We aim to respond within 2 business days.

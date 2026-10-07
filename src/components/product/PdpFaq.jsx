@@ -204,7 +204,7 @@ export function FaqChat({ subject, faqs, accent, avatar, buyName, payable, onBuy
   const waiting = faqs.filter((f) => !asked.includes(f.id))
 
   const instagram = socialLinks.find((s) => s.label === 'Instagram')
-  const email = legalBusinessDetails.supportEmail
+  const email = legalBusinessDetails.email
   const phone = legalBusinessDetails.phone
 
   return (

@@ -1,5 +1,8 @@
 import { Link } from 'react-router-dom'
 import LegalLayout, { LegalHeading, LegalList } from '../components/layout/LegalLayout'
+import { legalBusinessDetails } from '../data/site'
+
+const { email } = legalBusinessDetails
 
 export default function ShippingReturnPage() {
   return (
@@ -51,8 +54,8 @@ export default function ShippingReturnPage() {
       />
       <p>
         To start a return, email{' '}
-        <a className="font-black text-ink hover:underline" href="mailto:cravings@justnibbleit.in">
-          cravings@justnibbleit.in
+        <a className="font-black text-ink hover:underline" href={`mailto:${email}`}>
+          {email}
         </a>{' '}
         with your order number, photos, and delivery date. Approved returns are collected or
         credited as per the{' '}
