@@ -147,7 +147,7 @@
     background-repeat: no-repeat;
     background-size: 100% 100%;
     color: var(--color-text-dark);
-    font-family: var(--font-brand);
+    font-family: var(--font-body);
     font-size: 0.95rem;
     font-weight: 700;
     letter-spacing: 0.01em;
@@ -936,7 +936,7 @@
   background: var(--color-cta-yellow);
   box-shadow: 3px 4px 0 var(--color-border);
   color: var(--color-text-dark);
-  font-family: var(--font-brand);
+  font-family: var(--font-body);
   font-weight: 400;
   font-size: clamp(1.9rem, 2.8vw, 2.6rem);
   line-height: 1.1;
@@ -984,8 +984,8 @@
 }
 .jni-dossier-chip b {
   display: block;
-  font-family: var(--font-brand);
-  font-weight: 400;
+  font-family: var(--font-body);
+  font-weight: 900;
   font-size: 19px;
 }
 .jni-dossier-chip i {
@@ -1029,8 +1029,8 @@
   opacity: 0.9;
 }
 .jni-dossier-ship b {
-  font-family: var(--font-brand);
-  font-weight: 400;
+  font-family: var(--font-body);
+  font-weight: 900;
   font-size: 15px;
   color: var(--jni-dossier-accent, var(--color-accent-yellow));
 }
@@ -1130,8 +1130,8 @@
   gap: 3px;
 }
 .jni-dossier-flav b {
-  font-family: var(--font-brand);
-  font-weight: 400;
+  font-family: var(--font-body);
+  font-weight: 900;
   font-size: 15px;
   line-height: 1;
   white-space: nowrap;

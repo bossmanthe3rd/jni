@@ -82,7 +82,7 @@ export default function LaunchBanner({ tone = 'light', className = '' }) {
           dark ? 'text-ink' : 'text-foam'
         }`}
       >
-        <h2 id="launch-offer-heading" className="font-display text-2xl sm:text-3xl">
+        <h2 id="launch-offer-heading" className="text-2xl font-black sm:text-3xl">
           <span className={dark ? 'text-ink' : 'text-teal'}>Launch offer</span>{' '}
           <span className="whitespace-nowrap">
             ₹{bundle.price}

@@ -854,7 +854,8 @@
   border-radius: 6px;
   box-shadow: inset 0 0 0 1.5px var(--vm-paper), inset 0 0 0 3px var(--vm-stamp);
   color: var(--vm-stamp);
-  font-family: var(--font-brand);
+  font-family: var(--font-body);
+  font-weight: 900;
   font-size: 15px;
   letter-spacing: 0.06em;
   line-height: 1.1;
@@ -1113,7 +1114,8 @@
   min-width: 0;
   flex: 1;
   overflow: hidden;
-  font-family: var(--font-brand);
+  font-family: var(--font-body);
+  font-weight: 900;
   font-size: 17px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1355,7 +1357,8 @@
   position: absolute;
   padding: 12px 10px 9px;
   color: var(--vm-ink);
-  font-family: var(--font-brand);
+  font-family: var(--font-body);
+  font-weight: 900;
   font-size: 14px;
   line-height: 1.12;
   box-shadow: 2px 3px 0 rgb(13 40 24 / 0.35);

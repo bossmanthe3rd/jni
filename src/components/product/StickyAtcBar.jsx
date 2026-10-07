@@ -124,7 +124,7 @@ export default function StickyAtcBar({
                 {name}
               </p>
               <p className="flex items-baseline gap-2">
-                <span className="font-display text-2xl leading-none text-ink">₹{price}</span>
+                <span className="text-2xl leading-none text-ink">₹{price}</span>
                 {originalPrice > price && (
                   <span className="text-xs font-semibold text-ink/40 line-through">
                     ₹{originalPrice}

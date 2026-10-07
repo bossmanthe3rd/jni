@@ -70,7 +70,7 @@ export default function FlavoursPage() {
                   to={`/flavours/${product.slug}`}
                   className="flex min-h-11 items-center gap-3 transition hover:-translate-y-0.5"
                 >
-                  <span className="font-brand text-sm text-sunshine sm:text-base">
+                  <span className="text-sm font-black text-sunshine sm:text-base">
                     {product.shortName}
                   </span>
                   <HeatMeter product={product} flavour={product.slug} />

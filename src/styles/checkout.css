@@ -299,7 +299,7 @@ body:has(.ck-page) .jni-footer-lip {
 .ck-total-price {
   position: relative;
   margin-right: 8px;
-  font-family: var(--font-brand);
+  font-family: var(--font-body);
   font-size: 34px;
   line-height: 1;
 }
@@ -338,7 +338,8 @@ body:has(.ck-page) .jni-footer-lip {
   border-radius: 6px;
   box-shadow: inset 0 0 0 1.5px var(--ck-paper), inset 0 0 0 3px var(--ck-stamp);
   color: var(--ck-stamp);
-  font-family: var(--font-brand);
+  font-family: var(--font-body);
+  font-weight: 900;
   font-size: 14px;
   letter-spacing: 0.06em;
   line-height: 1.1;

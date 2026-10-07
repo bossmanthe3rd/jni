@@ -66,7 +66,7 @@ export default function CrateLine({ item, onQty, onRemove, compact = false }) {
         </div>
       </div>
 
-      <span className={`self-start font-display text-ink ${compact ? 'text-lg' : 'text-xl sm:text-2xl'}`}>
+      <span className={`self-start text-ink ${compact ? 'text-lg' : 'text-xl sm:text-2xl'}`}>
         <Tick value={Number(item.price) * item.qty} />
       </span>
     </motion.li>

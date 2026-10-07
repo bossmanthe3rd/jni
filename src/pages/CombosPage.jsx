@@ -60,7 +60,7 @@ function ComboCard({ bundle, index }) {
 
         <div className="mt-auto flex flex-col items-center pt-5">
           <div className="mb-3 flex w-full flex-wrap items-center gap-2">
-            <p className="font-display text-3xl text-forest">₹{bundle.price}</p>
+            <p className="text-3xl text-forest">₹{bundle.price}</p>
             <span className="text-sm font-bold text-ink/45 line-through">
               ₹{bundle.originalPrice}
             </span>

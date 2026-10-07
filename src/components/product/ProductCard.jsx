@@ -194,7 +194,7 @@ export function BundleCard({ bundle, index = 0 }) {
 
         <div className="mt-auto flex flex-col gap-1.5 pt-3 sm:flex-row sm:items-end sm:justify-between sm:gap-3 sm:pt-4">
           <div className="flex items-baseline gap-1.5 sm:gap-2">
-            <span className="font-brand text-xl text-ink sm:text-3xl">₹{bundle.price}</span>
+            <span className="text-xl text-ink sm:text-3xl">₹{bundle.price}</span>
             <span className="text-xs font-semibold text-ink/40 line-through sm:text-sm">
               ₹{bundle.originalPrice}
             </span>

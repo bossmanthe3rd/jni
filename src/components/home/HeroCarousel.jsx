@@ -863,7 +863,7 @@ function HeroCopy({ slide, stage, palette, reduceMotion, onScreen = false }) {
 function PriceNote({ product }) {
   return (
     <div className="hero-price-note">
-      <p className="hero-price-note-price font-brand">
+      <p className="hero-price-note-price">
         &#8377;{product.price}
         <span>{product.weight}</span>
       </p>

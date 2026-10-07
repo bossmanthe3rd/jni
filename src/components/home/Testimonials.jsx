@@ -257,7 +257,7 @@ export default function Testimonials() {
             </button>
             {/* Nine one-card pages make nine dots on a phone -- wider than the
                 panel, and each a 10px target. A count reads better there. */}
-            <p className="min-w-[4.5rem] text-center font-brand text-lg text-ink sm:hidden" aria-live="polite">
+            <p className="min-w-[4.5rem] text-center text-lg text-ink sm:hidden" aria-live="polite">
               {page + 1} <span className="text-ink/50">/ {pages}</span>
             </p>
             <div className="hidden items-center gap-2 sm:flex">
