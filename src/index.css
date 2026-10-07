@@ -276,6 +276,70 @@
 }
 
 /* ---------------------------------------------------------------------------
+   Testimonials panel (Testimonials.jsx)
+
+   The panel is the break-room noticeboard the reviews are pinned to: a
+   halftone dot screen and print grain on the sunshine, each review a slip of
+   paper taped up in one of the three pouch colours, with a speech tail
+   because it is something someone said. All static paint -- the doodle
+   procession on the edge stays the section's one moving thing.
+   --------------------------------------------------------------------------- */
+.jni-review-board-dots {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(rgb(13 40 24 / 0.2) 2px, transparent 2.4px);
+  background-size: 16px 16px;
+  /* Thickest at the corners, clearing in the middle where the cards sit. */
+  -webkit-mask-image: radial-gradient(75% 85% at 50% 45%, transparent 35%, #000 100%);
+  mask-image: radial-gradient(75% 85% at 50% 45%, transparent 35%, #000 100%);
+}
+.jni-review-board-quote {
+  position: absolute;
+  z-index: -1;
+  /* In the bottom corner the pager leaves empty, clear of every card. */
+  right: clamp(1.5rem, 4vw, 3.5rem);
+  bottom: 1.6rem;
+  width: clamp(4.5rem, 9vw, 8rem);
+  rotate: 10deg;
+  pointer-events: none;
+}
+.jni-review-card {
+  position: relative;
+}
+/* A strip of tape across the top edge, torn at both ends. */
+.jni-review-card::before {
+  content: '';
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  width: 84px;
+  height: 24px;
+  translate: -50% 0;
+  rotate: var(--tape-turn, -3deg);
+  background: var(--tape, #f59120);
+  opacity: 0.86;
+  clip-path: polygon(
+    3% 0, 97% 0, 100% 17%, 96% 33%, 100% 50%, 96% 67%, 100% 83%, 97% 100%,
+    3% 100%, 0 83%, 4% 67%, 0 50%, 4% 33%, 0 17%
+  );
+}
+/* The speech tail, cut from the card itself: cream fill, ink on two sides. */
+.jni-review-card::after {
+  content: '';
+  position: absolute;
+  bottom: -11px;
+  left: 30px;
+  width: 20px;
+  height: 20px;
+  rotate: 45deg;
+  border-right: 3px solid var(--color-border);
+  border-bottom: 3px solid var(--color-border);
+  background: var(--color-bg-cream);
+}
+
+/* ---------------------------------------------------------------------------
    Why Flipos icon animations - play 3x on first scroll-in, loop on hover
    --------------------------------------------------------------------------- */
 .why-icon {

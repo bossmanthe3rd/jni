@@ -9,6 +9,7 @@ import FlipSpot from '../mascot/FlipSpot'
 import DoodleField from '../ui/DoodleField'
 import DoodleBorder from '../ui/DoodleBorder'
 import { jaggedEdge } from '../ui/jaggedEdge'
+import { packPalettes } from '../icons/PackDoodles'
 
 /*
  * The panel is cut like the pouch: a crimped seal along the top and down both
@@ -68,12 +69,42 @@ function usePanelEdge(ref) {
 /** A small alternating tilt, so a row of reviews reads as a pinned-up wall
  * rather than a grid. Kept under 2deg: the cards still have to line up. */
 const CARD_TILT = [-1.6, 1.1, -0.7]
+/** The tape each slip is stuck up with: the three pouch colours, in turn. */
+const TAPE = [
+  { colour: packPalettes['sweet-chilli-rush'].fill, turn: -4 },
+  { colour: packPalettes['jalapeno-kick'].fill, turn: 3 },
+  { colour: packPalettes['peri-peri-punch'].fill, turn: -2 },
+]
+
+/** A hand-drawn open quote, the board's one big mark. */
+function QuoteMark({ className = '' }) {
+  return (
+    <svg className={className} viewBox="0 0 120 96" aria-hidden="true">
+      {[0, 60].map((x) => (
+        <path
+          key={x}
+          transform={`translate(${x} 0)`}
+          d="M44 8C22 14 6 32 6 56c0 17 10 30 25 30 13 0 22-9 22-21 0-12-8-20-19-20-3 0-5 0-7 1 2-13 11-24 24-29Z"
+          fill="#4DB8AE"
+          stroke="#071A16"
+          strokeWidth="5"
+          strokeLinejoin="round"
+        />
+      ))}
+    </svg>
+  )
+}
 
 function ReviewCard({ review, index }) {
+  const tape = TAPE[index % TAPE.length]
   return (
     <blockquote
-      className="flex h-full flex-col rounded-[22px] border-[3px] border-ink bg-cream p-5 shadow-doodle"
-      style={{ transform: `rotate(${CARD_TILT[index % CARD_TILT.length]}deg)` }}
+      className="jni-review-card flex h-full flex-col rounded-[22px] border-[3px] border-ink bg-cream p-5 shadow-doodle"
+      style={{
+        transform: `rotate(${CARD_TILT[index % CARD_TILT.length]}deg)`,
+        '--tape': tape.colour,
+        '--tape-turn': `${tape.turn}deg`,
+      }}
     >
       {/* The brand's own drawn star, in the site's star colour. */}
       <div className="mb-3 flex items-center gap-1">
@@ -191,7 +222,7 @@ export default function Testimonials() {
             panel clips its own field, and a border that sits ON the edge has
             to be half outside it. */}
         <div
-          className="jni-doodle-edge relative isolate overflow-hidden bg-sunshine px-9 pb-20 pt-11 sm:px-14 sm:pt-12"
+          className="jni-doodle-edge jni-grain relative isolate overflow-hidden bg-sunshine px-9 pb-20 pt-11 sm:px-14 sm:pt-12"
           style={edge ? { clipPath: `path("${edge.d}")` } : undefined}
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
@@ -211,6 +242,8 @@ export default function Testimonials() {
             count={8}
             seed={23}
           />
+          <div className="jni-review-board-dots" aria-hidden="true" />
+          <QuoteMark className="jni-review-board-quote" />
           {/* Every page is laid into the same grid cell, and only the current
               one is visible. The cell is therefore as tall as the tallest
               page, so paging never changes the panel's height -- which used
