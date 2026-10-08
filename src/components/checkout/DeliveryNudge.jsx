@@ -1,25 +1,20 @@
 import { motion } from 'framer-motion'
-import { Plus } from 'lucide-react'
-import { FREE_SHIPPING_THRESHOLD, products } from '../../data/products'
-import { responsiveImage } from '../../lib/responsiveImage'
+import { FREE_SHIPPING_THRESHOLD } from '../../data/products'
+import PincodeCheck from './PincodeCheck'
 
 /**
- * How far from free delivery, and the one pack that closes the gap.
+ * The crate's delivery card: how far from free delivery, and where it is
+ * going.
  *
- * The suggestion is the cheapest flavour not already in the crate: a nudge
- * towards trying something new reads as a tip, where "add another of the
- * same" reads as a sales push.
+ * It used to suggest one pack to close the gap. The shelf above it
+ * (ShelfRail) now offers everything not in the crate and puts whatever closes
+ * the gap first, with a sticker saying so -- two places suggesting the same
+ * pack read as a sales push. Both halves of this card are about delivery, so
+ * the PIN check lives here rather than in a box of its own.
  */
-export default function DeliveryNudge({ items, subtotal, onAdd, compact = false }) {
+export default function DeliveryNudge({ subtotal, compact = false }) {
   const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal)
   const progress = Math.min(100, Math.round((subtotal / FREE_SHIPPING_THRESHOLD) * 100))
-  const suggestion =
-    remaining > 0
-      ? products
-          .filter((p) => p.stockQuantity !== 0 && !items.some((i) => i.slug === p.slug))
-          .sort((a, b) => a.price - b.price)[0]
-      : null
-  const clears = suggestion && suggestion.price >= remaining
 
   return (
     <div className={`jni-card shadow-doodle ${compact ? 'p-3.5' : 'p-4 sm:p-5'}`}>
@@ -49,28 +44,9 @@ export default function DeliveryNudge({ items, subtotal, onAdd, compact = false 
         />
       </div>
 
-      {suggestion && (
-        <div className="mt-3.5 flex items-center gap-3 border-t-2 border-dashed border-ink/20 pt-3.5">
-          <img
-            {...responsiveImage(suggestion.images?.thumb || suggestion.images?.plp, '44px')}
-            alt=""
-            className="h-11 w-11 shrink-0 rounded-xl border-[2px] border-ink object-cover"
-          />
-          <p className="min-w-0 flex-1 text-sm leading-snug text-ink">
-            <span className="font-black">Add {suggestion.shortName}</span> · ₹{suggestion.price}
-            <span className="block text-xs font-bold text-ink/55">
-              {clears ? 'and delivery is free' : `₹${suggestion.price} closer to free delivery`}
-            </span>
-          </p>
-          <button
-            type="button"
-            onClick={() => onAdd(suggestion)}
-            className="inline-flex h-11 shrink-0 items-center gap-1 rounded-pill border-[2.5px] border-ink bg-sunshine px-4 text-sm font-black text-ink transition hover:bg-ink hover:text-cream"
-          >
-            <Plus size={15} /> Add
-          </button>
-        </div>
-      )}
+      <div className={`border-t-2 border-dashed border-ink/20 ${compact ? 'mt-3.5 pt-3.5' : 'mt-4 pt-4'}`}>
+        <PincodeCheck size={compact ? 'compact' : 'full'} />
+      </div>
     </div>
   )
 }

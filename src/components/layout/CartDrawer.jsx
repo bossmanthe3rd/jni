@@ -3,12 +3,13 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Link, useLocation } from 'react-router-dom'
 import { X } from 'lucide-react'
 import { useCart } from '../../store/cartStore'
-import { SHIPPING_FLAT, toCartProduct } from '../../data/products'
+import { SHIPPING_FLAT } from '../../data/products'
 import { BrandHeading } from '../ui/Primitives'
 import { MarkerRing } from '../ui/ReceiptMarks'
 import { Tick } from '../checkout/CheckoutReceipt'
 import CrateLine from '../checkout/CrateLine'
 import DeliveryNudge from '../checkout/DeliveryNudge'
+import ShelfRail from '../checkout/ShelfRail'
 import EmptySlot from '../checkout/EmptySlot'
 import { cartTotals, itemCount } from '../checkout/cartTotals'
 import { trapTab } from '../../lib/focusTrap'
@@ -24,7 +25,7 @@ import '../../styles/checkout.css'
  * and its Pay button show, so the price never changes between the two.
  */
 export default function CartDrawer() {
-  const { items, isOpen, closeCart, setQty, removeItem, addItem } = useCart()
+  const { items, isOpen, closeCart, setQty, removeItem } = useCart()
   const { subtotal, shipping, total, packs } = cartTotals(items)
 
   // A drawer over a dimmed page is a modal, so it gets what a modal owes the
@@ -149,13 +150,11 @@ export default function CartDrawer() {
                         ))}
                       </AnimatePresence>
                     </ul>
-                    <div className="mt-4">
-                      <DeliveryNudge
-                        compact
-                        items={items}
-                        subtotal={subtotal}
-                        onAdd={(p) => addItem(toCartProduct(p), 1)}
-                      />
+                    <div className="mt-6">
+                      <ShelfRail size="compact" />
+                    </div>
+                    <div className="mt-6">
+                      <DeliveryNudge compact subtotal={subtotal} />
                     </div>
                   </div>
 

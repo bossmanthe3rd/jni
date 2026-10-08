@@ -280,6 +280,13 @@ body:has(.ck-page) .jni-footer-lip {
 .ck-row:first-child {
   margin-top: 0;
 }
+/* "Next day to 560001", under Delivery, once a PIN has been checked. */
+.ck-row-note {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ck-stamp);
+}
 .ck-row s {
   margin-right: 6px;
   font-weight: 700;

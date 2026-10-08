@@ -3,11 +3,11 @@ import { Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft } from 'lucide-react'
 import { useCart } from '../store/cartStore'
-import { toCartProduct } from '../data/products'
 import { BrandHeading } from '../components/ui/Primitives'
 import CheckoutReceipt, { Tick } from '../components/checkout/CheckoutReceipt'
 import CrateLine from '../components/checkout/CrateLine'
 import DeliveryNudge from '../components/checkout/DeliveryNudge'
+import ShelfRail from '../components/checkout/ShelfRail'
 import EmptySlot from '../components/checkout/EmptySlot'
 import { DeskTop, DeskWall } from '../components/checkout/DeskScene'
 import { cartTotals, itemCount } from '../components/checkout/cartTotals'
@@ -26,7 +26,7 @@ import '../styles/checkout.css'
  * now, so the price never grows at the last step.
  */
 export default function CheckoutPage() {
-  const { items, addItem, setQty, removeItem } = useCart()
+  const { items, setQty, removeItem } = useCart()
   const payRef = useRef(null)
   const [handoff, setHandoff] = useState(false)
   const { subtotal, savings, shipping, total, packs } = cartTotals(items)
@@ -75,12 +75,11 @@ export default function CheckoutPage() {
                 ))}
               </AnimatePresence>
             </ul>
-            <div className="mt-6">
-              <DeliveryNudge
-                items={items}
-                subtotal={subtotal}
-                onAdd={(p) => addItem(toCartProduct(p), 1)}
-              />
+            <div className="mt-8">
+              <ShelfRail size="full" />
+            </div>
+            <div className="mt-8">
+              <DeliveryNudge subtotal={subtotal} />
             </div>
           </section>
 

@@ -1217,3 +1217,10 @@ body:has(.jni-edge-last) .jni-footer-lip {
     transition: none;
   }
 }
+
+/* The PIN check inside the delivery answer, under the route it updates. */
+.jni-chat-route-pin {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 2px dashed rgb(13 40 24 / 0.2);
+}

@@ -1,0 +1,439 @@
+/* ===========================================================================
+   Delivery: the PIN check (PincodeCheck.jsx) and the crate shelf (ShelfRail.jsx)
+
+   Both are extensions of the crate and the bill, so neither brings a new
+   material: the PIN boxes are the receipt paper, the answer is the bill's
+   rubber stamp, the shelf is the vending machine's glass and yellow shelf, and
+   the add button is one of its keypad keys. Comic Sans throughout -- these are
+   small labelled elements, and the site keeps one face per element.
+   =========================================================================== */
+
+.pin-check,
+.shelf {
+  --dl-ink: var(--color-text-dark);
+  --dl-paper: #fffbea;
+  --dl-stamp: #1d6f67;
+  --dl-bad: #d4361c;
+  color: var(--dl-ink);
+  font-family: var(--font-body);
+}
+
+/* ---- the PIN form ------------------------------------------------------- */
+
+.pin-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 900;
+}
+.pin-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.pin-boxes {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(6, var(--pin-box, 36px));
+  gap: 5px;
+}
+.pin-box {
+  display: grid;
+  height: calc(var(--pin-box, 36px) * 1.18);
+  place-items: center;
+  border: 2.5px solid var(--dl-ink);
+  border-radius: 8px;
+  background: var(--dl-paper);
+  font-size: calc(var(--pin-box, 36px) * 0.56);
+  font-weight: 900;
+  line-height: 1;
+  transition: box-shadow 0.12s ease, translate 0.12s ease;
+}
+/* The box the next digit lands in, while the field has focus. */
+.pin-boxes[data-focused] .pin-box[data-caret] {
+  box-shadow: 0 0 0 3px var(--color-accent-teal);
+  translate: 0 -1px;
+}
+.pin-boxes[data-focused] .pin-box[data-caret]:empty::after {
+  content: '';
+  width: 2px;
+  height: 50%;
+  background: var(--dl-ink);
+  animation: pin-caret 1s steps(1) infinite;
+}
+@keyframes pin-caret {
+  50% {
+    opacity: 0;
+  }
+}
+.pin-boxes[data-bad] .pin-box {
+  border-color: var(--dl-bad);
+}
+/* The real field: laid over the boxes, its own text and caret hidden, so a
+   tap anywhere on the boxes focuses it and the boxes show what it holds. */
+.pin-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  caret-color: transparent;
+  font-size: 16px; /* 16px: below this iOS zooms the page on focus */
+  letter-spacing: 1em;
+  outline: none;
+  cursor: text;
+}
+.pin-input::selection {
+  background: transparent;
+}
+
+.pin-go {
+  min-width: 84px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 3px solid var(--dl-ink);
+  border-radius: 10px;
+  background: var(--color-accent-yellow);
+  box-shadow: 0 4px 0 var(--dl-ink);
+  font-size: 15px;
+  font-weight: 900;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+.pin-go:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--dl-ink);
+}
+.pin-go:disabled {
+  opacity: 0.7;
+}
+.pin-go:focus-visible,
+.pin-change:focus-visible {
+  outline: 3px solid var(--color-accent-teal);
+  outline-offset: 2px;
+}
+
+.pin-msg {
+  margin-top: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: rgb(13 40 24 / 0.6);
+}
+.pin-msg[data-bad] {
+  color: var(--dl-bad);
+}
+
+/* ---- the answer: the bill's rubber stamp ------------------------------- */
+
+.pin-answer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.pin-stamp {
+  flex: 0 0 auto;
+  padding: 5px 10px 4px;
+  border: 3px solid var(--stamp, var(--dl-stamp));
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1.5px var(--dl-paper), inset 0 0 0 3px var(--stamp, var(--dl-stamp));
+  color: var(--stamp, var(--dl-stamp));
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  mix-blend-mode: multiply;
+  rotate: -9deg;
+}
+.pin-stamp[data-kind='standard'] {
+  --stamp: var(--dl-ink);
+}
+.pin-answer-text {
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+  color: rgb(13 40 24 / 0.75);
+}
+.pin-answer-text b {
+  display: block;
+  font-size: 14.5px;
+  font-weight: 900;
+  color: var(--dl-ink);
+}
+.pin-change {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  margin: -12px 0 -14px 6px;
+  font-weight: 900;
+  color: var(--dl-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---- sizes ------------------------------------------------------------- */
+
+.pin-check--full {
+  --pin-box: 42px;
+}
+.pin-check--full .pin-label {
+  font-size: 15px;
+}
+/* Phones: six boxes and Check on one line down to a 360px screen. */
+@media (max-width: 639px) {
+  .pin-check {
+    --pin-box: 34px;
+  }
+  .pin-boxes {
+    gap: 4px;
+  }
+}
+/* 360px phones leave the card about 296px: smaller boxes, a narrower Check. */
+@media (max-width: 400px) {
+  .pin-check {
+    --pin-box: 30px;
+  }
+  .pin-go {
+    min-width: 70px;
+    padding: 0 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pin-boxes[data-focused] .pin-box[data-caret]:empty::after {
+    animation: none;
+  }
+}
+
+/* ---- the shelf ---------------------------------------------------------- */
+
+.shelf {
+  --slot: 140px;
+}
+.shelf--full {
+  --slot: 168px;
+}
+.shelf-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.shelf-head h3 {
+  font-size: 16px;
+  font-weight: 900;
+}
+.shelf--full .shelf-head h3 {
+  font-size: 18px;
+}
+/* Arrows only where there is a mouse; a phone swipes the shelf. */
+.shelf-arrows {
+  display: none;
+  gap: 8px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .shelf-arrows {
+    display: flex;
+  }
+}
+/* And only when the shelf is wider than its glass. */
+.shelf-arrows[hidden] {
+  display: none;
+}
+.shelf-arrows button {
+  display: grid;
+  width: 36px;
+  height: 32px;
+  place-items: center;
+  border: 2.5px solid var(--dl-ink);
+  border-radius: 10px;
+  background: var(--color-bg-cream);
+  box-shadow: 0 3px 0 var(--dl-ink);
+}
+.shelf-arrows button:disabled {
+  opacity: 0.35;
+  box-shadow: none;
+  translate: 0 3px;
+}
+
+/* The machine's glass: dark, one soft glint, an ink frame. */
+.shelf-glass {
+  position: relative;
+  overflow: hidden;
+  border: 3px solid var(--dl-ink);
+  border-radius: 14px;
+  background: var(--color-bg-dark);
+  box-shadow: 4px 4px 0 var(--dl-ink);
+}
+.shelf-pack::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(115deg, transparent 30%, rgb(255 255 255 / 0.06) 30% 42%, transparent 42%);
+  pointer-events: none;
+}
+.shelf-track {
+  display: flex;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.shelf-track::-webkit-scrollbar {
+  display: none;
+}
+.shelf-slot {
+  position: relative;
+  display: flex;
+  /* Grows to fill when every slot fits, so no bare glass is left at the end. */
+  flex: 1 0 var(--slot);
+  flex-direction: column;
+  scroll-snap-align: start;
+}
+/* Slots butt up against each other, so the shelf reads as one run. */
+.shelf-slot + .shelf-slot .shelf-ledge {
+  border-left: 2px dashed rgb(13 40 24 / 0.25);
+}
+.shelf-pack {
+  position: relative;
+  display: flex;
+  height: calc(var(--slot) * 0.72);
+  align-items: flex-end;
+  justify-content: center;
+  padding-top: 12px;
+}
+.shelf-pack > img {
+  height: 92%;
+  width: auto;
+  filter: drop-shadow(3px 4px 0 rgb(0 0 0 / 0.4));
+}
+.shelf-box {
+  display: flex;
+  height: 74%;
+  align-items: flex-end;
+  justify-content: center;
+}
+/* Three pouches overlapped into one box's width. */
+.shelf-box img {
+  height: 100%;
+  width: auto;
+  margin: 0 -9px;
+  filter: drop-shadow(2px 3px 0 rgb(0 0 0 / 0.4));
+}
+.shelf-box img:nth-child(1) {
+  rotate: -9deg;
+}
+.shelf-box img:nth-child(2) {
+  position: relative;
+  z-index: 1;
+  height: 108%;
+}
+.shelf-box img:nth-child(3) {
+  rotate: 8deg;
+}
+
+/* The yellow shelf, the tag clipped to its front, and the key under it. */
+.shelf-ledge {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 10px 12px;
+  border-top: 3px solid var(--dl-ink);
+  background: var(--color-accent-yellow);
+}
+.shelf-tag {
+  flex: 1;
+  padding: 6px 8px 7px;
+  border: 2px solid var(--dl-ink);
+  border-radius: 6px;
+  background: var(--dl-paper);
+}
+.shelf-tag-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+}
+.shelf-tag-top b {
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.15;
+}
+.shelf-tag-top span {
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 900;
+}
+.shelf-heat {
+  margin-top: 5px;
+  gap: 6px;
+}
+.shelf-heat > span {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+.shelf-meta {
+  display: block;
+  margin-top: 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: rgb(13 40 24 / 0.65);
+}
+/* One of the machine's keypad keys. */
+.shelf-key {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 3px solid var(--dl-ink);
+  border-radius: 10px;
+  background: var(--color-bg-cream);
+  box-shadow: 0 4px 0 var(--dl-ink);
+  font-size: 15px;
+  font-weight: 900;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+.shelf-key:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--dl-ink);
+}
+.shelf-key:focus-visible,
+.shelf-arrows button:focus-visible {
+  outline: 3px solid var(--color-accent-teal);
+  outline-offset: 2px;
+}
+@media (hover: hover) {
+  .shelf-key:hover {
+    background: #fffbe3;
+  }
+}
+/* The one sticker: on whatever unlocks free delivery by itself, slapped
+   across the shelf's front edge so it never covers the pack. */
+.shelf-sticker {
+  position: absolute;
+  z-index: 3;
+  top: calc(var(--slot) * 0.72 - 13px);
+  left: 8px;
+  right: 8px;
+  padding: 3px 6px;
+  border: 2px solid var(--dl-ink);
+  border-radius: 6px;
+  background: var(--color-accent-teal);
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.15;
+  text-align: center;
+  rotate: -4deg;
+}
+.shelf--full .shelf-tag-top b,
+.shelf--full .shelf-tag-top span {
+  font-size: 14.5px;
+}

@@ -8,6 +8,8 @@ import { packPalettes } from '../icons/PackDoodles'
 import { heatLevel } from './HeatMeter'
 import { useCart } from '../../store/cartStore'
 import { useCrateSubtotal } from '../checkout/cartTotals'
+import PincodeCheck from '../checkout/PincodeCheck'
+import { usePincode } from '../../lib/pincode'
 
 /**
  * "Asked a lot", as a chat.
@@ -88,29 +90,44 @@ function FriedAnswer() {
   )
 }
 
-const STOPS = ['Ordered', 'Dispatched in 24h', 'At your door in 2-4 days']
+/* The last stop follows the reader's PIN: next day after dispatch on the
+   India Post next-day list, 2-4 days everywhere else. Until a PIN is checked
+   the route shows the promise that holds for every PIN. */
+const stopsFor = (pin) => [
+  'Ordered',
+  'Dispatched in 24h',
+  pin?.status === 'next-day' ? 'Next day after dispatch' : 'At your door in 2-4 days',
+]
 
 export function DeliveryAnswer({ product }) {
   const reduce = useReducedMotion()
+  const pin = usePincode((s) => s.result)
   const thumb = product.gallery?.[0]?.thumb || product.images?.thumb
+  const fast = pin?.status === 'next-day'
   return (
     <div className="jni-chat-card jni-chat-route">
       <div className="jni-chat-route-line">
+        {/* Keyed on the answer, so checking a PIN sends the pouch again --
+            quicker on a next-day route. */}
         <motion.img
+          key={pin ? `${pin.pin}-${pin.status}` : 'route'}
           src={thumb}
           alt=""
           aria-hidden="true"
           initial={reduce ? false : { left: '0%' }}
           whileInView={{ left: '100%' }}
           viewport={ONCE}
-          transition={{ duration: 1.6, delay: 0.25, ease: [0.45, 0, 0.3, 1] }}
+          transition={{ duration: fast ? 0.9 : 1.6, delay: 0.25, ease: [0.45, 0, 0.3, 1] }}
         />
       </div>
       <ol>
-        {STOPS.map((s) => (
+        {stopsFor(pin).map((s) => (
           <li key={s}>{s}</li>
         ))}
       </ol>
+      <div className="jni-chat-route-pin">
+        <PincodeCheck size="compact" />
+      </div>
     </div>
   )
 }
@@ -135,7 +152,7 @@ function faqsFor(product) {
     {
       id: 'delivery',
       q: 'How long does delivery take?',
-      a: '2-4 days across most metro and regional zones.',
+      a: 'Next day in six metros, 2-4 days everywhere else. Pop your PIN in to see yours.',
       Extra: DeliveryAnswer,
     },
   ]

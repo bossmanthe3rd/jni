@@ -2,6 +2,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { STAMP_INK, STAMP_INK_BUNDLE, SHIPPING_FLAT } from '../../data/products'
 import { Wordmark } from '../icons/Wordmark'
 import { Barcode, MarkerRing } from '../ui/ReceiptMarks'
+import { usePincode } from '../../lib/pincode'
 
 const DATE = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
 
@@ -23,6 +24,7 @@ export default function CheckoutReceipt({ items, subtotal, savings, shipping, to
   const reduce = useReducedMotion()
   const packs = items.reduce((n, i) => n + i.qty, 0)
   const free = shipping === 0
+  const pin = usePincode((s) => s.result)
 
   return (
     <div>
@@ -69,7 +71,14 @@ export default function CheckoutReceipt({ items, subtotal, savings, shipping, to
               </div>
             )}
             <div className="ck-row">
-              <span>Delivery</span>
+              <span>
+                Delivery
+                {pin && (
+                  <small className="ck-row-note">
+                    {pin.status === 'next-day' ? 'Next day' : '2–4 days'} to {pin.pin}
+                  </small>
+                )}
+              </span>
               {free ? (
                 <span>
                   <s>₹{SHIPPING_FLAT}</s>Free

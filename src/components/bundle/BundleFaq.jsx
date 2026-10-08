@@ -101,7 +101,7 @@ function faqsFor(bundle) {
     {
       id: 'delivery',
       q: 'How long does delivery take?',
-      a: '2-4 days across most metro and regional zones.',
+      a: 'Next day in six metros, 2-4 days everywhere else. Pop your PIN in to see yours.',
       Extra: DeliveryAnswer,
       avatar: chilli(2),
     },
