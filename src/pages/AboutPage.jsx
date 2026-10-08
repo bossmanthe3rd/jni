@@ -11,6 +11,7 @@ import LaunchBanner from '../components/promo/LaunchBanner'
 import { pouchCutout } from '../components/product/PouchStage'
 import { responsiveImage } from '../lib/responsiveImage'
 import '../styles/about.css'
+import { SHOP_HREF } from '../data/site'
 
 /*
  * About us, laid out the way the owner's About artboard is: a desk, the story
@@ -277,7 +278,7 @@ export default function AboutPage() {
             </BlobPanel>
           </div>
 
-          <Link to="/flavours" className="jni-btn mt-14 text-base">
+          <Link to={SHOP_HREF} className="jni-btn mt-14 text-base">
             Nibble All Now <ArrowRight size={16} />
           </Link>
         </section>

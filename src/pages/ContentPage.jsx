@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Mail, Sparkles } from 'lucide-react'
 import { BrandHeading, Blob, Sparkle } from '../components/ui/Primitives'
+import { SHOP_HREF } from '../data/site'
 
 /**
  * Generic content page. On the live site this is the catch-all route element,
@@ -135,7 +136,7 @@ export default function ContentPage() {
           </a>
         </div>
 
-        <Link to="/flavours" className="jni-btn jni-btn-dark mt-8">
+        <Link to={SHOP_HREF} className="jni-btn jni-btn-dark mt-8">
           Back to the snacks <ArrowRight size={16} />
         </Link>
       </section>

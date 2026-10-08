@@ -17,6 +17,7 @@ import DoodleField from '../ui/DoodleField'
 import { Stars } from '../ui/Primitives'
 import { responsiveImage } from '../../lib/responsiveImage'
 import PouchStage, { StageSwatch, pouchCutout } from './PouchStage'
+import { SHOP_HREF } from '../../data/site'
 
 /**
  * The flavour dossier: a product page's hero, built as one spread.
@@ -345,7 +346,7 @@ export default function FlavourDossier({ product, ctaRef, onQtyChange }) {
         {/* ---- the pouch ---- */}
         <div className="jni-dossier-pack">
           <nav aria-label="Breadcrumb" className="jni-dossier-crumbs">
-            <Link to="/flavours">Flavours</Link>
+            <Link to={SHOP_HREF}>Flavours</Link>
             <span aria-hidden="true">/</span>
             <span aria-current="page">{product.shortName || product.name}</span>
           </nav>

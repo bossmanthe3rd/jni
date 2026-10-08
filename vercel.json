@@ -1,3 +1,8 @@
 {
+  "redirects": [
+    { "source": "/flavours", "destination": "/#products", "permanent": true },
+    { "source": "/flavors", "destination": "/#products", "permanent": true },
+    { "source": "/combos", "destination": "/combos/flipos-party-six", "permanent": false }
+  ],
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }

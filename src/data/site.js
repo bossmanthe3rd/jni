@@ -21,6 +21,16 @@ export const launchOffer = {
 }
 
 /*
+ * Where "shop" goes. There is no flavours index and no combos index any more:
+ * the vending machine on the homepage is the place to pick a flavour, and the
+ * combos link goes straight to the box on offer. /flavours and /combos
+ * redirect to these (App.jsx in the app, vercel.json at the edge), and every
+ * link that used to point at them uses these instead.
+ */
+export const SHOP_HREF = '/#products'
+export const COMBO_HREF = `/combos/${launchOffer.slug}`
+
+/*
  * The two ticker lines used to disagree with each other and with the
  * catalogue: desktop offered three flavours for 399 when the trio is 499, and
  * mobile offered the six-pack. Both now carry the launch offer, and the link
@@ -32,7 +42,7 @@ export const ticker = {
   text: "Launch offer: FLIPO's pack of 6 for Rs. 299",
   backgroundColor: '#f8d43a',
   textColor: '#111111',
-  link: '/combos/flipos-party-six',
+  link: COMBO_HREF,
   active: true,
 }
 
@@ -45,7 +55,7 @@ export const ticker = {
  */
 export const navLinks = [
   { label: 'Shop flavours', to: '/', hash: 'products' },
-  { label: 'Combos', to: '/combos' },
+  { label: 'Combos', to: COMBO_HREF },
   { label: 'About us', to: '/about' },
   { label: 'Contact us', to: '/contact' },
 ]
@@ -192,8 +202,8 @@ export const footerColumns = [
   {
     title: 'Shop',
     links: [
-      { label: 'All Flavours', to: '/#products' },
-      { label: 'Combos', to: '/combos' },
+      { label: 'All Flavours', to: SHOP_HREF },
+      { label: 'Combos', to: COMBO_HREF },
     ],
   },
   {

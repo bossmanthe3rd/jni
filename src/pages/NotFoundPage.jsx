@@ -4,6 +4,7 @@ import { ArrowRight, Home } from 'lucide-react'
 import { BrandHeading } from '../components/ui/Primitives'
 import { Crumbs } from '../components/icons/Wordmark'
 import DoodleField from '../components/ui/DoodleField'
+import { SHOP_HREF } from '../data/site'
 
 /*
  * The page that was missing.
@@ -68,7 +69,7 @@ export default function NotFoundPage() {
           </p>
 
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-            <Link to="/flavours" className="jni-btn">
+            <Link to={SHOP_HREF} className="jni-btn">
               See all flavours <ArrowRight size={16} />
             </Link>
             <Link

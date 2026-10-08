@@ -14,6 +14,7 @@ import BundleFaq from '../components/bundle/BundleFaq'
 import { boxFlavours, toCartBundle } from '../components/bundle/boxContents'
 import '../styles/pdp.css'
 import '../styles/bundle.css'
+import { SHOP_HREF } from '../data/site'
 
 const CREAM = '#fbf6d0'
 const SUNSHINE = '#f3c63b'
@@ -76,7 +77,7 @@ export default function BundleDetailPage() {
     return () => tag.remove()
   }, [bundle])
 
-  if (!bundle) return <Navigate to="/combos" replace />
+  if (!bundle) return <Navigate to={SHOP_HREF} replace />
 
   const flavours = boxFlavours(bundle)
   const word = REVIEW_WORD[bundle.slug]

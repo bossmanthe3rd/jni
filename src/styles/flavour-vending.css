@@ -32,6 +32,15 @@
   background-position: center top;
 }
 
+/* /#products -- where every "shop" link and the old /flavours URL land. The
+   page reserves the whole header height above an anchor, but the header has no
+   strip of its own, so that band showed the tail of the flavour stage (its rail
+   and red crimp) above the machine. Landing it right under the ticker puts the
+   floating header buttons on this section's own wall, which has the room. */
+.vm-section {
+  scroll-margin-top: calc(var(--site-ticker-height) - var(--site-header-offset));
+}
+
 /* Off screen, every loop in the machine holds its place (FlavourVending). */
 .vm-section--asleep *,
 .vm-section--asleep *::before,

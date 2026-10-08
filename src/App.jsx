@@ -1,5 +1,5 @@
 import { Component, Suspense, lazy, useEffect } from 'react'
-import { Route, Routes, useLocation } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import SiteHeader from './components/layout/SiteHeader'
 import SiteFooter from './components/layout/SiteFooter'
 import CartDrawer from './components/layout/CartDrawer'
@@ -7,14 +7,13 @@ import RecentPurchaseToast from './components/layout/RecentPurchaseToast'
 import NibbleIntro from './components/layout/NibbleIntro'
 import { BlobClipDefs } from './components/ui/BlobShapes'
 import HomePage from './pages/HomePage'
+import { COMBO_HREF, SHOP_HREF } from './data/site'
 
 // Route-level code splitting, mirroring the live site's chunk boundaries.
-const CombosPage = lazy(() => import('./pages/CombosPage'))
 const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'))
 const BundleDetailPage = lazy(() => import('./pages/BundleDetailPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 const ContentPage = lazy(() => import('./pages/ContentPage'))
-const FlavoursPage = lazy(() => import('./pages/FlavoursPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'))
 const ShippingReturnPage = lazy(() => import('./pages/ShippingReturnPage'))
@@ -106,10 +105,14 @@ export default function App() {
           <Suspense fallback={<RouteFallback />}>
             <Routes>
               <Route path="/" element={<HomePage />} />
-              <Route path="/flavours" element={<FlavoursPage />} />
+              {/* No flavours or combos index: picking happens at the vending
+                  machine, and the combos link is the box on offer. The same
+                  redirects run at the edge (vercel.json) for direct hits. */}
+              <Route path="/flavours" element={<Navigate to={SHOP_HREF} replace />} />
+              <Route path="/flavors" element={<Navigate to={SHOP_HREF} replace />} />
               <Route path="/flavours/:slug" element={<ProductDetailPage />} />
               <Route path="/snacks/:slug" element={<ProductDetailPage />} />
-              <Route path="/combos" element={<CombosPage />} />
+              <Route path="/combos" element={<Navigate to={COMBO_HREF} replace />} />
               <Route path="/combos/:slug" element={<BundleDetailPage />} />
               <Route path="/about" element={<AboutPage />} />
               {/* The live site renders the same About page for /story. */}

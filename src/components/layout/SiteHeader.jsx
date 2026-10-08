@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ShoppingCart, User, X } from 'lucide-react'
 import { useCart } from '../../store/cartStore'
-import { HERO_INTERVAL, ticker, navLinks } from '../../data/site'
+import { COMBO_HREF, HERO_INTERVAL, ticker, navLinks } from '../../data/site'
 import { BADGE_FILLS, getBadgeFlavour, setBadgeFlavour, useBadgeFlavour } from '../../lib/badgeFlavour'
 import { StarDoodle } from '../icons/WhyIcons'
 import { useScrollLock } from '../../lib/scrollLock'
@@ -39,7 +39,7 @@ function WavyMenuIcon({ className = '' }) {
 
 /**
  * Cream, so it is invisible on the cream the site mostly runs on and only
- * shows up where it has work to do -- /combos and the other dark heroes, whose
+ * shows up where it has work to do -- the combo page and the other dark heroes, whose
  * background is near enough the plates' own to swallow them whole.
  */
 const PLATE_KEYLINE = 'var(--color-bg-cream, #fbf6d0)'
@@ -340,7 +340,7 @@ export default function SiteHeader() {
       {ticker.active !== false && (
         <Link
           data-site-ticker=""
-          to={ticker.link || '/combos'}
+          to={ticker.link || COMBO_HREF}
           aria-label={ticker.text}
           // Above the row, so the badge retracts up behind it -- into the seal,
           // the way it drops out of one on the pack.

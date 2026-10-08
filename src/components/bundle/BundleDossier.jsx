@@ -10,7 +10,7 @@ import {
   deliveredTotal,
   perPacketPrice,
 } from '../../data/products'
-import { launchOffer } from '../../data/site'
+import { SHOP_HREF, launchOffer } from '../../data/site'
 import { useCart } from '../../store/cartStore'
 import { useCrateSubtotal } from '../checkout/cartTotals'
 import DoodleField from '../ui/DoodleField'
@@ -206,7 +206,7 @@ export default function BundleDossier({ bundle, ctaRef, onQtyChange }) {
           {/* ---- the box ---- */}
           <div className="jni-dossier-pack">
             <nav aria-label="Breadcrumb" className="jni-dossier-crumbs">
-              <Link to="/combos">Combos</Link>
+              <Link to={SHOP_HREF}>Combos</Link>
               <span aria-hidden="true">/</span>
               <span aria-current="page">{bundle.name}</span>
             </nav>
@@ -302,7 +302,7 @@ export default function BundleDossier({ bundle, ctaRef, onQtyChange }) {
             <div className="jni-dossier-switch">
               <div className="jni-box-switch-k">
                 <p className="jni-dossier-k">Pick your box</p>
-                <Link to="/flavours" className="jni-box-single">
+                <Link to={SHOP_HREF} className="jni-box-single">
                   Or pick one flavour <ArrowRight size={14} strokeWidth={3} aria-hidden="true" />
                 </Link>
               </div>

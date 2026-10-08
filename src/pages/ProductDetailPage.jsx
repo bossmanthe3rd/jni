@@ -15,6 +15,7 @@ import SectionEdge from '../components/product/SectionEdge'
 import TypeBands from '../components/product/TypeBands'
 import { packPalettes } from '../components/icons/PackDoodles'
 import '../styles/pdp.css'
+import { SHOP_HREF } from '../data/site'
 
 const CREAM = '#fbf6d0'
 const FOREST = '#071a16'
@@ -73,7 +74,7 @@ export default function ProductDetailPage() {
     return () => tag.remove()
   }, [product])
 
-  if (!product) return <Navigate to="/flavours" replace />
+  if (!product) return <Navigate to={SHOP_HREF} replace />
 
   const ground = packPalettes[product.slug]?.ground || product.theme?.ink
 
