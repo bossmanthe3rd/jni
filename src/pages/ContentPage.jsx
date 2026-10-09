@@ -137,7 +137,7 @@ export default function ContentPage() {
         </div>
 
         <Link to={SHOP_HREF} className="jni-btn jni-btn-dark mt-8">
-          Back to the snacks <ArrowRight size={16} />
+          Nibble now <ArrowRight size={16} />
         </Link>
       </section>
     </div>

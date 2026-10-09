@@ -24,7 +24,8 @@ import { responsiveImage } from '../../lib/responsiveImage'
  *
  * Behind the heading a pack drifts and bounces off the screen's edges like the
  * old DVD screensaver, changing flavour on every bounce the way the DVD logo
- * changed colour. When it lands square in a corner, the screen throws a burst
+ * changed colour. It shrinks as it drifts and springs back to full size off
+ * each wall. When it lands square in a corner, the screen throws a burst
  * of confetti. That is the one joke; everything else stays still until you
  * touch it -- a note lifts and its doodle comes alive only under the pointer.
  *
@@ -56,6 +57,11 @@ const ROOM = 150
 export const MAX_FIT = 1.3
 const SPEED = 78 // px per second, in screen units
 const CORNER = 14 // how close to square a corner counts as a corner hit
+// The pack shrinks as it drifts and springs back to full size off every wall:
+// down to MIN_SCALE over SHRINK_S seconds, back up in GROW_S.
+const MIN_SCALE = 0.5
+const SHRINK_S = 1.8
+const GROW_S = 0.28
 
 export default function WhyFlipos({ staged = false, revealed = true, covered = false, monitorRef }) {
   const rigRef = useRef(null)
@@ -151,7 +157,18 @@ export const Monitor = forwardRef(function Monitor(
  * Both screens are laid out at the same native size, so one set of
  * coordinates fits both.
  */
-const bounce = { x: 60, y: 40, vx: SPEED, vy: SPEED * 0.72, flavour: 0, last: 0, frame: 0, screens: new Set() }
+const bounce = {
+  x: 60,
+  y: 40,
+  vx: SPEED,
+  vy: SPEED * 0.72,
+  scale: 1,
+  growing: false,
+  flavour: 0,
+  last: 0,
+  frame: 0,
+  screens: new Set(),
+}
 
 function runBounce() {
   if (bounce.frame) return
@@ -174,28 +191,45 @@ function tickBounce(t) {
   // Sizes come from the screen's ResizeObserver, not a read here: a read
   // straight after last frame's transform write forces a layout every frame.
   const { screenW, screenH, packW, packH } = lead.size
-  const maxX = screenW - packW
-  const maxY = screenH - packH
+
+  // Size first: shrinking while it drifts, springing back after a wall.
+  if (b.growing) {
+    b.scale = Math.min(1, b.scale + ((1 - MIN_SCALE) / GROW_S) * dt)
+    if (b.scale === 1) b.growing = false
+  } else {
+    b.scale = Math.max(MIN_SCALE, b.scale - ((1 - MIN_SCALE) / SHRINK_S) * dt)
+  }
+  // The pack scales about its centre, so its visible edges sit `inset` in
+  // from its layout box: the walls are measured against what is drawn.
+  const insetX = ((1 - b.scale) * packW) / 2
+  const insetY = ((1 - b.scale) * packH) / 2
+  const minX = -insetX
+  const minY = -insetY
+  const maxX = screenW - packW + insetX
+  const maxY = screenH - packH + insetY
 
   b.x += b.vx * dt
   b.y += b.vy * dt
+  // Only a wall it is heading into counts. While it grows back beside the
+  // wall it just left, it is eased off that wall, not bounced again.
   let hitX = false
   let hitY = false
-  if (b.x <= 0 || b.x >= maxX) {
-    b.x = Math.max(0, Math.min(maxX, b.x))
+  if ((b.x <= minX && b.vx < 0) || (b.x >= maxX && b.vx > 0)) {
     b.vx *= -1
     hitX = true
   }
-  if (b.y <= 0 || b.y >= maxY) {
-    b.y = Math.max(0, Math.min(maxY, b.y))
+  if ((b.y <= minY && b.vy < 0) || (b.y >= maxY && b.vy > 0)) {
     b.vy *= -1
     hitY = true
   }
+  b.x = Math.max(minX, Math.min(maxX, b.x))
+  b.y = Math.max(minY, Math.min(maxY, b.y))
   if (hitX || hitY) {
+    b.growing = true
     b.flavour = (b.flavour + 1) % PACKS.length
     // A corner: one wall hit with the other wall within reach.
-    const nearX = b.x <= CORNER || b.x >= maxX - CORNER
-    const nearY = b.y <= CORNER || b.y >= maxY - CORNER
+    const nearX = b.x <= minX + CORNER || b.x >= maxX - CORNER
+    const nearY = b.y <= minY + CORNER || b.y >= maxY - CORNER
     const corner = (hitX && nearY) || (hitY && nearX)
     const at = { id: t, x: b.x + packW / 2, y: b.y + packH / 2 }
     b.screens.forEach((s) => {
@@ -203,7 +237,7 @@ function tickBounce(t) {
       if (corner) s.burst(at)
     })
   }
-  const transform = `translate(${b.x}px, ${b.y}px)`
+  const transform = `translate(${b.x}px, ${b.y}px) scale(${b.scale.toFixed(3)})`
   b.screens.forEach((s) => {
     if (s.pack.current) s.pack.current.style.transform = transform
   })
@@ -242,7 +276,9 @@ function Screensaver({ decorative, saverOpacity, paused, children }) {
     }
     entry.current = e
     bounce.screens.add(e)
-    if (packRef.current) packRef.current.style.transform = `translate(${bounce.x}px, ${bounce.y}px)`
+    if (packRef.current) {
+      packRef.current.style.transform = `translate(${bounce.x}px, ${bounce.y}px) scale(${bounce.scale})`
+    }
     const measure = () => {
       const screen = screenRef.current
       const pack = packRef.current

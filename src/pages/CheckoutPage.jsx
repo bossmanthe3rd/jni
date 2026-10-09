@@ -177,7 +177,7 @@ function EmptyCrate() {
             The machine’s fully stocked. Pick a flavour and it’ll print you a bill.
           </p>
           <Link to="/#products" className="jni-btn mt-6">
-            Shop flavours
+            Nibble now
           </Link>
         </div>
       </DeskWall>

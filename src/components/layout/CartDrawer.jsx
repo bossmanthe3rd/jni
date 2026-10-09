@@ -130,7 +130,7 @@ export default function CartDrawer() {
                       Pick a flavour, or grab the trio and settle the argument.
                     </p>
                     <Link to="/#products" onClick={closeCart} className="jni-btn mt-2">
-                      Shop flavours
+                      Nibble now
                     </Link>
                   </div>
                 </div>

@@ -76,7 +76,7 @@ const TAPE = [
   { colour: packPalettes['peri-peri-punch'].fill, turn: -2 },
 ]
 
-/** A hand-drawn open quote, the board's one big mark. */
+/** A hand-drawn open quote. Turned half a turn, the same mark closes. */
 function QuoteMark({ className = '' }) {
   return (
     <svg className={className} viewBox="0 0 120 96" aria-hidden="true">
@@ -243,7 +243,9 @@ export default function Testimonials() {
             seed={23}
           />
           <div className="jni-review-board-dots" aria-hidden="true" />
-          <QuoteMark className="jni-review-board-quote" />
+          {/* A pair, either side of the pager: the reviews are quoted. */}
+          <QuoteMark className="jni-review-board-quote jni-review-board-quote--open" />
+          <QuoteMark className="jni-review-board-quote jni-review-board-quote--close" />
           {/* Every page is laid into the same grid cell, and only the current
               one is visible. The cell is therefore as tall as the tallest
               page, so paging never changes the panel's height -- which used

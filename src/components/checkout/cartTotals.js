@@ -17,7 +17,7 @@ export function cartTotals(items) {
 }
 
 /**
- * What is already in the crate, in rupees. A product page's Buy now adds to
+ * What is already in the crate, in rupees. A product page's Nibble now adds to
  * the crate and goes to checkout, which bills all of it -- so the price on
  * that button, and the free-shipping bar above it, have to start from here.
  */

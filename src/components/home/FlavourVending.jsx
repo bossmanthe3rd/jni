@@ -748,7 +748,7 @@ function Receipt({ slot, torn = 'bottom' }) {
 
       <div className="vm-sticker">
         <button type="button" className="jni-btn vm-cta" disabled={soldOut} onClick={handleAdd}>
-          {soldOut ? 'Sold out' : 'Nibble Now'}
+          {soldOut ? 'Sold out' : 'Nibble now'}
         </button>
       </div>
 

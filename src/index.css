@@ -153,7 +153,15 @@
     letter-spacing: 0.01em;
     line-height: 1.1;
     text-transform: none;
-    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.16s ease;
+    /* The site's hard ink shadow, as a drop-shadow so it follows the traced
+       shape rather than drawing a rectangle behind it. It deepens on hover
+       and all but disappears on press, so the button reads as pushed in. */
+    --btn-shadow: var(--color-border);
+    filter: drop-shadow(3px 4px 0 var(--btn-shadow));
+    transition:
+      transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+      filter 0.16s ease,
+      background-color 0.16s ease;
   }
   /* Hover lifts live behind (hover: hover) across the site: on a phone a tap
      fires :hover and it sticks until the next tap elsewhere, so a pressed
@@ -162,16 +170,28 @@
   @media (hover: hover) {
     .jni-btn:hover {
       transform: scale(1.05);
-      filter: brightness(1.06);
+      filter: brightness(1.06) drop-shadow(4px 6px 0 var(--btn-shadow));
     }
   }
   .jni-btn:active {
     transform: scale(0.95);
+    filter: drop-shadow(1px 1px 0 var(--btn-shadow));
   }
   .jni-btn:disabled {
     transform: none;
     opacity: 0.55;
     cursor: not-allowed;
+    filter: drop-shadow(2px 2px 0 var(--btn-shadow));
+  }
+  /* On the dark grounds an ink shadow vanishes into the ink, so it takes the
+     brand teal there instead -- the hero's monitor, the combo page's forest,
+     the launch band and the phone pay bar. */
+  .hero-screen-cta,
+  .jni-box .jni-btn,
+  .about-end .jni-btn,
+  .ck-paybar .jni-btn,
+  .jni-section-dark .jni-btn {
+    --btn-shadow: var(--color-accent-teal);
   }
   /* The same traced shape, filled dark. The shorthand `background` this used
      to set wiped out .jni-btn's shape image and left a plain rectangle; here
@@ -298,12 +318,19 @@
 .jni-review-board-quote {
   position: absolute;
   z-index: -1;
-  /* In the bottom corner the pager leaves empty, clear of every card. */
-  right: clamp(1.5rem, 4vw, 3.5rem);
-  bottom: 1.6rem;
-  width: clamp(4.5rem, 9vw, 8rem);
-  rotate: 10deg;
+  /* In the bottom corners the pager leaves empty, clear of every card. */
+  bottom: 1.4rem;
+  width: clamp(2.75rem, 5vw, 4.5rem);
   pointer-events: none;
+}
+.jni-review-board-quote--open {
+  left: clamp(1.25rem, 4vw, 3.5rem);
+  rotate: -8deg;
+}
+/* The same mark turned half a turn is the closing quote. */
+.jni-review-board-quote--close {
+  right: clamp(1.25rem, 4vw, 3.5rem);
+  rotate: 172deg;
 }
 .jni-review-card {
   position: relative;

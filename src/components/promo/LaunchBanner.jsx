@@ -101,7 +101,7 @@ export default function LaunchBanner({ tone = 'light', className = '' }) {
           )}
         </p>
         <Link to={`/combos/${bundle.slug}`} className="jni-btn">
-          Grab the six-pack <ArrowRight size={16} />
+          Nibble the six-pack <ArrowRight size={16} />
         </Link>
       </div>
     </section>

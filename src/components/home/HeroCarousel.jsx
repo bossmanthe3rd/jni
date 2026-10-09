@@ -397,7 +397,7 @@ function HeroCarousel() {
               >
                 <Link
                   to={`/flavours/${s.product.slug}`}
-                  aria-label={`Shop ${s.product.name}`}
+                  aria-label={`Nibble ${s.product.name}`}
                   className="block"
                   onPointerEnter={(e) => e.pointerType === 'mouse' && !reduceMotion && setLifted(true)}
                   onPointerMove={(e) => e.pointerType === 'mouse' && !reduceMotion && onTilt(e)}
@@ -824,14 +824,14 @@ function HeroCopy({ slide, stage, palette, reduceMotion, onScreen = false }) {
 
         {onScreen ? (
           <Link to={`/flavours/${slide.product.slug}`} className="jni-btn hero-screen-cta">
-            Shop {slide.product.shortName}
+            Nibble {slide.product.shortName}
           </Link>
         ) : (
           <div className="mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 md:justify-start">
             <span className="relative inline-block">
               <ArrowDoodle className="pointer-events-none absolute -left-20 -top-16 hidden h-20 w-24 lg:block" />
               <Link to={`/flavours/${slide.product.slug}`} className="jni-btn">
-                Shop {slide.product.shortName}
+                Nibble {slide.product.shortName}
               </Link>
             </span>
             <p className="text-sm font-black" style={{ color: INK }}>

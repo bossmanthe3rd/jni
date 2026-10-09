@@ -26,7 +26,7 @@ export default function StickyAtcBar({
   onAdd,
   watchRef,
   image,
-  ctaLabel = 'Nibble Now',
+  ctaLabel = 'Nibble now',
   unit = '1 pack',
 }) {
   const [visible, setVisible] = useState(false)

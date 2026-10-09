@@ -34,7 +34,7 @@ import { SHOP_HREF } from '../../data/site'
  * huge behind it -- and two notes pinned to the things they point at. Right,
  * the buy block: a switcher to the other two flavours, quantity as chips, the
  * ₹499 free-shipping line made visible while it can still change the order,
- * and a Buy now that quotes the delivered total so the price cannot grow at
+ * and a Nibble now that quotes the delivered total so the price cannot grow at
  * the last step.
  *
  * WHAT MOVES
@@ -165,7 +165,7 @@ export default function FlavourDossier({ product, ctaRef, onQtyChange }) {
      stage. On a desk shot or a flat-lay they would be pointing at nothing. */
   const onPackShot = !photo
 
-  // The order Buy now places: what is in the crate already, plus this.
+  // The order Nibble now places: what is in the crate already, plus this.
   const order = crateSubtotal + Number(product.price) * qty
   const freeShipping = order >= FREE_SHIPPING_THRESHOLD
   const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - order)
@@ -632,7 +632,7 @@ export default function FlavourDossier({ product, ctaRef, onQtyChange }) {
               className="jni-btn jni-dossier-buy"
               onClick={handleBuyNow}
             >
-              Buy now · {rupee(payable)}
+              Nibble now · {rupee(payable)}
             </button>
             <button type="button" className="jni-dossier-ghost" onClick={handleAdd}>
               {added ? `Added — ${qty} in cart` : 'Add to cart'}

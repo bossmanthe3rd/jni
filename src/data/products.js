@@ -37,7 +37,7 @@ export const products = [
     tagline: 'Sweet, Spicy, Irresistible.',
     description:
       'A glossy sweet-chilli crunch with a slow, playful heat built for movie nights and desk drawers.',
-    price: 170,
+    price: 169,
     originalPrice: 190,
     stockQuantity: 180,
     badge: 'Crowd pleaser',
@@ -106,7 +106,7 @@ export const products = [
     tagline: 'A spicy little kick.',
     description:
       'A crisp jalapeño-led bite with fresh pepper character and a clean finish that keeps the hand going back.',
-    price: 170,
+    price: 169,
     originalPrice: 190,
     stockQuantity: 160,
     badge: 'Fresh drop',
@@ -181,7 +181,7 @@ export const products = [
     tagline: 'Fire with every crunch.',
     description:
       'A deep peri-peri hit with chilli warmth, a savoury finish, and enough crunch to headline any snack break.',
-    price: 170,
+    price: 169,
     originalPrice: 190,
     stockQuantity: 220,
     badge: 'Heat hero',

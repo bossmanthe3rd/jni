@@ -478,7 +478,14 @@ export default function FlavourScrollStage() {
                 exit={reduce ? { opacity: 0 } : { opacity: 0, y: -10 }}
                 transition={{ duration: reduce ? 0.15 : 0.3, ease: [0.22, 1, 0.36, 1] }}
               >
-                <Link to={href} className="jni-btn" aria-label={`Nibble now: ${product.name}`}>
+                <Link
+                  to={href}
+                  className="jni-btn"
+                  aria-label={`Nibble now: ${product.name}`}
+                  // Its shadow in the chapter's own dark line; teal on the
+                  // combo's near-black ground, where a dark shadow vanishes.
+                  style={{ '--btn-shadow': stage.bundle ? 'var(--color-accent-teal)' : palette.line }}
+                >
                   Nibble now
                 </Link>
                 <p className="text-sm font-black" style={{ color: FOAM }}>

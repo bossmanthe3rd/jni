@@ -33,7 +33,7 @@ import PouchStage, { StageSwatch } from '../product/PouchStage'
  *
  * The buy block is the flavour dossier's, so buying works the same on every
  * product page: box chips instead of a stepper, the free-shipping line, and a
- * Buy now that quotes the delivered total.
+ * Nibble now that quotes the delivered total.
  */
 
 const FOREST = '#071a16'
@@ -100,7 +100,7 @@ export default function BundleDossier({ bundle, ctaRef, onQtyChange }) {
   const photo = shot > 0 ? gallery[shot - 1] : null
   const perPack = perPacketPrice(bundle)
 
-  // The order Buy now places: what is in the crate already, plus this.
+  // The order Nibble now places: what is in the crate already, plus this.
   const order = crateSubtotal + Number(bundle.price) * qty
   const freeShipping = order >= FREE_SHIPPING_THRESHOLD
   const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - order)
@@ -400,7 +400,7 @@ export default function BundleDossier({ bundle, ctaRef, onQtyChange }) {
 
             <div className="jni-dossier-actions" data-pdp-atc-sentinel="true">
               <button ref={ctaRef} type="button" className="jni-btn jni-dossier-buy" onClick={handleBuyNow}>
-                Buy now · {rupee(payable)}
+                Nibble now · {rupee(payable)}
               </button>
               <button type="button" className="jni-dossier-ghost" onClick={handleAdd}>
                 {added ? `Added — ${qty} in cart` : 'Add to cart'}

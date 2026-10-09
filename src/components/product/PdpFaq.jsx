@@ -293,7 +293,7 @@ export function FaqChat({ subject, faqs, accent, avatar, buyName, payable, onBuy
             {buyName}, delivered for {rupee(payable)}.
           </p>
           <button type="button" className="jni-btn jni-chat-buy-btn" onClick={onBuy}>
-            Buy now · {rupee(payable)}
+            Nibble now · {rupee(payable)}
           </button>
         </div>
 

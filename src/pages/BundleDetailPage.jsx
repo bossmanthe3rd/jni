@@ -133,7 +133,7 @@ export default function BundleDetailPage() {
         originalPrice={Number(bundle.originalPrice) * qty}
         image={bundle.gallery?.[0]?.thumb || bundle.imageUrl}
         unit={qty === 1 ? '1 box' : `${qty} boxes`}
-        ctaLabel={`Buy · ${rupee(deliveredTotal(crateSubtotal + Number(bundle.price) * qty))}`}
+        ctaLabel={`Nibble now · ${rupee(deliveredTotal(crateSubtotal + Number(bundle.price) * qty))}`}
         onAdd={handleBuy}
         watchRef={ctaRef}
       />

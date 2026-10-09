@@ -70,7 +70,7 @@ export default function NotFoundPage() {
 
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <Link to={SHOP_HREF} className="jni-btn">
-              See all flavours <ArrowRight size={16} />
+              Nibble all flavours <ArrowRight size={16} />
             </Link>
             <Link
               to="/"

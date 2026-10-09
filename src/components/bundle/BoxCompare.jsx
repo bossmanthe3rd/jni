@@ -99,7 +99,7 @@ export default function BoxCompare({ bundle }) {
                   </span>
                   {here ? (
                     <button type="button" className="jni-btn jni-compare-cta" onClick={() => buy(b)}>
-                      Buy now · {rupee(deliveredTotal(Number(b.price)))}
+                      Nibble now · {rupee(deliveredTotal(Number(b.price)))}
                     </button>
                   ) : (
                     <>

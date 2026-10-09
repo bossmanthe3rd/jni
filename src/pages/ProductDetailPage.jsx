@@ -118,7 +118,7 @@ export default function ProductDetailPage() {
         originalPrice={Number(product.originalPrice) * qty}
         image={product.gallery?.[0]?.thumb || product.images.thumb}
         unit={qty === 1 ? '1 pack' : `${qty} packs`}
-        ctaLabel={`Buy · ${rupee(deliveredTotal(crateSubtotal + Number(product.price) * qty))}`}
+        ctaLabel={`Nibble now · ${rupee(deliveredTotal(crateSubtotal + Number(product.price) * qty))}`}
         onAdd={handleBuy}
         watchRef={ctaRef}
       />
