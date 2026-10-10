@@ -213,15 +213,6 @@ export const footerColumns = [
   { title: 'Socials', socials: socialLinks },
 ]
 
-/** Rotating social-proof toast copy seen bottom-left on the live site. */
-export const recentPurchases = [
-  { name: 'Aarav', city: 'Kolkata', product: "FLIPO's Jalapeño Kick" },
-  { name: 'Sakshi', city: 'Delhi', product: "FLIPO's Peri Peri Punch" },
-  { name: 'Rohan', city: 'Kolkata', product: "FLIPO's Peri Peri Punch" },
-  { name: 'Meera', city: 'Pune', product: "FLIPO's Sweet Chilli Rush" },
-  { name: 'Vikram', city: 'Bengaluru', product: "FLIPO's Flavour Trio" },
-]
-
 export const legalBusinessDetails = {
   brand: 'Just Nibble It',
   entity: 'Meenakshi Craft Foods Private Limited',

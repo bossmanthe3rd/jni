@@ -3,7 +3,6 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import SiteHeader from './components/layout/SiteHeader'
 import SiteFooter from './components/layout/SiteFooter'
 import CartDrawer from './components/layout/CartDrawer'
-import RecentPurchaseToast from './components/layout/RecentPurchaseToast'
 import NibbleIntro from './components/layout/NibbleIntro'
 import { BlobClipDefs } from './components/ui/BlobShapes'
 import HomePage from './pages/HomePage'
@@ -147,7 +146,6 @@ export default function App() {
       </main>
       <SiteFooter />
       <CartDrawer />
-      <RecentPurchaseToast />
     </>
   )
 }
